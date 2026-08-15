@@ -2,6 +2,15 @@
 
 # Changelog
 
+## [0.11.14](https://github.com/tekumara/fakesnow/compare/v0.11.13...v0.11.14) (2026-08-15)
+
+
+### Bug Fixes
+
+* accept a space before a utc offset in timestamp literals ([#376](https://github.com/tekumara/fakesnow/issues/376)) ([14e15fc](https://github.com/tekumara/fakesnow/commit/14e15fc9b0a7aa5686d0a752147868636231a590)), closes [#372](https://github.com/tekumara/fakesnow/issues/372)
+* raise ProgrammingError for CREATE MACRO instead of creating it as a side effect ([#350](https://github.com/tekumara/fakesnow/issues/350)) ([0b9a651](https://github.com/tekumara/fakesnow/commit/0b9a651299a81d1225e31587be847b2ed357ea0f))
+* support account-scoped SHOW KEYS ([d6c2071](https://github.com/tekumara/fakesnow/commit/d6c2071f256503bc2e02b46ac6d76458bed0166f)), closes [#373](https://github.com/tekumara/fakesnow/issues/373)
+
 ## [0.11.13](https://github.com/tekumara/fakesnow/compare/v0.11.12...v0.11.13) (2026-08-14)
 
 
