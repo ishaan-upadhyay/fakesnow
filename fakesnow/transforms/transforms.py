@@ -42,6 +42,8 @@ def array_construct_etc(expression: Expr) -> Expr:
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
 
     def as_variant(item: Expr) -> Expr:
+        if isinstance(item, exp.Array):
+            item = exp.Array(expressions=[as_variant(value) for value in item.expressions])
         value = (
             exp.Cast(
                 this=exp.Interval(this=exp.Literal.string("0"), unit=exp.Var(this="SECOND")),
@@ -69,6 +71,96 @@ def array_construct_etc(expression: Expr) -> Expr:
         )
     ):
         return exp.Array(expressions=[as_variant(item) for item in expression.expressions])
+    return expression
+
+
+def array_functions(expression: Expr) -> Expr:
+    """Route unstructured array functions through Snowflake-compatible VARIANT[] UDFs."""
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+
+    def variant(value: Expr | None) -> Expr:
+        return exp.Cast(
+            this=value.copy() if value is not None else exp.Null(),
+            to=variant_type.copy(),
+        )
+
+    def call(name: str, *arguments: Expr | None) -> Expr:
+        return exp.Anonymous(this=name, expressions=[variant(argument) for argument in arguments])
+
+    if isinstance(expression, exp.ArrayContains):
+        return call("_fs_array_contains", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayPosition):
+        result = call("_fs_array_position", expression.this, expression.expression)
+        result.args["_fs_array_position"] = True
+        return result
+    if isinstance(expression, exp.ArrayAppend):
+        return call("_fs_array_append", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayPrepend):
+        return call("_fs_array_prepend", expression.this, expression.expression)
+    if isinstance(expression, exp.ArraySlice):
+        return exp.Anonymous(
+            this="_fs_array_slice",
+            expressions=[
+                variant(expression.this),
+                expression.args["start"].copy(),
+                expression.args["end"].copy(),
+            ],
+        )
+    if isinstance(expression, exp.ArrayToString):
+        return exp.Anonymous(
+            this="_fs_array_to_string",
+            expressions=[variant(expression.this), expression.expression.copy()],
+        )
+    if isinstance(expression, exp.ArrayDistinct):
+        return call("_fs_array_distinct", expression.this)
+    if isinstance(expression, exp.Flatten) and not isinstance(expression.parent, (exp.From, exp.Join)):
+        return call("_fs_array_flatten", expression.this)
+    if isinstance(expression, exp.SortArray):
+        return exp.Anonymous(
+            this="_fs_array_sort",
+            expressions=[
+                variant(expression.this),
+                (expression.args.get("asc") or exp.Null()).copy(),
+                (expression.args.get("nulls_first") or exp.Null()).copy(),
+            ],
+        )
+    if isinstance(expression, exp.ArrayMax):
+        return call("_fs_array_max", expression.this)
+    if isinstance(expression, exp.ArrayMin):
+        return call("_fs_array_min", expression.this)
+    if isinstance(expression, exp.ArrayRemove):
+        return call("_fs_array_remove", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayInsert):
+        return exp.Anonymous(
+            this="_fs_array_insert",
+            expressions=[
+                variant(expression.this),
+                expression.args["position"].copy(),
+                variant(expression.expression),
+            ],
+        )
+    if isinstance(expression, exp.ArrayCompact):
+        return call("_fs_array_compact", expression.this)
+    if isinstance(expression, exp.ArrayExcept):
+        return call("_fs_array_except", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayIntersect):
+        return call("_fs_array_intersection", *expression.expressions)
+    if isinstance(expression, exp.ArrayOverlaps):
+        return call("_fs_arrays_overlap", expression.this, expression.expression)
+    if isinstance(expression, exp.ArraysZip) and len(expression.expressions) == 2:
+        return call("_fs_arrays_zip", *expression.expressions)
+    if isinstance(expression, exp.ArrayConcat) and len(expression.expressions) == 1:
+        return call("_fs_array_cat", expression.this, expression.expressions[0])
+    if isinstance(expression, exp.GenerateSeries) and expression.args.get("is_end_exclusive"):
+        generated = expression.copy()
+        return exp.Cast(
+            this=generated,
+            to=exp.DataType(
+                this=exp.DataType.Type.ARRAY,
+                expressions=[variant_type.copy()],
+                nested=False,
+            ),
+        )
     return expression
 
 
@@ -105,6 +197,61 @@ def array_size(expression: Expr) -> Expr:
 
 
 def array_agg(expression: Expr) -> Expr:
+    if isinstance(expression, exp.ArrayUniqueAgg):
+        argument = expression.this.copy()
+        return exp.ArrayAgg(
+            this=exp.Distinct(
+                expressions=[
+                    exp.Cast(
+                        this=argument,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            ),
+            nulls_excluded=True,
+        )
+    if isinstance(expression, exp.ArrayAgg):
+        result = expression.copy()
+        value = result.this
+        if isinstance(value, exp.Order):
+            ordered = value.copy()
+            ordered.set(
+                "this",
+                exp.Cast(
+                    this=value.this.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                ),
+            )
+            result.set("this", ordered)
+        elif isinstance(value, exp.Distinct):
+            distinct = value.copy()
+            distinct.set(
+                "expressions",
+                [
+                    exp.Cast(
+                        this=item.copy(),
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                    for item in value.expressions
+                ],
+            )
+            result.set("this", distinct)
+        else:
+            result.set(
+                "this",
+                exp.Cast(
+                    this=value.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                ),
+            )
+        select = expression.find_ancestor(exp.Select)
+        from_ = select.args.get("from") if select is not None else None
+        source = from_.this if isinstance(from_, exp.From) else None
+        return (
+            exp.Anonymous(this="list_reverse", expressions=[result])
+            if isinstance(source, exp.Subquery) and isinstance(source.this, exp.Union)
+            else result
+        )
     return expression
 
 
@@ -194,7 +341,8 @@ def array_agg_within_group(expression: Expr) -> Expr:
             this=exp.Order(
                 this=agg.this,
                 expressions=order.expressions,
-            )
+            ),
+            nulls_excluded=True,
         )
 
     return expression

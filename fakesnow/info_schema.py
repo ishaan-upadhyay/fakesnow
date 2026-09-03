@@ -98,6 +98,7 @@ case when starts_with(columns.data_type, 'DECIMAL') or columns.data_type='BIGINT
      when columns.data_type='TIMESTAMP' then 'TIMESTAMP_NTZ'
      when columns.data_type='TIMESTAMP WITH TIME ZONE' then 'TIMESTAMP_TZ'
      when columns.data_type='JSON' then 'VARIANT'
+     when columns.data_type='VARIANT[]' then 'ARRAY'
      when starts_with(columns.data_type, 'MAP(') then 'OBJECT'
      else columns.data_type end as DATA_TYPE,
 ext_character_maximum_length as CHARACTER_MAXIMUM_LENGTH, ext_character_octet_length as CHARACTER_OCTET_LENGTH,
