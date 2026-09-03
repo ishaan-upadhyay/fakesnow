@@ -87,6 +87,7 @@ from fakesnow.transforms.transforms import (
 )
 from fakesnow.transforms.variant import (
     capture_source_output_names as capture_source_output_names,
+    capture_structured_types as capture_structured_types,
     parse_json as parse_json,
     preserve_output_names as preserve_output_names,
     semi_structured_types as semi_structured_types,
