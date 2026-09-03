@@ -109,16 +109,32 @@ def array_agg(expression: Expr) -> Expr:
 
 
 def object_agg(expression: Expr) -> Expr:
-    """Convert OBJECT_AGG(key, value) to DuckDB equivalent.
-
-    Snowflake's OBJECT_AGG aggregates key-value pairs into a JSON object, skipping rows
-    where the key or value is NULL.
-
-    See https://docs.snowflake.com/en/sql-reference/functions/object_agg
-    """
     if isinstance(expression, exp.ObjectAgg):
         key = expression.this.copy()
         value = expression.expression.copy()
+        if not key.find(exp.Column) and not value.find(exp.Column):
+            key_array = exp.Array(
+                expressions=[
+                    exp.Cast(
+                        this=key,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            )
+            value_array = exp.Array(
+                expressions=[
+                    exp.Cast(
+                        this=value,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            )
+            key_array.args["_fs_internal"] = True
+            value_array.args["_fs_internal"] = True
+            return exp.Anonymous(
+                this="_fs_object_construct",
+                expressions=[key_array, value_array, exp.false()],
+            )
 
         value_not_null = exp.Not(this=exp.Is(this=value.copy(), expression=exp.Null()))
         key_not_null = exp.Not(this=exp.Is(this=key.copy(), expression=exp.Null()))
@@ -132,9 +148,28 @@ def object_agg(expression: Expr) -> Expr:
             this=exp.Anonymous(this="LIST", expressions=[value]),
             expression=exp.Where(this=not_null.copy()),
         )
-
-        map_expr = exp.Anonymous(this="MAP", expressions=[list_key, list_val])
-        return exp.Anonymous(this="TO_JSON", expressions=[map_expr])
+        return exp.Anonymous(
+            this="_fs_object_construct",
+            expressions=[
+                exp.Cast(
+                    this=list_key,
+                    to=exp.DataType(
+                        this=exp.DataType.Type.ARRAY,
+                        expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
+                        nested=False,
+                    ),
+                ),
+                exp.Cast(
+                    this=list_val,
+                    to=exp.DataType(
+                        this=exp.DataType.Type.ARRAY,
+                        expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
+                        nested=False,
+                    ),
+                ),
+                exp.false(),
+            ],
+        )
 
     return expression
 
@@ -1283,12 +1318,35 @@ def object_construct(expression: Expr) -> Expr:
     keys: list[Expr] = []
     values: list[Expr] = []
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+    literal_keys: set[str] = set()
 
     for key, value in items:
         if isinstance(key, exp.Identifier):
             key = exp.Literal(this=key.name, is_string=True)
+        if isinstance(key, exp.Literal) and not key.is_string:
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="SQL compilation error:",
+                errno=2270,
+                sqlstate="22000",
+            )
+        if isinstance(key, exp.Literal) and key.is_string:
+            if key.name in literal_keys:
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg=f"Duplicate field key '{key.name}'",
+                    errno=100103,
+                    sqlstate="22000",
+                )
+            literal_keys.add(key.name)
 
-        keys.append(key)
+        keys.append(exp.Cast(this=key, to=variant_type.copy()))
+        value = (
+            exp.Anonymous(
+                this="_fs_parse_json",
+                expressions=[exp.Literal.string("{}")],
+            )
+            if isinstance(value, exp.Struct) and not value.expressions
+            else value.transform(object_construct)
+        )
 
         if keep_nulls and isinstance(value, exp.Null):
             value = exp.Cast(
@@ -1308,13 +1366,71 @@ def object_construct(expression: Expr) -> Expr:
     value_array.args["_fs_internal"] = True
 
     return exp.Anonymous(
-        this="_FS_OBJECT_CONSTRUCT",
+        this="_fs_object_construct",
         expressions=[
             key_array,
             value_array,
             exp.true() if keep_nulls else exp.false(),
         ],
     )
+
+
+def object_functions(expression: Expr) -> Expr:
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+
+    def as_variant(value: Expr) -> Expr:
+        return exp.Cast(this=value.copy(), to=variant_type.copy())
+
+    def key_array(values: list[Expr]) -> Expr:
+        if len(values) == 1 and isinstance(values[0], exp.Array):
+            values = list(values[0].expressions)
+        result = exp.Array(expressions=[as_variant(value) for value in values])
+        result.args["_fs_internal"] = True
+        return result
+
+    if isinstance(expression, exp.ObjectInsert):
+        return exp.Anonymous(
+            this="_fs_object_insert",
+            expressions=[
+                as_variant(expression.this),
+                as_variant(expression.args["key"]),
+                as_variant(expression.args["value"]),
+                (expression.args.get("update_flag") or exp.false()).copy(),
+            ],
+        )
+
+    if isinstance(expression, exp.JSONKeys):
+        return exp.Anonymous(
+            this="_fs_object_keys",
+            expressions=[as_variant(expression.this)],
+        )
+
+    if isinstance(expression, exp.MapCat):
+        return exp.Anonymous(
+            this="_fs_object_cat",
+            expressions=[as_variant(expression.this), as_variant(expression.expression)],
+        )
+
+    if isinstance(expression, exp.Anonymous):
+        name = expression.name.upper()
+        if name == "OBJECT_DELETE" and expression.expressions:
+            return exp.Anonymous(
+                this="_fs_object_delete",
+                expressions=[
+                    as_variant(expression.expressions[0]),
+                    key_array(expression.expressions[1:]),
+                ],
+            )
+        if name == "OBJECT_PICK" and expression.expressions:
+            return exp.Anonymous(
+                this="_fs_object_pick",
+                expressions=[
+                    as_variant(expression.expressions[0]),
+                    key_array(expression.expressions[1:]),
+                ],
+            )
+
+    return expression
 
 
 def regex_replace(expression: Expr) -> Expr:
@@ -1777,6 +1893,97 @@ def values_columns(expression: Expr) -> Expr:
     return expression
 
 
+def _coerce_semi_structured_value(value: Expr, target: exp.DataType) -> Expr:
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+    as_variant = exp.Cast(this=value.copy(), to=variant_type)
+    if target.this == exp.DataType.Type.VARIANT:
+        return as_variant
+    if (
+        target.this == exp.DataType.Type.MAP
+        and len(target.expressions) == 2
+        and isinstance(target.expressions[1], exp.DataType)
+        and target.expressions[1].this == exp.DataType.Type.VARIANT
+    ):
+        return exp.Anonymous(this="_fs_variant_to_object", expressions=[as_variant])
+    if (
+        target.this == exp.DataType.Type.ARRAY
+        and target.expressions
+        and isinstance(target.expressions[0], exp.DataType)
+        and target.expressions[0].this == exp.DataType.Type.VARIANT
+    ):
+        return exp.Anonymous(this="_fs_variant_to_array", expressions=[as_variant])
+    return exp.Cast(this=value.copy(), to=target.copy())
+
+
+def _target_table(expression: exp.Insert | exp.Update) -> exp.Table | None:
+    target = expression.this
+    if isinstance(target, exp.Schema):
+        target = target.this
+    return target if isinstance(target, exp.Table) else None
+
+
+def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
+    if not isinstance(expression, (exp.Insert, exp.Update)):
+        return expression
+    table = _target_table(expression)
+    if table is None:
+        return expression
+    try:
+        described = duck_conn.sql(f"DESCRIBE {table.sql(dialect='duckdb')}").fetchall()
+    except Exception:
+        return expression
+    target_types = {
+        name.upper(): exp.DataType.build(column_type, dialect="duckdb")
+        for name, column_type, *_ in described
+    }
+
+    if isinstance(expression, exp.Update):
+        for assignment in expression.expressions:
+            if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
+                continue
+            if target := target_types.get(assignment.this.name.upper()):
+                assignment.set(
+                    "expression",
+                    _coerce_semi_structured_value(assignment.expression, target),
+                )
+        return expression
+
+    columns = (
+        [column.name for column in expression.this.expressions]
+        if isinstance(expression.this, exp.Schema)
+        else list(target_types)
+    )
+    source = expression.expression
+    if isinstance(source, exp.Select):
+        projections: list[Expr] = []
+        for index, item in enumerate(source.expressions):
+            column = item.alias_or_name if expression.args.get("by_name") else columns[index]
+            target = target_types.get(column.upper())
+            if target is None:
+                projections.append(item)
+                continue
+            value = item.this if isinstance(item, exp.Alias) else item
+            coerced = _coerce_semi_structured_value(value, target)
+            projections.append(
+                exp.Alias(this=coerced, alias=item.args["alias"].copy())
+                if isinstance(item, exp.Alias)
+                else coerced
+            )
+        source.set("expressions", projections)
+    elif isinstance(source, exp.Values):
+        for row in source.expressions:
+            if not isinstance(row, exp.Tuple):
+                continue
+            row.set(
+                "expressions",
+                [
+                    _coerce_semi_structured_value(value, target_types[columns[index].upper()])
+                    for index, value in enumerate(row.expressions)
+                ],
+            )
+    return expression
+
+
 def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
     if (
         isinstance(expression, exp.Create)
@@ -1813,10 +2020,11 @@ def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
             create_col_id = col_def.this
             assert isinstance(create_col_id, exp.Identifier), f"Expected Identifier, got {type(create_col_id)}"
             create_col_type = col_def.kind
+            assert create_col_type is not None
             select_col = select_query.expressions[i]
 
             inner = select_col.this if isinstance(select_col, exp.Alias) else select_col
-            cast_expr = exp.Cast(this=inner, to=create_col_type)
+            cast_expr = _coerce_semi_structured_value(inner, create_col_type)
             aliased_expr = exp.Alias(this=cast_expr, alias=create_col_id)
 
             new_expressions.append(aliased_expr)

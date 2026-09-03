@@ -296,7 +296,16 @@ class FakeSnowflakeCursor:
                 self._execute(transformed, params)
                 return self
 
-            expression = parse_one(command, read="snowflake")
+            try:
+                expression = parse_one(command, read="snowflake")
+            except IndexError:
+                if re.search(r"\bOBJECT_CONSTRUCT(?:_KEEP_NULL)?\s*\(", command, re.IGNORECASE):
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg="SQL compilation error:",
+                        errno=909,
+                        sqlstate="22023",
+                    ) from None
+                raise
             transforms.capture_source_output_names(expression, command)
             self.check_db_and_schema(expression)
 
@@ -417,6 +426,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.to_timestamp)
             .transform(transforms.to_variant)
             .transform(transforms.object_construct)
+            .transform(transforms.object_functions)
             .transform(transforms.structured_cast)
             .transform(transforms.timestamp_ntz)
             .transform(transforms.float_to_double)
@@ -460,6 +470,7 @@ class FakeSnowflakeCursor:
             .transform(lambda e: transforms.list_stage(e, self._conn.database, self._conn.schema))
             .transform(lambda e: transforms.put_stage(e, self._conn.database, self._conn.schema, params))
             .transform(lambda e: transforms.create_table_as(e, self._duck_conn))
+            .transform(lambda e: transforms.coerce_semi_structured_targets(e, self._duck_conn))
         )
 
     def _transform_explode(self, expression: Expr) -> list[Expr]:
@@ -576,7 +587,12 @@ class FakeSnowflakeCursor:
                 self._duck_conn.execute(sql, params)
         except duckdb.BinderException as e:
             msg = e.args[0]
-            errno, sqlstate = (100103, "22000") if "Duplicate struct entry name" in msg else (2043, "02000")
+            if "Function 'flatten' has a template parameter type" in msg:
+                msg, errno, sqlstate = "SQL compilation error:", 979, "42601"
+            elif "Duplicate struct entry name" in msg:
+                errno, sqlstate = 100103, "22000"
+            else:
+                errno, sqlstate = 2043, "02000"
             raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=errno, sqlstate=sqlstate) from e
         except duckdb.InvalidInputException as e:
             if sf_error := variant_programming_error(e):

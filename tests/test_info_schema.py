@@ -142,7 +142,7 @@ def test_info_schema_columns_other(cur: snowflake.connector.cursor.SnowflakeCurs
         """
         create or replace table example (
             XTIMESTAMP TIMESTAMP, XTIMESTAMP_NTZ TIMESTAMP_NTZ, XTIMESTAMP_NTZ9 TIMESTAMP_NTZ(9), XTIMESTAMP_TZ TIMESTAMP_TZ, XDATE DATE, XTIME TIME,
-            XBINARY BINARY, /* XARRAY ARRAY, XOBJECT OBJECT */ XVARIANT VARIANT
+            XBINARY BINARY, /* XARRAY ARRAY, */ XOBJECT OBJECT, XVARIANT VARIANT
         )
         """
     )
@@ -162,9 +162,9 @@ def test_info_schema_columns_other(cur: snowflake.connector.cursor.SnowflakeCurs
         ("XDATE", "DATE"),
         ("XTIME", "TIME"),
         ("XBINARY", "BINARY"),
-        # TODO: support these types https://github.com/tekumara/fakesnow/issues/27
+        # TODO: support ARRAY https://github.com/tekumara/fakesnow/issues/27
         # ("XARRAY", "ARRAY"),
-        # ("XOBJECT", "OBJECT"),
+        ("XOBJECT", "OBJECT"),
         ("XVARIANT", "VARIANT"),
     ]
 

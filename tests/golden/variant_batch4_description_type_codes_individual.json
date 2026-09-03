@@ -1979,7 +1979,7 @@
     },
     {
       "id": "object_construct",
-      "sql": "SELECT OBJECT_CONSTRUCT(*) AS a",
+      "sql": "SELECT OBJECT_CONSTRUCT(*) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2)",
       "setup": null,
       "expect": {
         "error": null,

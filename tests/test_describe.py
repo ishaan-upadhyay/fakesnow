@@ -17,7 +17,7 @@ def test_describe(cur: snowflake.connector.cursor.SnowflakeCursor):
             XINT INT, XINTEGER INTEGER, XBIGINT BIGINT, XSMALLINT SMALLINT, XTINYINT TINYINT, XBYTEINT BYTEINT,
             XVARCHAR20 VARCHAR(20), XVARCHAR VARCHAR, XTEXT TEXT,
             XTIMESTAMP TIMESTAMP, XTIMESTAMP_NTZ TIMESTAMP_NTZ, XTIMESTAMP_NTZ9 TIMESTAMP_NTZ(9), XTIMESTAMP_TZ TIMESTAMP_TZ, XDATE DATE, XTIME TIME,
-            XBINARY BINARY, /* XARRAY ARRAY, XOBJECT OBJECT */ XVARIANT VARIANT
+            XBINARY BINARY, /* XARRAY ARRAY, */ XOBJECT OBJECT, XVARIANT VARIANT
         )
         """
     )
@@ -51,9 +51,9 @@ def test_describe(cur: snowflake.connector.cursor.SnowflakeCursor):
         ResultMetadata(name='XDATE', type_code=3, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='XTIME', type_code=12, display_size=None, internal_size=None, precision=0, scale=9, is_nullable=True),
         ResultMetadata(name='XBINARY', type_code=11, display_size=None, internal_size=8388608, precision=None, scale=None, is_nullable=True),
-        # TODO: handle ARRAY and OBJECT see https://github.com/tekumara/fakesnow/issues/26
+        # TODO: handle ARRAY see https://github.com/tekumara/fakesnow/issues/26
         # ResultMetadata(name='XARRAY', type_code=10, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
-        # ResultMetadata(name='XOBJECT', type_code=9, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
+        ResultMetadata(name='XOBJECT', type_code=9, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='XVARIANT', type_code=5, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
     ]
     # fmt: on
@@ -90,7 +90,7 @@ def test_describe_table(dcur: snowflake.connector.cursor.DictCursor):
             XINT INT, XINTEGER INTEGER, XBIGINT BIGINT, XSMALLINT SMALLINT, XTINYINT TINYINT, XBYTEINT BYTEINT,
             XVARCHAR20 VARCHAR(20), XVARCHAR VARCHAR, XTEXT TEXT,
             XTIMESTAMP TIMESTAMP, XTIMESTAMP_NTZ TIMESTAMP_NTZ, XTIMESTAMP_NTZ9 TIMESTAMP_NTZ(9), XTIMESTAMP_TZ TIMESTAMP_TZ, XDATE DATE, XTIME TIME,
-            XBINARY BINARY, /* XARRAY ARRAY, XOBJECT OBJECT */ XVARIANT VARIANT
+            XBINARY BINARY, /* XARRAY ARRAY, */ XOBJECT OBJECT, XVARIANT VARIANT
         )
         """
     )
@@ -133,6 +133,7 @@ def test_describe_table(dcur: snowflake.connector.cursor.DictCursor):
         {"name": "XDATE", "type": "DATE", **common},
         {"name": "XTIME", "type": "TIME(9)", **common},
         {"name": "XBINARY", "type": "BINARY(8388608)", **common},
+        {"name": "XOBJECT", "type": "OBJECT", **common},
         {"name": "XVARIANT", "type": "VARIANT", **common},
     ]
 
