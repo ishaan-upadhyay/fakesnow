@@ -8,6 +8,7 @@ import duckdb
 import fakesnow.fakes as fakes
 from fakesnow import info_schema
 from fakesnow.transforms import show
+from fakesnow.variant import register_variant_udfs
 
 GLOBAL_DATABASE_NAME = "_fs_global"
 
@@ -27,6 +28,7 @@ class FakeSnow:
 
         self.results_cache: dict[str, tuple] = {}
         self.duck_conn = duckdb.connect(database=":memory:")
+        register_variant_udfs(self.duck_conn)
 
         # create a "global" database for storing objects which span databases.
         self.duck_conn.execute(f"ATTACH IF NOT EXISTS ':memory:' AS {GLOBAL_DATABASE_NAME}")
