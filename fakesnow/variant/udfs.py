@@ -95,33 +95,136 @@ def _to_variant_timestamp(value: str | None, kind: str) -> Any:
 def _object_keep_null(value: Any) -> Any:
     if value is None:
         return None
-    if not isinstance(value, dict):
+    items = _map_items(value)
+    if items is None:
         return value
 
     def replace_nulls(item: Any) -> Any:
         if item is None:
             return JSON_NULL
-        if isinstance(item, dict):
-            return {key: replace_nulls(nested) for key, nested in item.items()}
+        if (nested_items := _map_items(item)) is not None:
+            return {key: replace_nulls(nested) for key, nested in nested_items}
         if isinstance(item, list):
             return [replace_nulls(nested) for nested in item]
         return item
 
-    return duckdb.Value(
-        _variant_output(replace_nulls(value)),
-        sqltypes.VARIANT,
-    )
+    return {key: duckdb.Value(_variant_output(replace_nulls(item)), sqltypes.VARIANT) for key, item in items}
 
 
 def _object_drop_null(value: Any) -> Any:
     if value is None:
         return None
-    if not isinstance(value, dict):
+    items = _map_items(value)
+    if items is None:
         return value
-    return duckdb.Value(
-        _variant_output({key: item for key, item in value.items() if item is not None}),
-        sqltypes.VARIANT,
-    )
+    return {
+        key: duckdb.Value(_variant_output(item), sqltypes.VARIANT)
+        for key, item in items
+        if item is not None
+    }
+
+
+def _object_result(items: list[tuple[str, Any]]) -> dict[str, Any]:
+    return {
+        key: duckdb.Value(_variant_output(value), sqltypes.VARIANT)
+        for key, value in items
+    }
+
+
+def _object_construct(keys: list[Any] | None, values: list[Any] | None, keep_nulls: bool | None) -> Any:
+    if keys is None or values is None:
+        return {}
+    items: list[tuple[str, Any]] = []
+    seen: set[str] = set()
+    for key, value in zip(keys, values, strict=True):
+        if key is None:
+            continue
+        if not isinstance(key, str):
+            raise VariantRuntimeError("SQL compilation error:", 2270)
+        if key in seen:
+            raise VariantRuntimeError(f"Duplicate field key '{key}'", 100103)
+        seen.add(key)
+        if value is not None or keep_nulls:
+            items.append((key, JSON_NULL if value is None else value))
+    return _object_result(items)
+
+
+def _object_validate_keys(keys: list[Any] | None) -> Any:
+    if keys is None:
+        return []
+    validated: list[str | None] = []
+    seen: set[str] = set()
+    for key in keys:
+        if key is None:
+            validated.append(None)
+            continue
+        if not isinstance(key, str):
+            raise VariantRuntimeError("SQL compilation error:", 2270)
+        if key in seen:
+            raise VariantRuntimeError(f"Duplicate field key '{key}'", 100103)
+        seen.add(key)
+        validated.append(key)
+    return validated
+
+
+def _object_items(value: Any) -> list[tuple[str, Any]] | None:
+    if value is None:
+        return None
+    items = _map_items(value)
+    if items is None:
+        raise VariantRuntimeError(
+            f"Failed to cast variant value {sf_json_compact(value)} to OBJECT",
+            100071,
+        )
+    return items
+
+
+def _object_insert(value: Any, key: Any, item: Any, update: bool | None) -> Any:
+    items = _object_items(value)
+    if items is None:
+        return None
+    if key is None or item is None:
+        return _object_result(items)
+    if not isinstance(key, str):
+        raise VariantRuntimeError("SQL compilation error:", 2270)
+    values = dict(items)
+    if key in values and not update:
+        raise VariantRuntimeError(f"Duplicate field key '{key}'", 100103)
+    values[key] = item
+    return _object_result(list(values.items()))
+
+
+def _object_delete(value: Any, keys: list[Any] | None) -> Any:
+    items = _object_items(value)
+    if items is None:
+        return None
+    deleted = {key for key in keys or [] if isinstance(key, str)}
+    return _object_result([(key, item) for key, item in items if key not in deleted])
+
+
+def _object_pick(value: Any, keys: list[Any] | None) -> Any:
+    items = _object_items(value)
+    if items is None:
+        return None
+    picked = {key for key in keys or [] if isinstance(key, str)}
+    return _object_result([(key, item) for key, item in items if key in picked])
+
+
+def _object_keys(value: Any) -> Any:
+    items = _object_items(value)
+    if items is None:
+        return None
+    return [duckdb.Value(key, sqltypes.VARIANT) for key, _ in sorted(items)]
+
+
+def _object_cat(left: Any, right: Any) -> Any:
+    left_items = _object_items(left)
+    right_items = _object_items(right)
+    if left_items is None or right_items is None:
+        return None
+    values = dict(left_items)
+    values.update(right_items)
+    return _object_result(list(values.items()))
 
 
 def _to_array(value: Any) -> Any:
@@ -356,6 +459,8 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
     variant = sqltypes.VARIANT
     integer = sqltypes.INTEGER
     decimal = duckdb.decimal_type(38, 18)
+    object_type = duckdb.map_type(sqltypes.VARCHAR, variant)
+    variant_array = duckdb.list_type(variant)
     definitions: list[tuple[str, Callable[..., Any], list[DuckDBPyType], DuckDBPyType]] = [
         ("_fs_parse_json", _parse_json, [sqltypes.VARCHAR], variant),
         (
@@ -364,9 +469,16 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
             [sqltypes.VARCHAR, sqltypes.VARCHAR],
             variant,
         ),
-        ("_fs_object_drop_null", _object_drop_null, [variant], variant),
-        ("_fs_object_keep_null", _object_keep_null, [variant], variant),
-        ("_fs_variant_to_array", _to_array, [variant], duckdb.list_type(variant)),
+        ("_fs_object_drop_null", _object_drop_null, [variant], object_type),
+        ("_fs_object_keep_null", _object_keep_null, [variant], object_type),
+        ("_fs_object_validate_keys", _object_validate_keys, [variant_array], duckdb.list_type(sqltypes.VARCHAR)),
+        ("_fs_object_construct", _object_construct, [variant_array, variant_array, sqltypes.BOOLEAN], object_type),
+        ("_fs_object_insert", _object_insert, [variant, variant, variant, sqltypes.BOOLEAN], object_type),
+        ("_fs_object_delete", _object_delete, [variant, variant_array], object_type),
+        ("_fs_object_pick", _object_pick, [variant, variant_array], object_type),
+        ("_fs_object_keys", _object_keys, [variant], variant_array),
+        ("_fs_object_cat", _object_cat, [variant, variant], object_type),
+        ("_fs_variant_to_array", _to_array, [variant], variant_array),
         ("_fs_variant_get", _get, [variant, variant], variant),
         ("_fs_variant_get_ignore_case", _get_ignore_case, [variant, sqltypes.VARCHAR], variant),
         ("_fs_variant_get_path", _get_path, [variant, sqltypes.VARCHAR], variant),
@@ -426,7 +538,7 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
             "_fs_variant_to_object",
             _to_object,
             [variant],
-            duckdb.map_type(sqltypes.VARCHAR, variant),
+            object_type,
         ),
         ("_fs_sf_json", sf_json, [variant], sqltypes.VARCHAR),
         ("_fs_sf_object_json", _object_json, [variant], sqltypes.VARCHAR),

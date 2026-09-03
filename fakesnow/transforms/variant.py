@@ -787,6 +787,29 @@ def variant_functions(expression: Expr) -> Expr:
 
 
 def variant_cast(expression: Expr) -> Expr:
+    object_functions = {
+        "_FS_OBJECT_CAT",
+        "_FS_OBJECT_CONSTRUCT",
+        "_FS_OBJECT_DELETE",
+        "_FS_OBJECT_INSERT",
+        "_FS_OBJECT_PICK",
+        "_FS_VARIANT_TO_OBJECT",
+    }
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this in {exp.DataType.Type.VARCHAR, exp.DataType.Type.TEXT}
+        and isinstance(expression.this, exp.Anonymous)
+        and expression.this.name.upper() in object_functions
+    ):
+        return exp.Anonymous(
+            this="_fs_variant_to_varchar",
+            expressions=[
+                exp.Cast(
+                    this=expression.this.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                )
+            ],
+        )
     if not isinstance(expression, exp.Cast) or not _is_variant_expression(expression.this):
         return expression
 
@@ -851,11 +874,11 @@ def structured_cast(expression: Expr) -> Expr:
     if not isinstance(key_array, exp.Array) or not isinstance(value_array, exp.Array):
         return expression
 
-    values = {
-        key.name.upper(): value.copy()
-        for key, value in zip(key_array.expressions, value_array.expressions, strict=True)
-        if isinstance(key, exp.Literal) and key.is_string
-    }
+    values: dict[str, Expr] = {}
+    for key, value in zip(key_array.expressions, value_array.expressions, strict=True):
+        source_key = key.this if isinstance(key, exp.Cast) else key
+        if isinstance(source_key, exp.Literal) and source_key.is_string:
+            values[source_key.name.upper()] = value.copy()
     fields: list[Expr] = []
     for field in expression.to.expressions:
         if not isinstance(field, exp.ColumnDef) or field.kind is None or field.name.upper() not in values:

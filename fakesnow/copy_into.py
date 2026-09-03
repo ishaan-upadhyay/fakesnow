@@ -17,6 +17,7 @@ from sqlglot import Expr, exp
 import fakesnow.transforms.stage as stage
 from fakesnow import logger
 from fakesnow.params import MutableParams, pop_qmark_param
+from fakesnow.transforms.transforms import coerce_semi_structured_targets
 
 Params = Sequence[Any] | dict[Any, Any]
 
@@ -102,6 +103,7 @@ def copy_into(
                 error_count = 1
                 first_error_message = "File was loaded before."
             else:
+                i = coerce_semi_structured_targets(i, duck_conn)
                 sql = i.sql(dialect="duckdb")
                 logger.log_sql(sql, params)
                 duck_conn.execute(sql, params)

@@ -140,7 +140,7 @@ def test_array_agg_within_group() -> None:
 
 
 def test_object_agg() -> None:
-    expected = "SELECT TO_JSON(MAP(LIST(key_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL), LIST(value_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL))) FROM test_table"  # noqa: E501
+    expected = "SELECT _FS_OBJECT_CONSTRUCT(CAST(LIST(key_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL) AS VARIANT[]), CAST(LIST(value_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL) AS VARIANT[]), FALSE) FROM test_table"  # noqa: E501
     assert (
         sqlglot.parse_one("SELECT OBJECT_AGG(key_col, value_col) FROM test_table")
         .transform(object_agg)
@@ -148,7 +148,7 @@ def test_object_agg() -> None:
         == expected
     )
 
-    expected = "SELECT TO_JSON(MAP(LIST(key_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL), LIST(value_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL))) AS obj FROM test_table GROUP BY id"  # noqa: E501
+    expected = "SELECT _FS_OBJECT_CONSTRUCT(CAST(LIST(key_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL) AS VARIANT[]), CAST(LIST(value_col) FILTER(WHERE NOT key_col IS NULL AND NOT value_col IS NULL) AS VARIANT[]), FALSE) AS obj FROM test_table GROUP BY id"  # noqa: E501
     assert (
         sqlglot.parse_one("SELECT OBJECT_AGG(key_col, value_col) AS obj FROM test_table GROUP BY id")
         .transform(object_agg)
@@ -643,7 +643,7 @@ def test_object_construct() -> None:
         )
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_CONSTRUCT(['a', 'b', 'c', 'd', NULL], [CAST(1 AS VARIANT), CAST('BBBB' AS VARIANT), CAST(NULL AS VARIANT), CAST(JSON('NULL') AS VARIANT), CAST('foo' AS VARIANT)], FALSE)"  # noqa: E501
+        == "SELECT _FS_OBJECT_CONSTRUCT([CAST('a' AS VARIANT), CAST('b' AS VARIANT), CAST('c' AS VARIANT), CAST('d' AS VARIANT), CAST(NULL AS VARIANT)], [CAST(1 AS VARIANT), CAST('BBBB' AS VARIANT), CAST(NULL AS VARIANT), CAST(JSON('NULL') AS VARIANT), CAST('foo' AS VARIANT)], FALSE)"  # noqa: E501
     )
 
     assert (
@@ -653,7 +653,7 @@ def test_object_construct() -> None:
         )
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_CONSTRUCT(['k1', 'k2', 'k3'], [CAST('v1' AS VARIANT), CAST(CASE WHEN CASE WHEN col IS NULL THEN 0 ELSE col END + 1 >= 2 THEN 'v2' ELSE NULL END AS VARIANT), CAST('v3' AS VARIANT)], FALSE)"  # noqa: E501
+        == "SELECT _FS_OBJECT_CONSTRUCT([CAST('k1' AS VARIANT), CAST('k2' AS VARIANT), CAST('k3' AS VARIANT)], [CAST('v1' AS VARIANT), CAST(CASE WHEN CASE WHEN col IS NULL THEN 0 ELSE col END + 1 >= 2 THEN 'v2' ELSE NULL END AS VARIANT), CAST('v3' AS VARIANT)], FALSE)"  # noqa: E501
     )
 
     assert (
@@ -663,7 +663,7 @@ def test_object_construct() -> None:
         )
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_CONSTRUCT(['a', 'b', 'c', 'd', NULL], [CAST(1 AS VARIANT), CAST('BBBB' AS VARIANT), CAST(CAST('00000000-0000-0000-0000-000000000000' AS UUID) AS VARIANT), CAST(JSON('NULL') AS VARIANT), CAST('foo' AS VARIANT)], TRUE)"  # noqa: E501
+        == "SELECT _FS_OBJECT_CONSTRUCT([CAST('a' AS VARIANT), CAST('b' AS VARIANT), CAST('c' AS VARIANT), CAST('d' AS VARIANT), CAST(NULL AS VARIANT)], [CAST(1 AS VARIANT), CAST('BBBB' AS VARIANT), CAST(CAST('00000000-0000-0000-0000-000000000000' AS UUID) AS VARIANT), CAST(JSON('NULL') AS VARIANT), CAST('foo' AS VARIANT)], TRUE)"  # noqa: E501
     )
 
     assert (
@@ -673,7 +673,7 @@ def test_object_construct() -> None:
         )
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_CONSTRUCT(['K1'], [CAST({'K2': 1} AS VARIANT)], FALSE)"
+        == "SELECT _FS_OBJECT_CONSTRUCT([CAST('K1' AS VARIANT)], [CAST(_FS_OBJECT_CONSTRUCT([CAST('K2' AS VARIANT)], [CAST(1 AS VARIANT)], FALSE) AS VARIANT)], FALSE)"  # noqa: E501
     )
 
 
