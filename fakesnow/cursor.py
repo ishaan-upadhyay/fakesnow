@@ -411,6 +411,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.indices_to_json_extract)
             .transform(transforms.variant_cast)
             .transform(transforms.variant_operators)
+            .transform(transforms.variant_relational_keys)
             .transform(transforms.json_extract_cast_as_varchar)
             .transform(transforms.json_extract_cased_as_varchar)
             .transform(transforms.json_extract_precedence)

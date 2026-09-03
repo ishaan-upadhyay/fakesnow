@@ -250,13 +250,17 @@ def _array_values(value: Any, *, coerce: bool = False) -> list[Any] | None:
     return [value] if coerce else None
 
 
+def _same_variant_value(left: Any, right: Any) -> bool:
+    return variant_key(left) == variant_key(right)
+
+
 def _array_contains(array: Any, value: Any) -> bool | None:
     values = _array_values(array)
     if values is None:
         return None if array is None else False
     if value is None:
         return True if any(is_undefined(item) or item is None for item in values) else None
-    return any(variant_eq(item, value) is True for item in values)
+    return any(_same_variant_value(item, value) for item in values)
 
 
 def _array_position(array: Any, value: Any) -> int | None:
@@ -267,7 +271,7 @@ def _array_position(array: Any, value: Any) -> int | None:
         if value is None:
             if is_undefined(item) or item is None:
                 return index
-        elif variant_eq(item, value) is True:
+        elif _same_variant_value(item, value):
             return index
     return None
 
@@ -323,7 +327,7 @@ def _array_distinct(array: Any) -> Any:
     ]
     result: list[Any] = []
     for value in [*ordinary, *sentinels]:
-        if not any(variant_eq(value, existing) is True for existing in result):
+        if not any(_same_variant_value(value, existing) for existing in result):
             result.append(value)
     return _array_output(result)
 
@@ -375,7 +379,7 @@ def _array_remove(array: Any, value: Any) -> Any:
     values = _array_values(array)
     if values is None or value is None:
         return None
-    return _array_output([item for item in values if variant_eq(item, value) is not True])
+    return _array_output([item for item in values if not _same_variant_value(item, value)])
 
 
 def _array_insert(array: Any, position: int | None, value: Any) -> Any:
@@ -419,7 +423,7 @@ def _array_except(left: Any, right: Any) -> Any:
         return None
     result = list(left_values)
     for value in right_values:
-        index = next((i for i, item in enumerate(result) if variant_eq(item, value) is True), None)
+        index = next((i for i, item in enumerate(result) if _same_variant_value(item, value)), None)
         if index is not None:
             result.pop(index)
     return _array_output(result)
@@ -433,7 +437,7 @@ def _array_intersection(left: Any, right: Any) -> Any:
     available = list(right_values)
     result: list[Any] = []
     for value in left_values:
-        index = next((i for i, item in enumerate(available) if variant_eq(item, value) is True), None)
+        index = next((i for i, item in enumerate(available) if _same_variant_value(item, value)), None)
         if index is not None:
             result.append(value)
             available.pop(index)
@@ -655,8 +659,8 @@ def _flatten_map_rows(
     ]
 
 
-def _key(value: Any) -> str:
-    return variant_key(value)
+def _key(value: Any) -> str | None:
+    return None if value is None else variant_key(value)
 
 
 def _object_json(value: Any) -> str | None:
