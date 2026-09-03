@@ -643,9 +643,7 @@ class FakeSnowflakeCursor:
             # snowflake reports this as an error rather than failing, message content may differ.
             msg = cast(str, e.args[0]).split("\n")[0]
             structured_targets = [
-                data_type
-                for data_type in transformed.find_all(exp.DataType)
-                if data_type.args.get("_fs_structured")
+                data_type for data_type in transformed.find_all(exp.DataType) if data_type.args.get("_fs_structured")
             ]
             if structured_targets:
                 numeric_map_key = any(
@@ -796,10 +794,12 @@ class FakeSnowflakeCursor:
             assert catalog and schema
             self._duck_conn.execute(info_schema.insert_text_lengths_sql(catalog, schema, table.name, text_lengths))
 
-        if (structured_types := cast(
-            list[tuple[str, str, str, str]],
-            transformed.args.get("_fs_structured_types"),
-        )) and (table := transformed.find(exp.Table)):
+        if (
+            structured_types := cast(
+                list[tuple[str, str, str, str]],
+                transformed.args.get("_fs_structured_types"),
+            )
+        ) and (table := transformed.find(exp.Table)):
             catalog = table.catalog or self._conn.database
             schema = table.db or self._conn.schema
             assert catalog and schema

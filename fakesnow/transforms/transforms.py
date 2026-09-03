@@ -2124,8 +2124,7 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
     except Exception:
         return expression
     target_types = {
-        name.upper(): exp.DataType.build(column_type, dialect="duckdb")
-        for name, column_type, *_ in described
+        name.upper(): exp.DataType.build(column_type, dialect="duckdb") for name, column_type, *_ in described
     }
 
     if isinstance(expression, exp.Update):
@@ -2156,9 +2155,7 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
             value = item.this if isinstance(item, exp.Alias) else item
             coerced = _coerce_semi_structured_value(value, target)
             projections.append(
-                exp.Alias(this=coerced, alias=item.args["alias"].copy())
-                if isinstance(item, exp.Alias)
-                else coerced
+                exp.Alias(this=coerced, alias=item.args["alias"].copy()) if isinstance(item, exp.Alias) else coerced
             )
         source.set("expressions", projections)
     elif isinstance(source, exp.Values):
