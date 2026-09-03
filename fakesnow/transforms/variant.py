@@ -157,6 +157,14 @@ def _as_variant(expression: Expr) -> Expr:
     )
 
 
+def _variant_key(expression: Expr) -> Expr:
+    return exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression)])
+
+
+def _first_variant(expression: Expr) -> Expr:
+    return exp.Anonymous(this="FIRST", expressions=[expression.copy()])
+
+
 # sqlglot parses Snowflake's TRY_* conversions as these nodes with safe=True. Other nodes carry a
 # safe arg for unrelated reasons, eg: DPipe for concatenation, so they must not be treated as TRY_*.
 _TRY_CONVERSIONS = (
@@ -314,35 +322,191 @@ def variant_operators(expression: Expr) -> Expr:
             _contains_variant_expression(expression.this)
             and _contains_variant_expression(expression.expression)
         ) or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
-        equals = exp.Anonymous(
-            this="_fs_variant_eq" if both_variant else "_fs_variant_eq_sql",
-            expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
+        equals = (
+            exp.EQ(
+                this=_variant_key(expression.this),
+                expression=_variant_key(expression.expression),
+            )
+            if both_variant
+            else exp.Anonymous(
+                this="_fs_variant_eq_sql",
+                expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
+            )
         )
         return exp.Not(this=equals) if isinstance(expression, exp.NEQ) else equals
 
     if isinstance(expression, (exp.GT, exp.GTE, exp.LT, exp.LTE)) and (
         _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
-        left = exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression.this)])
-        right = exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression.expression)])
+        left = _variant_key(expression.this)
+        right = _variant_key(expression.expression)
         return expression.__class__(this=left, expression=right)
 
     if isinstance(expression, exp.In) and _contains_variant_expression(expression.this):
-        comparisons = [
+        keyed = expression.copy()
+        keyed.set("this", _variant_key(expression.this))
+        keyed.set("expressions", [_variant_key(item) for item in expression.expressions])
+        keyed.set("not", None)
+        coerced = [
             exp.Anonymous(
                 this="_fs_variant_eq_sql",
                 expressions=[_as_variant(expression.this), _as_variant(item)],
             )
             for item in expression.expressions
         ]
-        if not comparisons:
-            return expression
-        result = comparisons[0]
-        for comparison in comparisons[1:]:
-            result = exp.Or(this=result, expression=comparison)
-        return exp.Not(this=result) if expression.args.get("not") else result
+        matches: Expr = keyed
+        for comparison in coerced:
+            matches = exp.Or(this=matches, expression=comparison)
+        return exp.Not(this=matches) if expression.args.get("not") else matches
 
     return expression
+
+
+def variant_relational_keys(expression: Expr) -> Expr:
+    """Use Snowflake VARIANT keys where DuckDB requires comparable values."""
+
+    if isinstance(expression, exp.Window):
+        result = expression.copy()
+        result.set(
+            "partition_by",
+            [
+                _variant_key(item) if _contains_variant_expression(item) else item.copy()
+                for item in expression.args.get("partition_by") or []
+            ],
+        )
+        order = expression.args.get("order")
+        if isinstance(order, exp.Order):
+            ordered = order.copy()
+            ordered_expressions: list[Expr] = []
+            for item in order.expressions:
+                if not isinstance(item, exp.Ordered):
+                    ordered_expressions.append(item.copy())
+                    continue
+                ordered_expression = item.copy()
+                ordered_expression.set(
+                    "this",
+                    _variant_key(item.this) if _contains_variant_expression(item.this) else item.this.copy(),
+                )
+                ordered_expressions.append(ordered_expression)
+            ordered.set(
+                "expressions",
+                ordered_expressions,
+            )
+            result.set("order", ordered)
+        return result
+
+    if not isinstance(expression, exp.Select):
+        return expression
+
+    result = expression.copy()
+    projections = list(result.expressions)
+    representatives: dict[str, Expr] = {}
+    group = result.args.get("group")
+    if group:
+        grouped = group.copy()
+        group_expressions: list[Expr] = []
+        for item in group.expressions:
+            if _contains_variant_expression(item):
+                representatives[item.sql()] = item.copy()
+                group_expressions.append(_variant_key(item))
+            else:
+                group_expressions.append(item.copy())
+        grouped.set("expressions", group_expressions)
+        result.set("group", grouped)
+
+        rewritten: list[Expr] = []
+        for item in projections:
+            source = item.this if isinstance(item, exp.Alias) else item
+            representative = representatives.get(source.sql())
+            if representative is None:
+                output_name = item.args.get("_fs_source_output_name")
+                rewritten.append(
+                    exp.Alias(this=item.copy(), alias=exp.to_identifier(output_name, quoted=True))
+                    if output_name and not isinstance(item, exp.Alias)
+                    else item.copy()
+                )
+                continue
+            first = _first_variant(representative)
+            alias = item.args["alias"].copy() if isinstance(item, exp.Alias) else exp.to_identifier(item.alias_or_name)
+            rewritten.append(exp.Alias(this=first, alias=alias))
+        projections = rewritten
+        result.set("expressions", projections)
+
+    if result.args.get("distinct"):
+        distinct_groups: list[Expr] = []
+        rewritten = []
+        for item in projections:
+            source = item.this if isinstance(item, exp.Alias) else item
+            if _contains_variant_expression(source):
+                representatives[item.alias_or_name.upper()] = source.copy()
+                distinct_groups.append(_variant_key(source))
+                first = _first_variant(source)
+                alias = (
+                    item.args["alias"].copy()
+                    if isinstance(item, exp.Alias)
+                    else exp.to_identifier(item.alias_or_name)
+                )
+                rewritten.append(exp.Alias(this=first, alias=alias))
+            else:
+                distinct_groups.append(source.copy())
+                rewritten.append(item.copy())
+        if representatives:
+            result.set("distinct", None)
+            result.set("expressions", rewritten)
+            result.set("group", exp.Group(expressions=distinct_groups))
+            projections = rewritten
+
+    if order := result.args.get("order"):
+        unsupported_order_types = {
+            exp.DataType.Type.BINARY,
+            exp.DataType.Type.DATE,
+            exp.DataType.Type.TIME,
+            exp.DataType.Type.TIMESTAMP,
+            exp.DataType.Type.TIMESTAMPLTZ,
+            exp.DataType.Type.TIMESTAMPNTZ,
+            exp.DataType.Type.TIMESTAMPTZ,
+        }
+        if any(
+            isinstance(value.this, (exp.Cast, exp.ToBinary))
+            and (
+                isinstance(value.this, exp.ToBinary)
+                or (isinstance(value.this, exp.Cast) and value.this.to.this in unsupported_order_types)
+            )
+            for value in result.find_all(exp.ToVariant)
+        ):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="SQL compilation error:",
+                errno=2014,
+                sqlstate="22000",
+            )
+        rewritten_order = order.copy()
+        ordered_items: list[Expr] = []
+        for item in order.expressions:
+            target = item.this
+            use_key = _contains_variant_expression(target)
+            if isinstance(target, exp.Literal) and not target.is_string:
+                index = int(target.this) - 1
+                if 0 <= index < len(projections):
+                    projection = projections[index]
+                    source = projection.this if isinstance(projection, exp.Alias) else projection
+                    if _contains_variant_expression(source):
+                        target = source
+                        use_key = True
+            elif isinstance(target, exp.Column):
+                representative = representatives.get(target.name.upper()) or representatives.get(target.sql())
+                if representative is not None:
+                    target = _first_variant(representative)
+                    use_key = True
+            if use_key:
+                ordered_item = item.copy()
+                ordered_item.set("this", _variant_key(target))
+                ordered_items.append(ordered_item)
+            else:
+                ordered_items.append(item.copy())
+        rewritten_order.set("expressions", ordered_items)
+        result.set("order", rewritten_order)
+
+    return result
 
 
 def parse_json(expression: Expr) -> Expr:
