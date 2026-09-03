@@ -7,7 +7,7 @@ import snowflake.connector
 
 from tests.parity import compare_results, load_fixtures, run_fakesnow, run_snowflake
 
-CURRENT_PR = 2
+CURRENT_PR = 3
 
 
 def _params() -> list[Any]:

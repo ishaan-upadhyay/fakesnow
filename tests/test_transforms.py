@@ -101,7 +101,7 @@ def test_array_size() -> None:
 def test_array_agg() -> None:
     assert (
         sqlglot.parse_one("SELECT ARRAY_AGG(name) AS names FROM table1").transform(array_agg).sql(dialect="duckdb")
-        == "SELECT ARRAY_AGG(name) AS names FROM table1"
+        == "SELECT ARRAY_AGG(CAST(name AS VARIANT)) AS names FROM table1"
     )
 
     assert (
@@ -110,7 +110,8 @@ def test_array_agg() -> None:
         )
         .transform(array_agg)
         .sql(dialect="duckdb")
-        == "SELECT DISTINCT ID, ANOTHER, ARRAY_AGG(DISTINCT COL) OVER (PARTITION BY ID) AS COLS FROM TEST"
+        == "SELECT DISTINCT ID, ANOTHER, ARRAY_AGG(DISTINCT CAST(COL AS VARIANT)) "
+        "OVER (PARTITION BY ID) AS COLS FROM TEST"
     )
 
 
@@ -121,7 +122,8 @@ def test_array_agg_within_group() -> None:
         )
         .transform(array_agg_within_group)
         .sql(dialect="duckdb")
-        == "SELECT someid, ARRAY_AGG(DISTINCT id ORDER BY id NULLS FIRST) AS ids FROM example GROUP BY someid"
+        == "SELECT someid, ARRAY_AGG(DISTINCT id ORDER BY id NULLS FIRST) "
+        "FILTER(WHERE id IS NOT NULL) AS ids FROM example GROUP BY someid"
     )
 
     assert (
@@ -130,7 +132,8 @@ def test_array_agg_within_group() -> None:
         )
         .transform(array_agg_within_group)
         .sql(dialect="duckdb")
-        == "SELECT someid, ARRAY_AGG(id ORDER BY id DESC) AS ids FROM example WHERE NOT someid IS NULL GROUP BY someid"
+        == "SELECT someid, ARRAY_AGG(id ORDER BY id DESC) FILTER(WHERE id IS NOT NULL) "
+        "AS ids FROM example WHERE NOT someid IS NULL GROUP BY someid"
     )
 
     assert (

@@ -306,11 +306,14 @@ def variant_operators(expression: Expr) -> Expr:
         return exp.Not(this=boolean_value(expression.this))
 
     if isinstance(expression, (exp.EQ, exp.NEQ)) and (
-        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this)
+        or _contains_variant_expression(expression.expression)
+        or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
     ):
-        both_variant = _contains_variant_expression(expression.this) and _contains_variant_expression(
-            expression.expression
-        )
+        both_variant = (
+            _contains_variant_expression(expression.this)
+            and _contains_variant_expression(expression.expression)
+        ) or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
         equals = exp.Anonymous(
             this="_fs_variant_eq" if both_variant else "_fs_variant_eq_sql",
             expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
@@ -574,7 +577,7 @@ def variant_functions(expression: Expr) -> Expr:
                 [text_value(argument) for argument in expression.expressions],
             )
             return result
-    if isinstance(expression, exp.Count) and _contains_variant_expression(expression.this):
+    if isinstance(expression, exp.Count) and not isinstance(expression.this, exp.Star):
         if isinstance(expression.this, exp.Distinct):
             return exp.Count(
                 this=exp.Distinct(expressions=[strip_json_null(argument) for argument in expression.this.expressions])
@@ -601,6 +604,11 @@ def variant_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.ToChar) and isinstance(value, Expr) and _contains_variant_expression(value):
         return exp.Anonymous(
             this="_fs_variant_to_varchar",
+            expressions=[_as_variant(value)],
+        )
+    if isinstance(expression, exp.ToChar) and isinstance(value, Expr) and _is_array_expression(value):
+        return exp.Anonymous(
+            this="_fs_sf_json_compact",
             expressions=[_as_variant(value)],
         )
 
@@ -787,7 +795,9 @@ def variant_functions(expression: Expr) -> Expr:
 
 
 def variant_cast(expression: Expr) -> Expr:
-    if not isinstance(expression, exp.Cast) or not _is_variant_expression(expression.this):
+    if not isinstance(expression, exp.Cast) or not (
+        _is_variant_expression(expression.this) or _is_array_expression(expression.this)
+    ):
         return expression
 
     target = expression.to
@@ -795,6 +805,12 @@ def variant_cast(expression: Expr) -> Expr:
         this=expression.this.copy(),
         to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
     )
+    if _is_array_expression(expression.this) and target.this in {
+        exp.DataType.Type.VARCHAR,
+        exp.DataType.Type.TEXT,
+        exp.DataType.Type.NVARCHAR,
+    }:
+        return exp.Anonymous(this="_fs_sf_json_compact", expressions=[variant_value])
     if target.this == exp.DataType.Type.ARRAY:
         return exp.Anonymous(this="_fs_variant_to_array", expressions=[variant_value])
     if target.this == exp.DataType.Type.MAP:
