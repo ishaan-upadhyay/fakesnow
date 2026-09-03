@@ -826,8 +826,8 @@ def variant_cast(expression: Expr) -> Expr:
         return exp.Anonymous(this="_fs_variant_to_bigint", expressions=[variant_value.copy()])
 
     if target.this == exp.DataType.Type.DECIMAL:
-        precision = target.expressions[0].this if target.expressions else exp.Literal.number(38)
-        scale = target.expressions[1].this if len(target.expressions) > 1 else exp.Literal.number(0)
+        precision = target.expressions[0] if target.expressions else exp.Literal.number(38)
+        scale = target.expressions[1] if len(target.expressions) > 1 else exp.Literal.number(0)
         converted = exp.Anonymous(
             this="_fs_variant_to_decimal",
             expressions=[variant_value, precision.copy(), scale.copy()],
