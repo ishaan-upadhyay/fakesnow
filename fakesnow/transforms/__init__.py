@@ -81,6 +81,7 @@ from fakesnow.transforms.transforms import (
     values_columns as values_columns,
 )
 from fakesnow.transforms.variant import (
+    capture_source_output_names as capture_source_output_names,
     parse_json as parse_json,
     preserve_output_names as preserve_output_names,
     semi_structured_types as semi_structured_types,

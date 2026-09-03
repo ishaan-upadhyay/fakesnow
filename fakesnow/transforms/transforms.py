@@ -724,6 +724,7 @@ def indices_to_json_extract(expression: Expr) -> Expr:
     DuckDB VARIANT arrays are one-based while Snowflake ARRAY/VARIANT paths are
     zero-based. Object keys use the same bracket syntax in both engines.
     """
+
     def bracket(this: Expr, index: Expr) -> Expr:
         if isinstance(index, exp.Literal) and not index.is_string:
             try:
@@ -858,6 +859,16 @@ def indices_to_json_extract(expression: Expr) -> Expr:
         )
 
     if (
+        isinstance(expression, exp.Dot)
+        and isinstance(expression.this, exp.Bracket)
+        and isinstance(expression.expression, exp.Identifier)
+    ):
+        return bracket(
+            expression.this.copy().transform(indices_to_json_extract),
+            exp.Literal.string(expression.expression.name),
+        )
+
+    if (
         isinstance(expression, exp.Bracket)
         and len(expression.expressions) == 1
         and isinstance(expression.expressions[0], exp.Neg)
@@ -902,8 +913,14 @@ def indices_to_json_extract(expression: Expr) -> Expr:
         and index.this
     ):
         if index.is_string:
-            return bracket(expression.this.copy(), index.copy())
-        return bracket(expression.this.copy(), index)
+            return bracket(
+                expression.this.copy().transform(indices_to_json_extract),
+                index.copy(),
+            )
+        return bracket(
+            expression.this.copy().transform(indices_to_json_extract),
+            index,
+        )
 
     return expression
 
@@ -1589,6 +1606,11 @@ def upper_case_unquoted_identifiers(expression: Expr) -> Expr:
         isinstance(expression, exp.Identifier)
         and not expression.quoted
         and isinstance(expression.this, str)
+        and not (
+            isinstance(expression.parent, exp.Dot)
+            and expression.parent.expression is expression
+            and isinstance(expression.parent.this, exp.Bracket)
+        )
         and not (
             isinstance(expression.parent, exp.PropertyEQ)
             and expression.parent.this is expression
