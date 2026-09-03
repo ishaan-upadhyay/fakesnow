@@ -15,6 +15,7 @@ from fakesnow.transforms import (
     dateadd_date_cast,
     dateadd_string_literal_timestamp_cast,
     datediff_string_literal_timestamp_cast,
+    decimal_arithmetic_precision,
     describe_table,
     drop_schema_cascade,
     extract_comment_on_columns,
@@ -375,6 +376,39 @@ def test_datediff_string_literal_timestamp_cast() -> None:
         .transform(datediff_string_literal_timestamp_cast)
         .sql(dialect="duckdb")
         == "SELECT DATE_DIFF('MINUTE', c1, c2) AS D"
+    )
+
+
+def test_decimal_arithmetic_precision() -> None:
+    # snowflake returns DECIMAL(11, 2), whereas duckdb widens to DECIMAL(13, 2)
+    assert (
+        sqlglot.parse_one("SELECT c::DECIMAL(10,2) + 1 AS R", read="snowflake")
+        .transform(decimal_arithmetic_precision)
+        .sql(dialect="duckdb")
+        == "SELECT CAST(CAST(c AS DECIMAL(10, 2)) + 1 AS DECIMAL(11, 2)) AS R"
+    )
+
+    assert (
+        sqlglot.parse_one("SELECT c::DECIMAL(10,2) - 1.005 AS R", read="snowflake")
+        .transform(decimal_arithmetic_precision)
+        .sql(dialect="duckdb")
+        == "SELECT CAST(CAST(c AS DECIMAL(10, 2)) - 1.005 AS DECIMAL(12, 3)) AS R"
+    )
+
+    # integer arithmetic is unchanged
+    assert (
+        sqlglot.parse_one("SELECT c::DECIMAL(10,0) + 1 AS R", read="snowflake")
+        .transform(decimal_arithmetic_precision)
+        .sql(dialect="duckdb")
+        == "SELECT CAST(c AS DECIMAL(10, 0)) + 1 AS R"
+    )
+
+    # operands without a statically known type are unchanged
+    assert (
+        sqlglot.parse_one("SELECT c::DECIMAL(10,2) + d AS R", read="snowflake")
+        .transform(decimal_arithmetic_precision)
+        .sql(dialect="duckdb")
+        == "SELECT CAST(c AS DECIMAL(10, 2)) + d AS R"
     )
 
 

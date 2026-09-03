@@ -105,6 +105,84 @@ def _as_variant(expression: Expr) -> Expr:
     )
 
 
+# sqlglot parses Snowflake's TRY_* conversions as these nodes with safe=True. Other nodes carry a
+# safe arg for unrelated reasons, eg: DPipe for concatenation, so they must not be treated as TRY_*.
+_TRY_CONVERSIONS = (
+    exp.Cast,
+    exp.StrToDate,
+    exp.StrToTime,
+    exp.ToBinary,
+    exp.ToBoolean,
+    exp.ToDouble,
+    exp.ToNumber,
+    exp.TsOrDsToDate,
+    exp.TsOrDsToTime,
+)
+
+
+def _is_array_expression(expression: Expr) -> bool:
+    return isinstance(expression, exp.Array) or (
+        isinstance(expression, exp.Cast)
+        and isinstance(expression.to, exp.DataType)
+        and expression.to.this == exp.DataType.Type.ARRAY
+    )
+
+
+def _branch_values(expression: Expr) -> list[Expr]:
+    """The values a CASE or IFF can return, ie: the branches Snowflake unifies into one type."""
+
+    if isinstance(expression, exp.If):
+        return [value for value in (expression.args.get("true"), expression.args.get("false")) if value is not None]
+    if isinstance(expression, exp.Case):
+        values = [branch.args["true"] for branch in expression.args.get("ifs") or []]
+        if default := expression.args.get("default"):
+            values.append(default)
+        return values
+    return []
+
+
+def _convert_branches(expression: Expr, function: str) -> Expr:
+    """Pass every variant branch of a CASE or IFF through function."""
+
+    def converted(value: Expr) -> Expr:
+        if not _contains_variant_expression(value):
+            return value.copy()
+        return exp.Anonymous(this=function, expressions=[_as_variant(value)])
+
+    result = expression.copy()
+    if isinstance(result, exp.If):
+        for key in ("true", "false"):
+            if (value := result.args.get(key)) is not None:
+                result.set(key, converted(value))
+        return result
+    for branch in result.args.get("ifs") or []:
+        branch.set("true", converted(branch.args["true"]))
+    if (default := result.args.get("default")) is not None:
+        result.set("default", converted(default))
+    return result
+
+
+def _zeroifnull_argument(expression: Expr) -> Expr | None:
+    """The argument of ZEROIFNULL, which sqlglot parses as IFF(arg IS NULL, 0, arg)."""
+
+    if not isinstance(expression, exp.If):
+        return None
+    predicate = expression.this
+    true = expression.args.get("true")
+    false = expression.args.get("false")
+    if (
+        isinstance(predicate, exp.Is)
+        and isinstance(predicate.expression, exp.Null)
+        and isinstance(true, exp.Literal)
+        and not true.is_string
+        and true.this == "0"
+        and false is not None
+        and predicate.this == false
+    ):
+        return false
+    return None
+
+
 def variant_operators(expression: Expr) -> Expr:
     def numeric_value(value: Expr) -> Expr:
         if not _contains_variant_expression(value):
@@ -268,13 +346,8 @@ def typeof_fn(expression: Expr) -> Expr:
                 expression.this.this,
                 *expression.this.expressions,
             ]
-        elif isinstance(expression.this, exp.Case):
-            arguments = [
-                branch.args["true"]
-                for branch in expression.this.args.get("ifs") or []
-            ]
-            if default := expression.this.args.get("default"):
-                arguments.append(default)
+        elif isinstance(expression.this, (exp.Case, exp.If)):
+            arguments = _branch_values(expression.this)
         if arguments and any(
             _contains_variant_expression(argument) for argument in arguments
         ) and any(
@@ -305,7 +378,8 @@ def variant_functions(expression: Expr) -> Expr:
         )
 
     if (
-        expression.args.get("safe")
+        isinstance(expression, _TRY_CONVERSIONS)
+        and expression.args.get("safe")
         and isinstance(value, Expr)
         and _contains_variant_expression(value)
     ):
@@ -314,6 +388,32 @@ def variant_functions(expression: Expr) -> Expr:
             errno=1065,
             sqlstate="22023",
         )
+
+    if (argument := _zeroifnull_argument(expression)) is not None and _contains_variant_expression(argument):
+        # ZEROIFNULL converts its argument to a number, so a VARIANT argument returns REAL
+        return exp.Coalesce(
+            this=exp.Anonymous(
+                this="_fs_variant_to_double",
+                expressions=[_as_variant(argument)],
+            ),
+            expressions=[exp.Literal.number(0)],
+        )
+
+    if branch_values := _branch_values(expression):
+        # Snowflake unifies the branch types of a CASE or IFF. VARIANT absorbs any scalar, but
+        # ARRAY has no common type with a scalar, so mixing the two is a compilation error.
+        if any(_is_array_expression(branch) for branch in branch_values) and any(
+            isinstance(branch, exp.Literal) for branch in branch_values
+        ):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="SQL compilation error:",
+                errno=1038,
+                sqlstate="22023",
+            )
+        if any(_contains_variant_expression(branch) for branch in branch_values) and any(
+            isinstance(branch, exp.Literal) and branch.is_string for branch in branch_values
+        ):
+            return _convert_branches(expression, "_fs_variant_to_varchar")
 
     if isinstance(expression, exp.ToBinary) and isinstance(
         value,
