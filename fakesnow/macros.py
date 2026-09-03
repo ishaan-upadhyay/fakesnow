@@ -4,9 +4,9 @@ from string import Template
 # see https://docs.snowflake.com/en/sql-reference/functions/flatten.html
 FS_FLATTEN = Template(
     """
-CREATE OR REPLACE MACRO ${catalog}._fs_flatten(input, path_arg, is_outer, is_recursive, mode_arg) AS TABLE
+CREATE OR REPLACE MACRO ${catalog}._fs_flatten(input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1) AS TABLE
     SELECT
-        1::UBIGINT AS SEQ,
+        e.seq AS SEQ,
         e.key AS KEY,
         e.path AS PATH,
         e.index AS INDEX,
@@ -19,11 +19,55 @@ CREATE OR REPLACE MACRO ${catalog}._fs_flatten(input, path_arg, is_outer, is_rec
                 path_arg,
                 is_outer,
                 is_recursive,
-                mode_arg
+                mode_arg,
+                seq_arg::UBIGINT
             ),
             recursive := true
         )
-    ) AS e(key, path, index, value, this)
+    ) AS e(seq, key, path, index, value, this)
+    """
+)
+
+FS_FLATTEN_ARRAY = Template(
+    """
+CREATE OR REPLACE MACRO ${catalog}._fs_flatten_array(
+    input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1
+) AS TABLE
+    SELECT
+        seq_arg::UBIGINT AS SEQ,
+        NULL::VARCHAR AS KEY,
+        (CASE WHEN path_arg = '' THEN '' ELSE path_arg END) || '[' || (e.index - 1) || ']' AS PATH,
+        (e.index - 1)::BIGINT AS INDEX,
+        e.value AS VALUE,
+        input AS THIS
+    FROM UNNEST(input) WITH ORDINALITY AS e(value, index)
+    WHERE UPPER(mode_arg) IN ('ARRAY', 'BOTH')
+    """
+)
+
+FS_FLATTEN_MAP = Template(
+    """
+CREATE OR REPLACE MACRO ${catalog}._fs_flatten_map(
+    input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1
+) AS TABLE
+    SELECT
+        e.seq AS SEQ,
+        e.key AS KEY,
+        e.path AS PATH,
+        e.index AS INDEX,
+        e.value AS VALUE,
+        e.this AS THIS
+    FROM (
+        SELECT UNNEST(
+            _fs_variant_flatten_map_rows(
+                input,
+                path_arg,
+                mode_arg,
+                seq_arg::UBIGINT
+            ),
+            recursive := true
+        )
+    ) AS e(seq, key, path, index, value, this)
     """
 )
 
@@ -109,6 +153,8 @@ CREATE OR REPLACE MACRO ${catalog}._fs_haversine(lat1, lon1, lat2, lon2) AS (
 def creation_sql(catalog: str) -> str:
     return f"""
         {FS_FLATTEN.substitute(catalog=catalog)};
+        {FS_FLATTEN_ARRAY.substitute(catalog=catalog)};
+        {FS_FLATTEN_MAP.substitute(catalog=catalog)};
         {FS_HAVERSINE.substitute(catalog=catalog)};
         {FS_OBJECT_CONSTRUCT.substitute(catalog=catalog)};
         {FS_OBJECT_CONSTRUCT_STAR.substitute(catalog=catalog)};
