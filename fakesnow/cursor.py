@@ -204,6 +204,7 @@ class FakeSnowflakeCursor:
                     variant_text = any(
                         function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
+                    hash_result = any(function.name.upper() == "HASH" for function in source.find_all(exp.Anonymous))
                     fixed_width_text = isinstance(source, exp.MD5)
                     if (
                         index < len(rows)
@@ -213,6 +214,10 @@ class FakeSnowflakeCursor:
                     ):
                         row = list(rows[index])
                         row[1] = "VARCHAR(134217728)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and hash_result:
+                        row = list(rows[index])
+                        row[1] = "DECIMAL(19,0)"
                         rows[index] = tuple(row)
                     elif index < len(rows) and isinstance(
                         source,
@@ -402,6 +407,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.timestamp_ntz)
             .transform(transforms.float_to_double)
             .transform(transforms.integer_precision)
+            .transform(transforms.hash_fn)
             .transform(transforms.extract_text_length)
             .transform(transforms.sample)
             .transform(transforms.array_size)

@@ -8,7 +8,15 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 
 from fakesnow.variant.render import _map_items, sf_json_compact
-from fakesnow.variant.sentinels import BIGINT_PREFIX, is_bigint, is_json_null, is_nan, is_undefined
+from fakesnow.variant.sentinels import (
+    BIGINT_PREFIX,
+    DECIMAL_PREFIX,
+    is_bigint,
+    is_decimal,
+    is_json_null,
+    is_nan,
+    is_undefined,
+)
 
 _KIND_ORDER = {
     "BOOLEAN": 0,
@@ -28,7 +36,7 @@ def _kind(value: Any) -> str:
         return "JSON_NULL"
     if is_undefined(value):
         return "SQL_NULL"
-    if is_bigint(value):
+    if is_bigint(value) or is_decimal(value):
         return "NUMBER"
     if isinstance(value, bool):
         return "BOOLEAN"
@@ -48,6 +56,8 @@ def _kind(value: Any) -> str:
 def _numeric_key(value: Any) -> Decimal | float:
     if is_bigint(value):
         return Decimal(value.removeprefix(BIGINT_PREFIX))
+    if is_decimal(value):
+        return Decimal(value.removeprefix(DECIMAL_PREFIX))
     if is_nan(value):
         return Decimal("NaN")
     if isinstance(value, Decimal):
