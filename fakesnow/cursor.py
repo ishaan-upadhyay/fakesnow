@@ -280,6 +280,7 @@ class FakeSnowflakeCursor:
                 return self
 
             expression = parse_one(command, read="snowflake")
+            transforms.capture_source_output_names(expression, command)
             self.check_db_and_schema(expression)
 
             for statement in self._transform_explode(expression):
@@ -784,14 +785,16 @@ class FakeSnowflakeCursor:
         if self._arrow_table is None:
             # mimic snowflake python connector error type
             raise TypeError("No open result set")
-        tslice = self._arrow_table.slice(offset=self._arrow_table_fetch_index or 0, length=size).to_pylist()
+        tslice = self._arrow_table.slice(offset=self._arrow_table_fetch_index or 0, length=size)
 
         if self._arrow_table_fetch_index is None:
             self._arrow_table_fetch_index = size
         else:
             self._arrow_table_fetch_index += size
 
-        return tslice if self._use_dict_result else [tuple(d.values()) for d in tslice]
+        if self._use_dict_result:
+            return tslice.to_pylist()
+        return list(zip(*(column.to_pylist() for column in tslice.columns), strict=True))
 
     def get_result_batches(self) -> list[ResultBatch] | None:
         if self._arrow_table is None:

@@ -1,8 +1,51 @@
 from __future__ import annotations
 
 import snowflake.connector
-from sqlglot import errors, exp
+from sqlglot import Dialect, errors, exp
 from sqlglot.expressions import Expr
+from sqlglot.tokenizer_core import TokenType
+
+
+def capture_source_output_names(expression: Expr, sql: str) -> None:
+    """Retain top-level SELECT expressions before sqlglot normalizes paths."""
+    if not isinstance(expression, exp.Select):
+        return
+
+    tokens = Dialect.get_or_raise("snowflake").tokenizer().tokenize(sql)
+    select_index: int | None = None
+    depth = 0
+    for index, token in enumerate(tokens):
+        if token.token_type == TokenType.L_PAREN:
+            depth += 1
+        elif token.token_type == TokenType.R_PAREN:
+            depth -= 1
+        elif depth == 0 and token.token_type == TokenType.SELECT:
+            select_index = index
+            break
+    if select_index is None:
+        return
+
+    projections: list[str] = []
+    start = tokens[select_index].end + 1
+    depth = 0
+    for token in tokens[select_index + 1 :]:
+        if token.token_type == TokenType.L_PAREN:
+            depth += 1
+        elif token.token_type == TokenType.R_PAREN:
+            depth -= 1
+        elif depth == 0 and token.token_type == TokenType.COMMA:
+            projections.append(sql[start : token.start].strip())
+            start = token.end + 1
+        elif depth == 0 and token.token_type in {TokenType.FROM, TokenType.SEMICOLON}:
+            projections.append(sql[start : token.start].strip())
+            break
+    else:
+        projections.append(sql[start:].strip())
+
+    if len(projections) != len(expression.expressions):
+        return
+    for item, output_name in zip(expression.expressions, projections, strict=True):
+        item.args["_fs_source_output_name"] = output_name.upper()
 
 
 def _path_cast_output_name(expression: Expr) -> str | None:
@@ -53,7 +96,9 @@ def preserve_output_names(expression: Expr) -> Expr:
         ) and not isinstance(item, (exp.Is, exp.EQ, exp.NEQ, exp.GT, exp.GTE, exp.LT, exp.LTE)):
             continue
         try:
-            output_name = _path_cast_output_name(item) or item.sql(dialect="snowflake")
+            output_name = (
+                item.args.get("_fs_source_output_name") or _path_cast_output_name(item) or item.sql(dialect="snowflake")
+            )
         except (NotImplementedError, ValueError, errors.UnsupportedError):
             continue
         internal_name = f"__FS_VARIANT_COL_{index}"
