@@ -1,0 +1,1436 @@
+{
+  "name": "misc",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "parse_json_a_1_a_parse_json_a_1_a",
+      "sql": "SELECT PARSE_JSON('{\"a\":1}'):a = PARSE_JSON('{\"a\":1}'):a AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_parse_json_1_2_1_7",
+      "sql": "SELECT GET(PARSE_JSON('[1,2]'), 1.7) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_2_1_7",
+      "sql": "SELECT PARSE_JSON('[1,2]')[1.7] AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_2_1",
+      "sql": "SELECT PARSE_JSON('[1,2]')['1'] AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_x_1",
+      "sql": "SELECT PARSE_JSON('{\"1\":\"x\"}')[1] AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_b_1_a_b",
+      "sql": "SELECT PARSE_JSON('{\"a\":{\"b\":1}}'):a.b AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_b_1_a_b_2",
+      "sql": "SELECT PARSE_JSON('{\"a\":{\"b\":1}}'):a:b AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_b_1_a_b_3",
+      "sql": "SELECT PARSE_JSON('{\"a\":{\"b\":1}}')['a']['b'] AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_b_1_a_b_4",
+      "sql": "SELECT PARSE_JSON('{\"a b\":1}'):\"a b\" AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_1_a",
+      "sql": "SELECT PARSE_JSON('{\"A\":1}'):A AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_1_a_2",
+      "sql": "SELECT PARSE_JSON('{\"A\":1}'):a AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_1_a_3",
+      "sql": "SELECT PARSE_JSON('{\"a\":1}'):A AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "system_typeof_parse_json_1_a",
+      "sql": "SELECT SYSTEM$TYPEOF(PARSE_JSON('1'):a) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "VARIANT[LOB]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_parse_json_a_1",
+      "sql": "SELECT TO_VARIANT(PARSE_JSON('{\"a\":1}')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_array_to_array_1",
+      "sql": "SELECT TO_ARRAY(TO_ARRAY(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_to_variant_1",
+      "sql": "SELECT TO_VARIANT(TO_VARIANT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct_a_object_construct_b_1_50",
+      "sql": "SELECT OBJECT_CONSTRUCT('a', OBJECT_CONSTRUCT('b', 1.50)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": {\n    \"b\": 1.5\n  }\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_object_construct_a_1_50_array_construct_1_5",
+      "sql": "SELECT ARRAY_CONSTRUCT(OBJECT_CONSTRUCT('a', 1.50), ARRAY_CONSTRUCT(1.5::DOUBLE)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1.5\n  },\n  [\n    1.500000000000000e+00\n  ]\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_array_construct_null",
+      "sql": "SELECT ARRAY_CONSTRUCT(ARRAY_CONSTRUCT(NULL)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  [\n    undefined\n  ]\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_parse_json_null",
+      "sql": "SELECT ARRAY_CONSTRUCT(PARSE_JSON('[null]')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  [\n    null\n  ]\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct_a_parse_json_b_null",
+      "sql": "SELECT OBJECT_CONSTRUCT('a', PARSE_JSON('{\"b\":null}')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": {\n    \"b\": null\n  }\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_a",
+      "sql": "SELECT PARSE_JSON('{\"a\":[]}'):a AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_a_a_2",
+      "sql": "SELECT PARSE_JSON('{\"a\":{}}'):a AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json",
+      "sql": "SELECT PARSE_JSON('[[],{}]') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  [],\n  {}\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct_e",
+      "sql": "SELECT OBJECT_CONSTRUCT('e', '') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"e\": \"\"\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_2",
+      "sql": "SELECT PARSE_JSON('\"\"') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "\"\""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_3",
+      "sql": "SELECT PARSE_JSON('\" \"') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "\" \""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1",
+      "sql": "SELECT PARSE_JSON('{\"\":1}') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_0",
+      "sql": "SELECT PARSE_JSON('[1.0]') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_50_2_500_1e_3_1e_3_0_0_0_0",
+      "sql": "SELECT PARSE_JSON('[-1.50, 2.500, 1E-3, 1e+3, 0.0, -0.0]') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  -1.5,\n  2.5,\n  1.000000000000000e-03,\n  1.000000000000000e+03,\n  0,\n  0\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_5e3",
+      "sql": "SELECT PARSE_JSON('1.5E3') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.500000000000000e+03"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_123456789012345678901234567890_123456789",
+      "sql": "SELECT PARSE_JSON('123456789012345678901234567890.123456789') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "123456789012345678901234567890.123456789"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_0_1234567890123456789012345678901234567890",
+      "sql": "SELECT PARSE_JSON('0.1234567890123456789012345678901234567890') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.234567890123457e-01"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_00000000000000000001",
+      "sql": "SELECT PARSE_JSON('1.00000000000000000001') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.00000000000000000001"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_9999999999999999999999999999999999999999",
+      "sql": "SELECT PARSE_JSON('9999999999999999999999999999999999999999') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+40"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1e38",
+      "sql": "SELECT PARSE_JSON('1e38') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+38"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1e_38",
+      "sql": "SELECT PARSE_JSON('1e-38') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e-38"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1e38_double",
+      "sql": "SELECT TO_VARIANT(1e38::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+38"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_123_456_float",
+      "sql": "SELECT TO_VARIANT(123.456::FLOAT) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.234560000000000e+02"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_0_1_double",
+      "sql": "SELECT TO_VARIANT(0.1::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e-01"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_100_0_double",
+      "sql": "SELECT TO_VARIANT(100.0::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+02"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1e15_double",
+      "sql": "SELECT TO_VARIANT(1e15::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+15"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1e16_double",
+      "sql": "SELECT TO_VARIANT(1e16::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+16"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_0_000001_double",
+      "sql": "SELECT TO_VARIANT(0.000001::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e-06"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_0_0000001_double",
+      "sql": "SELECT TO_VARIANT(0.0000001::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e-07"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1_5_double",
+      "sql": "SELECT TO_VARIANT(-1.5::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "-1.500000000000000e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_123456789_987654321_double",
+      "sql": "SELECT TO_VARIANT(123456789.987654321::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.234567899876543e+08"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_3_14159265358979_double",
+      "sql": "SELECT TO_VARIANT(3.14159265358979::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "3.141592653589790e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_2_0000000000000004_double",
+      "sql": "SELECT TO_VARIANT(2.0000000000000004::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "2.000000000000000e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_0_30000000000000004_double",
+      "sql": "SELECT TO_VARIANT(0.30000000000000004::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "3.000000000000000e-01"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1_0_double",
+      "sql": "SELECT TO_VARIANT(1.0::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1_float",
+      "sql": "SELECT TO_VARIANT(1::FLOAT) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1e0",
+      "sql": "SELECT PARSE_JSON('1e0') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_2_5e_1",
+      "sql": "SELECT PARSE_JSON('2.5e-1') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "2.500000000000000e-01"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_123e5",
+      "sql": "SELECT PARSE_JSON('123e5') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.230000000000000e+07"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

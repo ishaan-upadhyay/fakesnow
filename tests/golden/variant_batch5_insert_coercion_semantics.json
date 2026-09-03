@@ -1,0 +1,1251 @@
+{
+  "name": "insert_coercion_semantics",
+  "pr": 5,
+  "cases": [
+    {
+      "id": "insert_into_fakesnow_probe_v_select_object_construct_a_1",
+      "sql": "INSERT INTO fakesnow_probe(v) SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_select_array_construct_1",
+      "sql": "INSERT INTO fakesnow_probe(v) SELECT ARRAY_CONSTRUCT(1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_select_str",
+      "sql": "INSERT INTO fakesnow_probe(v) SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_values_str",
+      "sql": "INSERT INTO fakesnow_probe(v) VALUES ('str')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_values_1",
+      "sql": "INSERT INTO fakesnow_probe(v) VALUES (1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_values_parse_json_1",
+      "sql": "INSERT INTO fakesnow_probe(v) VALUES (PARSE_JSON('1'))",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_select_1_50",
+      "sql": "INSERT INTO fakesnow_probe(v) SELECT 1.50",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_v_select_current_date",
+      "sql": "INSERT INTO fakesnow_probe(v) SELECT CURRENT_DATE",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_a_select_parse_json_a_1",
+      "sql": "INSERT INTO fakesnow_probe(a) SELECT PARSE_JSON('{\"a\":1}')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_a_select_parse_json_1",
+      "sql": "INSERT INTO fakesnow_probe(a) SELECT PARSE_JSON('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_a_select_str",
+      "sql": "INSERT INTO fakesnow_probe(a) SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_a_values_array_construct_1_a",
+      "sql": "INSERT INTO fakesnow_probe(a) VALUES (ARRAY_CONSTRUCT(1,'a'))",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_a_values_1_a",
+      "sql": "INSERT INTO fakesnow_probe(a) VALUES ([1,'a'])",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_o_select_parse_json_1",
+      "sql": "INSERT INTO fakesnow_probe(o) SELECT PARSE_JSON('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_o_select_parse_json_a_1",
+      "sql": "INSERT INTO fakesnow_probe(o) SELECT PARSE_JSON('{\"a\":1}')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_o_select_a_1",
+      "sql": "INSERT INTO fakesnow_probe(o) SELECT {'a':1}",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sa_select_parse_json_1_x",
+      "sql": "INSERT INTO fakesnow_probe(sa) SELECT PARSE_JSON('[1,\"x\"]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sa_select_parse_json_1_2",
+      "sql": "INSERT INTO fakesnow_probe(sa) SELECT PARSE_JSON('[1,2]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sa_select_array_construct_1_2",
+      "sql": "INSERT INTO fakesnow_probe(sa) SELECT ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sa_select_1_2",
+      "sql": "INSERT INTO fakesnow_probe(sa) SELECT [1,2]",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_so_select_object_construct_x_1_y",
+      "sql": "INSERT INTO fakesnow_probe(so) SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_so_select_object_construct_x_1",
+      "sql": "INSERT INTO fakesnow_probe(so) SELECT OBJECT_CONSTRUCT('x', 1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_so_select_object_construct_x_1_y_2",
+      "sql": "INSERT INTO fakesnow_probe(so) SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z', 'extra', 1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_nn_select_x_null_object_x_int",
+      "sql": "INSERT INTO fakesnow_probe(nn) SELECT {'x':NULL}::OBJECT(x INT)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_nn_select_null",
+      "sql": "INSERT INTO fakesnow_probe(nn) SELECT NULL",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sm_select_object_construct_k_1",
+      "sql": "INSERT INTO fakesnow_probe(sm) SELECT OBJECT_CONSTRUCT('k', 1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_sm_select_k_x",
+      "sql": "INSERT INTO fakesnow_probe(sm) SELECT {'k': 'x'}",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_typeof_v_from_fakesnow_probe_where_a_is_null_and_sa",
+      "sql": "SELECT v, TYPEOF(v) FROM fakesnow_probe WHERE a IS NULL AND sa IS NULL ORDER BY 1",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_a_from_fakesnow_probe_where_v_is_null_and_a_is_not_nu",
+      "sql": "SELECT a FROM fakesnow_probe WHERE v IS NULL AND a IS NOT NULL",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_o_from_fakesnow_probe_where_v_is_null_and_o_is_not_nu",
+      "sql": "SELECT o FROM fakesnow_probe WHERE v IS NULL AND o IS NOT NULL",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sa_so_sm_from_fakesnow_probe_where_v_is_null_and_sa_i",
+      "sql": "SELECT sa, so, sm FROM fakesnow_probe WHERE v IS NULL AND (sa IS NOT NULL OR so IS NOT NULL OR sm IS NOT NULL)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SM",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "update_fakesnow_probe_set_v_object_construct_u_1_where_v_z_1",
+      "sql": "UPDATE fakesnow_probe SET v = OBJECT_CONSTRUCT('u', 1) WHERE v:z = 1",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): Access control error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_from_fakesnow_probe_where_v_u_1",
+      "sql": "SELECT v FROM fakesnow_probe WHERE v:u = 1",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "create_temporary_table_fakesnow_probe_ctas_as_select_object",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe_ctas AS SELECT OBJECT_CONSTRUCT('a',1) o, ARRAY_CONSTRUCT(1) a, PARSE_JSON('1') v, [1,2]::ARRAY(INT) sa, {'a':1}::OBJECT(a INT) so, {'k':1}::MAP(VARCHAR,INT) sm, PARSE_JSON('1'):a p, TO_VARIANT(1) tv, SPLIT('a,b', ',') sp, ARRAY_AGG(1) agg, OBJECT_AGG('k', TO_VARIANT(1)) oagg",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "status",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "Table FAKESNOW_PROBE_CTAS successfully created."
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "describe_table_fakesnow_probe_ctas",
+      "sql": "DESCRIBE TABLE fakesnow_probe_ctas",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "type",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "kind",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "null?",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "primary key",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "unique key",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "check",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "expression",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "comment",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "policy name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "privacy domain",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "write default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "O"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "A"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "V"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SA"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(NUMBER(38,0))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SO"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(a NUMBER(38,0))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SM"
+            },
+            {
+              "type": "str",
+              "value": "MAP(VARCHAR(16777216), NUMBER(38,0))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "P"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "TV"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SP"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "AGG"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "OAGG"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "create_temporary_table_fakesnow_probe_ctas2_o_object_a_array",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe_ctas2 (o OBJECT, a ARRAY, v VARIANT, sa ARRAY(INT)) AS SELECT OBJECT_CONSTRUCT('a',1), ARRAY_CONSTRUCT(1), PARSE_JSON('1'), ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_from_fakesnow_probe_ctas2",
+      "sql": "SELECT * FROM fakesnow_probe_ctas2",
+      "setup": null,
+      "expect": {
+        "error": "002003 (42S02): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "create_temporary_table_fakesnow_probe_ctas3_v_variant_as_sel",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe_ctas3 (v VARIANT) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "status",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "Table FAKESNOW_PROBE_CTAS3 successfully created."
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_typeof_v_from_fakesnow_probe_ctas3",
+      "sql": "SELECT v, TYPEOF(v) FROM fakesnow_probe_ctas3",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "create_temporary_table_fakesnow_probe_ctas4_a_array_as_selec",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe_ctas4 (a ARRAY) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "status",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "Table FAKESNOW_PROBE_CTAS4 successfully created."
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

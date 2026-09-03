@@ -1,0 +1,1006 @@
+{
+  "name": "structured_types_expressions",
+  "pr": 5,
+  "cases": [
+    {
+      "id": "select_1_2_3_array_int_sa_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SM",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2,\n  3\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": \"x\"\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"k1\": 1,\n  \"k2\": 2\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_3_array_array_int_nested_a_1_array_object_a_int_a",
+      "sql": "SELECT [[1],[2,3]]::ARRAY(ARRAY(INT)) nested, [{'a':1}]::ARRAY(OBJECT(a INT)) ao, [1.5, 2.25]::ARRAY(NUMBER(10,2)) an, ['2024-01-02'::DATE]::ARRAY(DATE) ad, ['2024-01-02 01:02:03'::TIMESTAMP_NTZ]::ARRAY(TIMESTAMP_NTZ) ats, [TRUE]::ARRAY(BOOLEAN) ab, ['x']::ARRAY(VARCHAR) av, [1.5::DOUBLE]::ARRAY(DOUBLE) adb, [TO_BINARY('ab','hex')]::ARRAY(BINARY) abin",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "NESTED",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AO",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AN",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AD",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "ATS",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AB",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "ADB",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "ABIN",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  [\n    1\n  ],\n  [\n    2,\n    3\n  ]\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1\n  }\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1.5,\n  2.25\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  \"2024-01-02\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  \"2024-01-02 01:02:03.000\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  true\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  \"x\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1.500000000000000e+00\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  \"AB\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_array_variant_av",
+      "sql": "SELECT [1,2]::ARRAY(VARIANT) av",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_a_parse_json_1_object_a_variant_ov",
+      "sql": "SELECT {'a': PARSE_JSON('1')}::OBJECT(a VARIANT) ov",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "OV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_k_parse_json_1_map_varchar_variant_mv",
+      "sql": "SELECT {'k': PARSE_JSON('[1]')}::MAP(VARCHAR, VARIANT) mv",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "MV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"k\": [\n    1\n  ]\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_k_1_map_number_int_mn",
+      "sql": "SELECT {'k': 1}::MAP(NUMBER, INT) mn",
+      "setup": null,
+      "expect": {
+        "error": "100038 (22018): Numeric value 'k' is not recognized",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_1_a_map_number_10_0_varchar_mn2",
+      "sql": "SELECT {1: 'a'}::MAP(NUMBER(10,0), VARCHAR) mn2",
+      "setup": null,
+      "expect": {
+        "error": "001003 (42000): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_1_null_array_int_an_a_null_object_a_int_on_k_null_map",
+      "sql": "SELECT [1,NULL]::ARRAY(INT) an, {'a':NULL}::OBJECT(a INT) on, {'k':NULL}::MAP(VARCHAR, INT) mnull, NULL::ARRAY(INT) na, NULL::OBJECT(a INT) no, NULL::MAP(VARCHAR,INT) nm",
+      "setup": null,
+      "expect": {
+        "error": "001003 (42000): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_1_null_array_int_not_null",
+      "sql": "SELECT [1,NULL]::ARRAY(INT NOT NULL)",
+      "setup": null,
+      "expect": {
+        "error": "100072 (22000): NULL result in a non-nullable column",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_system_typeof_1_2_3_array_int_a_system_typeof_a_1_obj",
+      "sql": "SELECT SYSTEM$TYPEOF([1,2,3]::ARRAY(INT)) a, SYSTEM$TYPEOF({'a':1}::OBJECT(a INT)) b, SYSTEM$TYPEOF({'k1':1}::MAP(VARCHAR, INT)) c, SYSTEM$TYPEOF(PARSE_JSON('1')) d, SYSTEM$TYPEOF(ARRAY_CONSTRUCT(1)) e, SYSTEM$TYPEOF(OBJECT_CONSTRUCT('a',1)) f, SYSTEM$TYPEOF([1,2]::ARRAY(NUMBER(10,2))) g, SYSTEM$TYPEOF([[1]]::ARRAY(ARRAY(INT))) h, SYSTEM$TYPEOF({'a':'x'}::OBJECT(a VARCHAR(10))) i, SYSTEM$TYPEOF(1) j, SYSTEM$TYPEOF('x') k",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "B",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "C",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "D",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "E",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "F",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "G",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "H",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "I",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "J",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "K",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "ARRAY(NUMBER(38,0))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(a NUMBER(38,0))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "MAP(VARCHAR, NUMBER(38,0))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(NUMBER(10,2))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(ARRAY(NUMBER(38,0)))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(a VARCHAR(10))[LOB]"
+            },
+            {
+              "type": "str",
+              "value": "NUMBER(1,0)[SB1]"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR(1)[LOB]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_1_2_3_array_int",
+      "sql": "SELECT TYPEOF([1,2,3]::ARRAY(INT))",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_a_1_object_a_int",
+      "sql": "SELECT TYPEOF({'a':1}::OBJECT(a INT))",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sa_0_i0_sa_5_i5_so_a_soa_so_a_sob_so_a_sodot_so_zz_so",
+      "sql": "SELECT sa[0] i0, sa[5] i5, so:a soa, so['a'] sob, so.a sodot, so:zz sozz, sm['k1'] smk, GET(sm, 'k1') gsm, GET(sa, 0) gsa, GET(so, 'a') gso, sa[0] + 1 arith, so:b || 'y' concat FROM (SELECT [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "000904 (42000): SQL compilation error: error line 1 at position 50",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_so_a_from_select_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT so:a FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SO:A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_so_zz_from_select_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT so:zz FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": "093201 (23001): Function GET: expected structured object to contain field zz but it did not.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sm_zz_from_select_k1_1_map_varchar_int_sm",
+      "sql": "SELECT sm['zz'] FROM (SELECT {'k1':1}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SM['ZZ']",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_sa_1_from_select_1_2_3_array_int_sa",
+      "sql": "SELECT sa[-1] FROM (SELECT [1,2,3]::ARRAY(INT) sa)",
+      "setup": null,
+      "expect": {
+        "error": "001852 (22023): Invalid extraction path '-1': array index -1 is off limits; must be between 0 and 2,147,483,647.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_array_size_sa_array_contains_1_sa_array_append_sa_4_a",
+      "sql": "SELECT ARRAY_SIZE(sa), ARRAY_CONTAINS(1, sa), ARRAY_APPEND(sa, 4), ARRAY_APPEND(sa, 'x'), ARRAY_CAT(sa, sa), ARRAY_SLICE(sa, 0, 1), ARRAY_TO_STRING(sa, ','), ARRAY_SORT(sa), ARRAY_DISTINCT(sa), ARRAY_MAX(sa), TO_ARRAY(sa), TO_VARIANT(sa), sa::ARRAY, sa::VARIANT, sa = [1,2,3]::ARRAY(INT), sa = ARRAY_CONSTRUCT(1,2,3) FROM (SELECT [1,2,3]::ARRAY(INT) sa)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 132",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_array_append_sa_x_from_select_1_2_3_array_int_sa",
+      "sql": "SELECT ARRAY_APPEND(sa, 'x') FROM (SELECT [1,2,3]::ARRAY(INT) sa)",
+      "setup": null,
+      "expect": {
+        "error": "100038 (22018): Numeric value 'x' is not recognized",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_keys_so_object_insert_so_c_3_object_delete_so",
+      "sql": "SELECT OBJECT_KEYS(so), OBJECT_INSERT(so, 'c', 3), OBJECT_DELETE(so, 'a'), OBJECT_PICK(so, 'a'), TO_OBJECT(so), TO_VARIANT(so), so::OBJECT, so::VARIANT, so = {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR), so = OBJECT_CONSTRUCT('a',1,'b','x') FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_insert_so_c_3_from_select_a_1_b_x_object_a_int",
+      "sql": "SELECT OBJECT_INSERT(so, 'c', 3) FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "OBJECT_INSERT(SO, 'C', 3)",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": \"x\",\n  \"c\": 3\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_map_keys_sm_map_size_sm_map_contains_key_k1_sm_map_ca",
+      "sql": "SELECT MAP_KEYS(sm), MAP_SIZE(sm), MAP_CONTAINS_KEY('k1', sm), MAP_CAT(sm, {'k2':2}::MAP(VARCHAR,INT)), MAP_INSERT(sm, 'k3', 3), MAP_DELETE(sm, 'k1'), MAP_PICK(sm, 'k1'), TO_VARIANT(sm), sm::VARIANT, sm::OBJECT, OBJECT_KEYS(sm), TO_OBJECT(sm), sm = {'k1':1}::MAP(VARCHAR,INT) FROM (SELECT {'k1':1}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 212",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_array_int_a_parse_json_a_1_object_a_in",
+      "sql": "SELECT PARSE_JSON('[1,2]')::ARRAY(INT) a, PARSE_JSON('{\"a\":1}')::OBJECT(a INT) b, PARSE_JSON('{\"a\":1}')::MAP(VARCHAR, INT) c, ARRAY_CONSTRUCT(1,2)::ARRAY(INT) d, OBJECT_CONSTRUCT('a',1)::OBJECT(a INT) e, OBJECT_CONSTRUCT('a',1)::MAP(VARCHAR,INT) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "B",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "C",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "D",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "E",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "F",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_extra_2_object_a_int",
+      "sql": "SELECT PARSE_JSON('{\"a\":1, \"extra\": 2}')::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_object_a_int_b_varchar",
+      "sql": "SELECT PARSE_JSON('{\"a\":1}')::OBJECT(a INT, b VARCHAR)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_x_array_int",
+      "sql": "SELECT PARSE_JSON('[1,\"x\"]')::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_array_int",
+      "sql": "SELECT PARSE_JSON('[1,\"2\"]')::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,\"2\"]')::ARRAY(INT)",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_object_a_int",
+      "sql": "SELECT PARSE_JSON('{\"a\":\"1\"}')::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('{\"A\":\"1\"}')::OBJECT(A INT)",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_null_array_int",
+      "sql": "SELECT PARSE_JSON('[1,null]')::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,NULL]')::ARRAY(INT)",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  undefined\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_array_int_array_varchar_a_1_2_array_int_array_b_a",
+      "sql": "SELECT [1,2]::ARRAY(INT)::ARRAY(VARCHAR) a, [1,2]::ARRAY(INT)::ARRAY b, ({'a':1}::OBJECT(a INT))::OBJECT(a VARCHAR) c",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "B",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "C",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"1\",\n  \"2\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": \"1\"\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_f_value_f_key_from_table_flatten_input_a_1_b_x_object",
+      "sql": "SELECT f.value, f.key FROM TABLE(FLATTEN(input => {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR))) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "VALUE",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "KEY",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "a"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"x\""
+            },
+            {
+              "type": "str",
+              "value": "b"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_array_agg_x_array_int_from_select_column1_x_from_valu",
+      "sql": "SELECT ARRAY_AGG(x)::ARRAY(INT) FROM (SELECT column1 x FROM VALUES (1),(2))",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "ARRAY_AGG(X)::ARRAY(INT)",
+            "ARRAY",
+            null,
+            null,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_array_int_union_all_select_array_construct_1",
+      "sql": "SELECT [1,2]::ARRAY(INT) UNION ALL SELECT ARRAY_CONSTRUCT(1)",
+      "setup": null,
+      "expect": {
+        "error": "001790 (42601): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_1_2_array_int_union_all_select_3_array_int",
+      "sql": "SELECT [1,2]::ARRAY(INT) UNION ALL SELECT [3]::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "[1,2]::ARRAY(INT)",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[\n  3\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_case_when_true_then_1_2_array_int_else_array_construc",
+      "sql": "SELECT CASE WHEN TRUE THEN [1,2]::ARRAY(INT) ELSE ARRAY_CONSTRUCT(1) END",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_coalesce_null_array_int_1_array_int",
+      "sql": "SELECT COALESCE(NULL::ARRAY(INT), [1]::ARRAY(INT))",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "COALESCE(NULL::ARRAY(INT), [1]::ARRAY(INT))",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

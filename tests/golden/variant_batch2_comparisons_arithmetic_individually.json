@@ -1,0 +1,2761 @@
+{
+  "name": "comparisons_arithmetic_individually",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:a = 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_2",
+      "sql": "SELECT v:a = '1' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:a = 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:s = 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:s = 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_b_true_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:b = 'true' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_b_true_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_2",
+      "sql": "SELECT v:b = TRUE AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_e_1_5_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:e = 1.5 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_e_1_50_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:e = 1.50 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_1_0_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a = 1.0 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_0_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:a > 0 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:s > 'a' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_in_1_2_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT v:a IN (1,2) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_in_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:a IN ('x') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_in_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:a IN ('1') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_in_x_y_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT v:s IN ('x','y') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_between_0_and_2_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT v:a BETWEEN 0 AND 2 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_like_x_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT v:s LIKE 'x%' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_ilike_x_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT v:s ILIKE 'X%' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_3",
+      "sql": "SELECT v:a + 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_e_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:e + 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_2_5_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a * 2.5 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_2_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:a / 2 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 0.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_y_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:s || 'y' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "xy"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_y_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:a || 'y' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1y"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_upper_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT UPPER(v:s) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "X"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_length_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT LENGTH(v:s) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "FIXED",
+            18,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_length_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT LENGTH(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "FIXED",
+            18,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_20",
+      "sql": "SELECT -v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": -1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_abs_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT ABS(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_round_v_e_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT ROUND(v:e) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_e_decimal_10_2_1_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT v:e::DECIMAL(10,2) + 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "FIXED",
+            11,
+            2,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "Decimal",
+              "value": "2.50"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT TYPEOF(v:a + 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_v_e_1_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT TYPEOF(v:e + 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_1_5_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a + 1.5 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_v_e_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a + v:e AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a - v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 0.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_2",
+      "sql": "SELECT v:a <> 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_4",
+      "sql": "SELECT v:a != 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_o_v_o_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:o = v:o AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_l_v_l_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:l = v:l AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_v_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_20",
+      "sql": "SELECT v = v AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:a = v:s AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_o_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:o = 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_l_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:l = 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_l_10_20_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:l = [10,20] AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_o_object_construct_k_1_as_r_from_select_parse_json",
+      "sql": "SELECT v:o = OBJECT_CONSTRUCT('k', 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_n_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:n = 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_n_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:n = 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_n_v_n_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:n = v:n AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_n_null_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:n = NULL AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_n_is_distinct_from_null_as_r_from_select_parse_json",
+      "sql": "SELECT v:n IS DISTINCT FROM NULL AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_zz_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:zz = 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_true_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT v:a = TRUE AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_b_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT v:b = 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_d_2024_01_02_date_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT v:d = '2024-01-02'::DATE AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_d_date_2024_01_02_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT v:d::DATE = '2024-01-02' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_x_variant_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT v:s = 'x'::VARIANT AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_to_variant_1_as_r_from_select_parse_json_a_1_s_x",
+      "sql": "SELECT v:a = TO_VARIANT(1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_to_variant_1_as_r_from_select_parse_json_a_1_s_x_2",
+      "sql": "SELECT v:a = TO_VARIANT('1') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_x_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_3",
+      "sql": "SELECT v:a < 'x' AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10_2",
+      "sql": "SELECT v:s < 1 AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1_2",
+      "sql": "SELECT v:a > v:s AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:s > v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_l_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:l > v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_o_v_l_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:o > v:l AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_b_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT v:b > v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_a_v_a_varchar_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT v:a = v:a::VARCHAR AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_x_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT 'x' = v:s AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT 1 = v:a AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_case_when_v_b_then_1_else_0_end_as_r_from_select_pars",
+      "sql": "SELECT CASE WHEN v:b THEN 1 ELSE 0 END AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_case_when_v_a_then_1_else_0_end_as_r_from_select_pars",
+      "sql": "SELECT CASE WHEN v:a THEN 1 ELSE 0 END AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_case_when_v_s_then_1_else_0_end_as_r_from_select_pars",
+      "sql": "SELECT CASE WHEN v:s THEN 1 ELSE 0 END AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_b_and_true_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT v:b AND TRUE AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_not_v_b_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT NOT v:b AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_iff_v_b_1_0_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT IFF(v:b, 1, 0) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sum_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT SUM(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_sum_v_e_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT SUM(v:e) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_avg_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT AVG(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_max_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT MAX(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_min_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT MIN(v:s) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "\"x\""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_max_v_l_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT MAX(v:l) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  10,\n  20\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_max_v_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
+      "sql": "SELECT MAX(v) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": true,\n  \"d\": \"2024-01-02\",\n  \"e\": 1.5,\n  \"l\": [\n    10,\n    20\n  ],\n  \"n\": null,\n  \"o\": {\n    \"k\": 1\n  },\n  \"s\": \"x\"\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_count_distinct_v_a_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT COUNT(DISTINCT v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "FIXED",
+            18,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_listagg_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT LISTAGG(v:s, ',') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_concat_v_s_y_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT CONCAT(v:s, 'y') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "xy"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_trim_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT TRIM(v:s) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_substr_v_s_1_1_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT SUBSTR(v:s, 1, 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_replace_v_s_x_y_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT REPLACE(v:s, 'x', 'y') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "y"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_split_part_v_s_x_1_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT SPLIT_PART(v:s, 'x', 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": ""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_regexp_replace_v_s_x_y_as_r_from_select_parse_json_a",
+      "sql": "SELECT REGEXP_REPLACE(v:s, 'x', 'y') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "y"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_hash_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
+      "sql": "SELECT HASH(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "FIXED",
+            19,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": -4730168494964875235
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_md5_v_s_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_1",
+      "sql": "SELECT MD5(v:s) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            32
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "9dd4e461268c8034f5c8564e155c67a6"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_varchar_v_s_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT v:s::VARCHAR = v:s AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_coalesce_v_zz_dflt_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT COALESCE(v:zz, 'dflt') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "dflt"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_coalesce_v_zz_5_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT COALESCE(v:zz, 5) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "5"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_coalesce_v_a_dflt_as_r_from_select_parse_json_a_1_s_x",
+      "sql": "SELECT COALESCE(v:a, 'dflt') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_ifnull_v_zz_0_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT IFNULL(v:zz, 0) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "0"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_nvl_v_zz_v_a_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT NVL(v:zz, v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_nullif_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k",
+      "sql": "SELECT NULLIF(v:a, 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_greatest_v_a_2_as_r_from_select_parse_json_a_1_s_x_o",
+      "sql": "SELECT GREATEST(v:a, 2) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "2"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_least_v_a_x_as_r_from_select_parse_json_a_1_s_x_o_k_1",
+      "sql": "SELECT LEAST(v:a, 'x') AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_coalesce_v_zz_5_as_r_from_select_parse_json_a",
+      "sql": "SELECT TYPEOF(COALESCE(v:zz, 5)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_coalesce_v_a_dflt_as_r_from_select_parse_json",
+      "sql": "SELECT TYPEOF(COALESCE(v:a, 'dflt')) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_ifnull_v_zz_0_as_r_from_select_parse_json_a_1",
+      "sql": "SELECT TYPEOF(IFNULL(v:zz, 0)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_greatest_v_a_2_as_r_from_select_parse_json_a_1",
+      "sql": "SELECT TYPEOF(GREATEST(v:a, 2)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_nullif_v_a_2_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT TYPEOF(NULLIF(v:a, 2)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_v_a_variant_as_r_from_select_parse_json_a_1_s",
+      "sql": "SELECT TYPEOF(v:a::VARIANT) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_case_when_true_then_v_a_else_x_end_as_r_from_s",
+      "sql": "SELECT TYPEOF(CASE WHEN TRUE THEN v:a ELSE 'x' END) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_case_when_true_then_v_a_else_x_end_as_r_from_select_p",
+      "sql": "SELECT CASE WHEN TRUE THEN v:a ELSE 'x' END AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_case_when_true_then_v_o_else_v_l_end_as_r_from_select",
+      "sql": "SELECT CASE WHEN TRUE THEN v:o ELSE v:l END AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"k\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_case_when_true_then_v_o_else_v_l_end_as_r_from",
+      "sql": "SELECT TYPEOF(CASE WHEN TRUE THEN v:o ELSE v:l END) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_iff_true_v_o_1_as_r_from_select_parse_json_a_1",
+      "sql": "SELECT TYPEOF(IFF(TRUE, v:o, 1)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_iff_true_array_construct_1_1_as_r_from_select_parse_j",
+      "sql": "SELECT IFF(TRUE, ARRAY_CONSTRUCT(1), 1) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_iff_true_array_construct_1_1_as_r_from_select",
+      "sql": "SELECT TYPEOF(IFF(TRUE, ARRAY_CONSTRUCT(1), 1)) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
+      "setup": null,
+      "expect": {
+        "error": "001038 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

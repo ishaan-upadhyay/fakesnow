@@ -1,0 +1,946 @@
+{
+  "name": "paths_get",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_v_a_v_a_v_a_v_a_v_s_v_s_varchar_v_s_string_v_o_v_o_va",
+      "sql": "SELECT v:a, v:A, v:\"a\", v:\"A\", v:s, v:s::VARCHAR, v:s::STRING, v:o, v:o::VARCHAR, TO_VARCHAR(v:o), TO_JSON(v:o), v:l, v:l::VARCHAR, v:l[0], v:l[2][0], v:l[5], v:zz, v:o.k, v:o.K, v:o:k, v['o']['k'], v['o'].k, GET(v, 'o'), GET(v:l, 0), GET(v:l, 5), GET_PATH(v, 'o.k'), GET_PATH(v, 'l[1]'), GET_PATH(v, 'l[2][0]'), v:\"a.b\", GET(v, 'a.b'), GET_PATH(v, '\"a.b\"'), v:\"sp ace\", v:\"q'uote\", v:e::VARCHAR, v:e::NUMBER(10,2), v:e::INT, v:e::DOUBLE, v:a::VARCHAR, v:b::VARCHAR, v:b::BOOLEAN, v:l[0]::VARCHAR, v:o:k::VARCHAR, v:zz::VARCHAR, v:zz IS NULL, GET(v, 'zz') IS NULL, v[0], v:l['x'], v:s[0], v:a:b, v:e::NUMBER(10,1), v:e::NUMBER(10,0), v:a::NUMBER(10,2), v:a::DOUBLE, v:e::FLOAT FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V:A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:\"A\"",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:\"A\"",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:S",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:S::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:S::STRING",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:O",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:O::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TO_VARCHAR(V:O)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TO_JSON(V:O)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:L",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:L::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:L[0]",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:L[2][0]",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:L[5]",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:ZZ",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:O.K",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:O.K",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:O:K",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V['O']['K']",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V['O'].K",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET(V, 'O')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET(V:L, 0)",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET(V:L, 5)",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET_PATH(V, 'O.K')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET_PATH(V, 'L[1]')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET_PATH(V, 'L[2][0]')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:\"A.B\"",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET(V, 'A.B')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET_PATH(V, '\"A.B\"')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:\"SP ACE\"",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:\"Q'UOTE\"",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:E::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:E::NUMBER(10,2)",
+            "FIXED",
+            10,
+            2,
+            null,
+            true
+          ],
+          [
+            "V:E::INT",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ],
+          [
+            "V:E::DOUBLE",
+            "REAL",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:A::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:B::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:B::BOOLEAN",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:L[0]::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:O:K::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:ZZ::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "V:ZZ IS NULL",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "GET(V, 'ZZ') IS NULL",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V[0]",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:L['X']",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:S[0]",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:A:B",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:E::NUMBER(10,1)",
+            "FIXED",
+            10,
+            1,
+            null,
+            true
+          ],
+          [
+            "V:E::NUMBER(10,0)",
+            "FIXED",
+            10,
+            0,
+            null,
+            true
+          ],
+          [
+            "V:A::NUMBER(10,2)",
+            "FIXED",
+            10,
+            2,
+            null,
+            true
+          ],
+          [
+            "V:A::DOUBLE",
+            "REAL",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V:E::FLOAT",
+            "REAL",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "9"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "9"
+            },
+            {
+              "type": "str",
+              "value": "\"x\""
+            },
+            {
+              "type": "str",
+              "value": "x"
+            },
+            {
+              "type": "str",
+              "value": "x"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"K\": 2,\n  \"k\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\"K\":2,\"k\":1}"
+            },
+            {
+              "type": "str",
+              "value": "{\"K\":2,\"k\":1}"
+            },
+            {
+              "type": "str",
+              "value": "{\"K\":2,\"k\":1}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  10,\n  20,\n  [\n    30\n  ]\n]"
+            },
+            {
+              "type": "str",
+              "value": "[10,20,[30]]"
+            },
+            {
+              "type": "str",
+              "value": "10"
+            },
+            {
+              "type": "str",
+              "value": "30"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "2"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"K\": 2,\n  \"k\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "10"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "20"
+            },
+            {
+              "type": "str",
+              "value": "30"
+            },
+            {
+              "type": "str",
+              "value": "7"
+            },
+            {
+              "type": "str",
+              "value": "7"
+            },
+            {
+              "type": "str",
+              "value": "7"
+            },
+            {
+              "type": "str",
+              "value": "3"
+            },
+            {
+              "type": "str",
+              "value": "4"
+            },
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "Decimal",
+              "value": "1.50"
+            },
+            {
+              "type": "int",
+              "value": 2
+            },
+            {
+              "type": "float",
+              "value": 1.5
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "str",
+              "value": "10"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "Decimal",
+              "value": "1.5"
+            },
+            {
+              "type": "int",
+              "value": 2
+            },
+            {
+              "type": "Decimal",
+              "value": "1.00"
+            },
+            {
+              "type": "float",
+              "value": 1.0
+            },
+            {
+              "type": "float",
+              "value": 1.5
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_2_oob_parse_json_1_2_a_key_on_arr_pars",
+      "sql": "SELECT PARSE_JSON('[1,2]')[2] oob, PARSE_JSON('[1,2]')['a'] key_on_arr, PARSE_JSON('{\"a\":1}')[0] idx_on_obj, PARSE_JSON('\"s\"')[0] idx_on_str, PARSE_JSON('\"s\"'):a key_on_str, PARSE_JSON('1'):a key_on_num, GET(PARSE_JSON('[1,2]'), 'a') g1, GET(PARSE_JSON('{\"a\":1}'), 0) g2, GET(PARSE_JSON('{\"0\":1}'), 0) g3, GET(PARSE_JSON('{\"0\":1}'), '0') g4, PARSE_JSON('{\"0\":1}')[0] g5, PARSE_JSON('[1,2]')['1'] g6, GET(PARSE_JSON('[1,2]'), '1') g7, GET(NULL::VARIANT, 'a') g8, GET(PARSE_JSON('null'), 'a') g9, GET(PARSE_JSON('{\"a\":1}'), NULL) g10",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "OOB",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "KEY_ON_ARR",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "IDX_ON_OBJ",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "IDX_ON_STR",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "KEY_ON_STR",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "KEY_ON_NUM",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G1",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G2",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G3",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G4",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G5",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G6",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G7",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G8",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G9",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G10",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_get_parse_json_1_2_1",
+      "sql": "SELECT GET(PARSE_JSON('[1,2]'), -1)",
+      "setup": null,
+      "expect": {
+        "error": "001852 (22023): Invalid extraction path '-1': array index -1 is off limits; must be between 0 and 2,147,483,647.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_get_v_l_i_from_select_parse_json_l_10_20_v_1_i",
+      "sql": "SELECT GET(v:l, i) FROM (SELECT PARSE_JSON('{\"l\":[10,20]}') v, -1 i)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "GET(V:L, I)",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_get_path_parse_json_a_1_b_2_a_1_b_a_get_path_parse_js",
+      "sql": "SELECT GET_PATH(PARSE_JSON('{\"a\":[1,{\"b\":2}]}'), 'a[1].b') a, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '[\"a\"][\"b\"]') c, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), 'a[\"b\"]') d, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '') f, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), NULL) g, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), 'a.zz.q') h, GET_PATH(PARSE_JSON('[[1,2]]'), '[0][1]') i",
+      "setup": null,
+      "expect": {
+        "error": "100073 (22000): Bad compound object's field path name '' in GET_PATH",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_get_path_parse_json_a_b_2_a_b",
+      "sql": "SELECT GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '$.a.b')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "GET_PATH(PARSE_JSON('{\"A\":{\"B\":2}}'), '$.A.B')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

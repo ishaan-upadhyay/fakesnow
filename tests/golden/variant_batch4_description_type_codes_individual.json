@@ -1,0 +1,2531 @@
+{
+  "name": "description_type_codes_individual",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "object_construct_a_1",
+      "sql": "SELECT OBJECT_CONSTRUCT('a',1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_1",
+      "sql": "SELECT ARRAY_CONSTRUCT(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1",
+      "sql": "SELECT PARSE_JSON('1') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a",
+      "sql": "SELECT v2:a AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_array_construct_1_0",
+      "sql": "SELECT GET(ARRAY_CONSTRUCT(1), 0) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_array_1",
+      "sql": "SELECT TO_ARRAY(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_object_object_construct_a_1",
+      "sql": "SELECT TO_OBJECT(OBJECT_CONSTRUCT('a',1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "1_2",
+      "sql": "SELECT [1,2] AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_1",
+      "sql": "SELECT {'a':1} AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "split_a_b",
+      "sql": "SELECT SPLIT('a,b',',') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"a\",\n  \"b\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_size_array_construct_1",
+      "sql": "SELECT ARRAY_SIZE(ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            9,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "typeof_v2",
+      "sql": "SELECT TYPEOF(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_1",
+      "sql": "SELECT TO_VARIANT(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_cat_array_construct_1_array_construct_2",
+      "sql": "SELECT ARRAY_CAT(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(2)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_keys_object_construct_a_1",
+      "sql": "SELECT OBJECT_KEYS(OBJECT_CONSTRUCT('a',1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"a\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_json_v2",
+      "sql": "SELECT TO_JSON(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_varchar",
+      "sql": "SELECT PARSE_JSON('1')::VARCHAR AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strip_null_value_v2",
+      "sql": "SELECT STRIP_NULL_VALUE(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_array_v2",
+      "sql": "SELECT IS_ARRAY(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "check_json",
+      "sql": "SELECT CHECK_JSON('{}') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "try_parse_json",
+      "sql": "SELECT TRY_PARSE_JSON('{}') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a_int",
+      "sql": "SELECT v2:a::INT AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a_number_10_2",
+      "sql": "SELECT v2:a::NUMBER(10,2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            10,
+            2,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "Decimal",
+              "value": "1.00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a_variant",
+      "sql": "SELECT v2:a::VARIANT AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_1_variant",
+      "sql": "SELECT ARRAY_CONSTRUCT(1)::VARIANT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct_a_1_variant",
+      "sql": "SELECT OBJECT_CONSTRUCT('a',1)::VARIANT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_array",
+      "sql": "SELECT v2::ARRAY AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1\n  }\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_object",
+      "sql": "SELECT v2::OBJECT AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "x_variant",
+      "sql": "SELECT 'x'::VARIANT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "\"x\""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "null_variant",
+      "sql": "SELECT NULL::VARIANT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "null_array",
+      "sql": "SELECT NULL::ARRAY AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "null_object",
+      "sql": "SELECT NULL::OBJECT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_slice_array_construct_1_2_0_1",
+      "sql": "SELECT ARRAY_SLICE(ARRAY_CONSTRUCT(1,2), 0, 1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_append_array_construct_1_2",
+      "sql": "SELECT ARRAY_APPEND(ARRAY_CONSTRUCT(1), 2) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_distinct_array_construct_1",
+      "sql": "SELECT ARRAY_DISTINCT(ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_flatten_array_construct_array_construct_1",
+      "sql": "SELECT ARRAY_FLATTEN(ARRAY_CONSTRUCT(ARRAY_CONSTRUCT(1))) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_insert_object_construct_a_1_b_2",
+      "sql": "SELECT OBJECT_INSERT(OBJECT_CONSTRUCT('a',1), 'b', 2) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_delete_object_construct_a_1_a",
+      "sql": "SELECT OBJECT_DELETE(OBJECT_CONSTRUCT('a',1), 'a') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_pick_object_construct_a_1_a",
+      "sql": "SELECT OBJECT_PICK(OBJECT_CONSTRUCT('a',1), 'a') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_contains_1_array_construct_1",
+      "sql": "SELECT ARRAY_CONTAINS(1, ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_position_1_array_construct_1",
+      "sql": "SELECT ARRAY_POSITION(1, ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            9,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_generate_range_0_2",
+      "sql": "SELECT ARRAY_GENERATE_RANGE(0,2) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  0,\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_varchar_v2",
+      "sql": "SELECT AS_VARCHAR(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_integer_v2_a",
+      "sql": "SELECT AS_INTEGER(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_array_array_construct_1",
+      "sql": "SELECT AS_ARRAY(ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_object_object_construct",
+      "sql": "SELECT AS_OBJECT(OBJECT_CONSTRUCT()) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_double_v2_a",
+      "sql": "SELECT AS_DOUBLE(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_decimal_v2_a_10_2",
+      "sql": "SELECT AS_DECIMAL(v2:a, 10, 2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            10,
+            2,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "Decimal",
+              "value": "1.00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_boolean_to_variant_true",
+      "sql": "SELECT AS_BOOLEAN(TO_VARIANT(TRUE)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_date_to_variant_current_date",
+      "sql": "SELECT AS_DATE(TO_VARIANT(CURRENT_DATE)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "DATE",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "date",
+              "value": "2026-09-03"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_timestamp_ntz_to_variant_current_timestamp_timestamp_ntz",
+      "sql": "SELECT AS_TIMESTAMP_NTZ(TO_VARIANT(CURRENT_TIMESTAMP::TIMESTAMP_NTZ)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TIMESTAMP_NTZ",
+            18,
+            9,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "datetime",
+              "value": "2026-09-03T18:00:05.479000"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_binary_to_variant_to_binary_ab_hex",
+      "sql": "SELECT AS_BINARY(TO_VARIANT(TO_BINARY('ab','hex'))) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BINARY",
+            null,
+            null,
+            67108864
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bytearray",
+              "value": "ab"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_char_v2",
+      "sql": "SELECT AS_CHAR(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_null_value_v2",
+      "sql": "SELECT IS_NULL_VALUE(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "system_typeof_v2",
+      "sql": "SELECT SYSTEM$TYPEOF(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "VARIANT[LOB]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "arrays_zip_array_construct_1_array_construct_2",
+      "sql": "SELECT ARRAYS_ZIP(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(2)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"$1\": 1,\n    \"$2\": 2\n  }\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_unique_agg_1",
+      "sql": "SELECT ARRAY_UNIQUE_AGG(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_1",
+      "sql": "SELECT ARRAY_AGG(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_agg_k_to_variant_1",
+      "sql": "SELECT OBJECT_AGG('k', TO_VARIANT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"k\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "map_cat_a_1_map_varchar_int_b_2_map_varchar_int",
+      "sql": "SELECT MAP_CAT({'a':1}::MAP(VARCHAR,INT), {'b':2}::MAP(VARCHAR,INT)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_max_array_construct_1",
+      "sql": "SELECT ARRAY_MAX(ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_sort_array_construct_2_1",
+      "sql": "SELECT ARRAY_SORT(ARRAY_CONSTRUCT(2,1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_remove_array_construct_1_1",
+      "sql": "SELECT ARRAY_REMOVE(ARRAY_CONSTRUCT(1), 1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_insert_array_construct_1_0_0",
+      "sql": "SELECT ARRAY_INSERT(ARRAY_CONSTRUCT(1), 0, 0) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  0,\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_prepend_array_construct_1_0",
+      "sql": "SELECT ARRAY_PREPEND(ARRAY_CONSTRUCT(1), 0) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  0,\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_compact_array_construct_1_null",
+      "sql": "SELECT ARRAY_COMPACT(ARRAY_CONSTRUCT(1, NULL)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_except_array_construct_1_array_construct_1",
+      "sql": "SELECT ARRAY_EXCEPT(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_intersection_array_construct_1_array_construct_1",
+      "sql": "SELECT ARRAY_INTERSECTION(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "arrays_overlap_array_construct_1_array_construct_1",
+      "sql": "SELECT ARRAYS_OVERLAP(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(1)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strtok_to_array_a_b",
+      "sql": "SELECT STRTOK_TO_ARRAY('a b') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"a\",\n  \"b\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_compact_1",
+      "sql": "SELECT ARRAY_CONSTRUCT_COMPACT(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct_keep_null_a_1",
+      "sql": "SELECT OBJECT_CONSTRUCT_KEEP_NULL('a',1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_path_v2_a",
+      "sql": "SELECT GET_PATH(v2, 'a') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a_2",
+      "sql": "SELECT v2['a'] AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_varchar_v2",
+      "sql": "SELECT TO_VARCHAR(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_char_v2",
+      "sql": "SELECT TO_CHAR(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_varchar",
+      "sql": "SELECT v2::VARCHAR AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_ignore_case_v2_a",
+      "sql": "SELECT GET_IGNORE_CASE(v2, 'A') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_construct",
+      "sql": "SELECT OBJECT_CONSTRUCT(*) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"V2\": {\n    \"a\": 1\n  }\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_a_1",
+      "sql": "SELECT v2:a + 1 AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 2.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "max_v2",
+      "sql": "SELECT MAX(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "min_v2_a",
+      "sql": "SELECT MIN(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "any_value_v2",
+      "sql": "SELECT ANY_VALUE(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "listagg_v2_a",
+      "sql": "SELECT LISTAGG(v2:a, ',') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "iff_true_v2_null",
+      "sql": "SELECT IFF(TRUE, v2, NULL) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "nvl_v2_x",
+      "sql": "SELECT NVL(v2, 'x') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "coalesce_v2_zz_1",
+      "sql": "SELECT COALESCE(v2:zz, 1) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "coalesce_v2_zz_x",
+      "sql": "SELECT COALESCE(v2:zz, 'x') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "zeroifnull_v2_a",
+      "sql": "SELECT ZEROIFNULL(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_boolean_to_variant_true",
+      "sql": "SELECT TO_BOOLEAN(TO_VARIANT(TRUE)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_number_v2_a",
+      "sql": "SELECT TO_NUMBER(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_double_v2_a",
+      "sql": "SELECT TO_DOUBLE(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "REAL",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "float",
+              "value": 1.0
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_date_to_variant_2024_01_02",
+      "sql": "SELECT TO_DATE(TO_VARIANT('2024-01-02')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "DATE",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "date",
+              "value": "2024-01-02"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_timestamp_ntz_to_variant_2024_01_02_01_02_03",
+      "sql": "SELECT TO_TIMESTAMP_NTZ(TO_VARIANT('2024-01-02 01:02:03')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TIMESTAMP_NTZ",
+            0,
+            9,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "datetime",
+              "value": "2024-01-02T01:02:03"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_binary_to_variant_ab_hex",
+      "sql": "SELECT TO_BINARY(TO_VARIANT('ab'), 'hex') AS a",
+      "setup": null,
+      "expect": {
+        "error": "000939 (22023): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "hash_v2",
+      "sql": "SELECT HASH(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            19,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 5192026222958118100
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "length_v2",
+      "sql": "SELECT LENGTH(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            18,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 7
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v2_is_null",
+      "sql": "SELECT v2 IS NULL AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "equal_null_v2_v2",
+      "sql": "SELECT EQUAL_NULL(v2, v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "try_cast_v2_a_as_int",
+      "sql": "SELECT TRY_CAST(v2:a AS INT) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001065 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "try_to_number_v2_a",
+      "sql": "SELECT TRY_TO_NUMBER(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001065 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "try_to_boolean_v2_a",
+      "sql": "SELECT TRY_TO_BOOLEAN(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001065 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "try_to_date_v2_a",
+      "sql": "SELECT TRY_TO_DATE(v2:a) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001065 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}
