@@ -8,7 +8,7 @@ from typing import Any, TypeVar
 
 from fakesnow.variant.errors import cast_error
 from fakesnow.variant.render import sf_json_compact
-from fakesnow.variant.sentinels import is_json_null, is_nan, is_undefined
+from fakesnow.variant.sentinels import is_json_null, is_nan, is_undefined, timestamp_kind, timestamp_value
 
 T = TypeVar("T")
 
@@ -29,8 +29,16 @@ def _convert(value: Any, target: str, converter: Callable[[], T]) -> T | None:
 def to_varchar(value: Any) -> str | None:
     if _null(value):
         return None
+    if timestamp_kind(value):
+        return timestamp_value(value)
     if isinstance(value, str):
         return value
+    if isinstance(value, datetime):
+        return value.isoformat(sep=" ", timespec="milliseconds")
+    if isinstance(value, date):
+        return value.isoformat()
+    if isinstance(value, float) and not is_nan(value):
+        return str(value)
     return sf_json_compact(value)
 
 
@@ -112,7 +120,8 @@ def to_timestamp(value: Any) -> datetime | None:
         if isinstance(value, date):
             return datetime.combine(value, time())
         if isinstance(value, str):
-            return datetime.fromisoformat(value.replace("Z", "+00:00"))
+            source = timestamp_value(value) if timestamp_kind(value) else value
+            return datetime.fromisoformat(source.removesuffix(" Z").replace(" Z", "+00:00"))
         if isinstance(value, (int, Decimal)):
             return datetime.fromtimestamp(int(value), tz=UTC).replace(tzinfo=None)
         raise ValueError
