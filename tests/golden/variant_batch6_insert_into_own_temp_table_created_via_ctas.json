@@ -1,0 +1,227 @@
+{
+  "name": "insert_into_own_temp_table_created_via_ctas",
+  "pr": 5,
+  "cases": [
+    {
+      "id": "insert_into_fakesnow_ins_v_select_object_construct_a_1",
+      "sql": "INSERT INTO fakesnow_ins(v) SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_v_values_str",
+      "sql": "INSERT INTO fakesnow_ins(v) VALUES ('str')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_v_values_1",
+      "sql": "INSERT INTO fakesnow_ins(v) VALUES (1)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_v_select_str",
+      "sql": "INSERT INTO fakesnow_ins(v) SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_a_values_array_construct_1_a",
+      "sql": "INSERT INTO fakesnow_ins(a) VALUES (ARRAY_CONSTRUCT(1,'a'))",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_a_values_1_a",
+      "sql": "INSERT INTO fakesnow_ins(a) VALUES ([1,'a'])",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_a_select_parse_json_a_1",
+      "sql": "INSERT INTO fakesnow_ins(a) SELECT PARSE_JSON('{\"a\":1}')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_o_values_a_1",
+      "sql": "INSERT INTO fakesnow_ins(o) VALUES ({'a':1})",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_o_select_parse_json_1",
+      "sql": "INSERT INTO fakesnow_ins(o) SELECT PARSE_JSON('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_sa_values_1_2",
+      "sql": "INSERT INTO fakesnow_ins(sa) VALUES ([1,2])",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_sa_select_array_construct_1_2",
+      "sql": "INSERT INTO fakesnow_ins(sa) SELECT ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_sa_select_parse_json_1_x",
+      "sql": "INSERT INTO fakesnow_ins(sa) SELECT PARSE_JSON('[1,\"x\"]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_values_parse_json_1_array_construct",
+      "sql": "INSERT INTO fakesnow_ins VALUES (PARSE_JSON('1'), ARRAY_CONSTRUCT(1), OBJECT_CONSTRUCT('a',1), [1]::ARRAY(INT))",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_v_values_a_1",
+      "sql": "INSERT INTO fakesnow_ins(v) VALUES ('{\"a\":1}')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_ins_v_select_parse_json_column1_from_va",
+      "sql": "INSERT INTO fakesnow_ins(v) SELECT PARSE_JSON(column1) FROM VALUES ('{\"a\":1}'), ('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have INSERT granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "update_fakesnow_ins_set_v_object_construct_u_1_where_v_a_1",
+      "sql": "UPDATE fakesnow_ins SET v = OBJECT_CONSTRUCT('u', 1) WHERE v:a = 1",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have UPDATE granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "update_fakesnow_ins_set_v_str_where_v_u_1",
+      "sql": "UPDATE fakesnow_ins SET v = 'str' WHERE v:u = 1",
+      "setup": null,
+      "expect": {
+        "error": "003001 (42501): SQL access control error: | Insufficient privileges to operate on table 'FAKESNOW_INS'. Your primary role DEV_TEAM_DATA_INFRA or one of your secondary roles must have UPDATE granted on TABLE SANDBOX_ANALYTICS.PUBLIC.FAKESNOW_INS.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_typeof_v_a_o_sa_from_fakesnow_ins",
+      "sql": "SELECT v, TYPEOF(v), a, o, sa FROM fakesnow_ins",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "A1",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "A2",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "A3",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "A4",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    }
+  ]
+}

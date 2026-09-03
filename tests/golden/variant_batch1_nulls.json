@@ -1,0 +1,775 @@
+{
+  "name": "nulls",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_parse_json_null_jn_null_variant_sn_to_variant_null_tv",
+      "sql": "SELECT PARSE_JSON('null') jn, NULL::VARIANT sn, TO_VARIANT(NULL) tv, PARSE_JSON('null') IS NULL a, IS_NULL_VALUE(PARSE_JSON('null')) b, IS_NULL_VALUE(NULL::VARIANT) c, IS_NULL_VALUE(PARSE_JSON('1')) d, TYPEOF(PARSE_JSON('null')) e, TYPEOF(NULL::VARIANT) f, PARSE_JSON('null')::VARCHAR g, TO_VARCHAR(PARSE_JSON('null')) h, TO_JSON(PARSE_JSON('null')) i, TO_JSON(NULL::VARIANT) j, COALESCE(PARSE_JSON('null'), 'fallback') k, NVL(PARSE_JSON('null'), 'fb') l, PARSE_JSON('null')::INT m, PARSE_JSON('null')::BOOLEAN n, STRIP_NULL_VALUE(PARSE_JSON('null')) IS NULL o, PARSE_JSON('null') = PARSE_JSON('null') p, PARSE_JSON('null') = 'null' q, COUNT(PARSE_JSON('null')) r, PARSE_JSON('{\"a\":null}'):a IS NULL s, PARSE_JSON('{\"a\":null}'):b IS NULL t, IS_NULL_VALUE(PARSE_JSON('{\"a\":null}'):b) u, TYPEOF(PARSE_JSON('{\"a\":null}'):b) w, PARSE_JSON('null')::ARRAY x, NULLIF(PARSE_JSON('null'), PARSE_JSON('null')) y, IFNULL(PARSE_JSON('null'), 1) z",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "JN",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "SN",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TV",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "B",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "C",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "D",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "E",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "F",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "G",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "H",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "I",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "J",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "K",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "L",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "M",
+            "FIXED",
+            38,
+            0,
+            null
+          ],
+          [
+            "N",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "O",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "P",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "Q",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "R",
+            "FIXED",
+            18,
+            0,
+            null
+          ],
+          [
+            "S",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "T",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "U",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "W",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "X",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "Y",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "Z",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "NULL_VALUE"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "fallback"
+            },
+            {
+              "type": "str",
+              "value": "fb"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "int",
+              "value": 0
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "null"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_object_construct_a_null_b_parse_json_null_c_1_oc_obje",
+      "sql": "SELECT OBJECT_CONSTRUCT('a', NULL, 'b', PARSE_JSON('null'), 'c', 1) oc, OBJECT_CONSTRUCT_KEEP_NULL('a', NULL, 'b', PARSE_JSON('null'), 'c', 1) ock, OBJECT_CONSTRUCT(NULL, 1) on1, OBJECT_CONSTRUCT_KEEP_NULL(NULL, 1) onk, OBJECT_CONSTRUCT('a', NULL) oa, OBJECT_CONSTRUCT_KEEP_NULL('a', NULL) oak",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "OC",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "OCK",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "ON1",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "ONK",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "OA",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "OAK",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"b\": null,\n  \"c\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": null,\n  \"b\": null,\n  \"c\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{}"
+            },
+            {
+              "type": "str",
+              "value": "{}"
+            },
+            {
+              "type": "str",
+              "value": "{}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": null\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_f_value_f_value_is_null_isn_is_null_value_f_value_inv",
+      "sql": "SELECT f.value, f.value IS NULL isn, IS_NULL_VALUE(f.value) inv, TYPEOF(f.value) t, f.index, f.key, f.path, f.this, f.seq FROM TABLE(FLATTEN(input => PARSE_JSON('[1, null, \"a\"]'))) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "VALUE",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "ISN",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "INV",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "T",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "INDEX",
+            "FIXED",
+            38,
+            0,
+            null
+          ],
+          [
+            "KEY",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "PATH",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "THIS",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "SEQ",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "int",
+              "value": 0
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[0]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  null,\n  \"a\"\n]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "str",
+              "value": "NULL_VALUE"
+            },
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[1]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  null,\n  \"a\"\n]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"a\""
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            },
+            {
+              "type": "int",
+              "value": 2
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[2]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  null,\n  \"a\"\n]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_f_key_f_value_f_value_is_null_f_path_f_index_from_tab",
+      "sql": "SELECT f.key, f.value, f.value IS NULL, f.path, f.index FROM TABLE(FLATTEN(input => PARSE_JSON('{\"a\": null, \"b\": 1}'))) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "KEY",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "VALUE",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "F.VALUE IS NULL",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "PATH",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "INDEX",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "a"
+            },
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "a"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "b"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "b"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_from_select_parse_json_column1_v_from_values_null_1_n",
+      "sql": "SELECT * FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('null'), ('1'), (NULL)) WHERE v IS NOT NULL",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "null"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_v_is_null_from_select_parse_json_column1_v_from_val",
+      "sql": "SELECT v, v IS NULL FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('null'), ('1'), (NULL)) ORDER BY v",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "V IS NULL",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "bool",
+              "value": false
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "bool",
+              "value": false
+            }
+          ],
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

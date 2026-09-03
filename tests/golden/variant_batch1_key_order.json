@@ -1,0 +1,119 @@
+{
+  "name": "key_order",
+  "pr": 4,
+  "cases": [
+    {
+      "id": "select_object_construct_b_1_a_2_b_3_x_4_1_5_aa_6_a_b_7_8_z_9",
+      "sql": "SELECT OBJECT_CONSTRUCT('b', 1, 'a', 2, 'B', 3, '_x', 4, '1', 5, 'aa', 6, 'a b', 7, '', 8, 'Z', 9, 'z', 10, '10', 11, '9', 12) o",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"\": 8,\n  \"1\": 5,\n  \"10\": 11,\n  \"9\": 12,\n  \"B\": 3,\n  \"Z\": 9,\n  \"_x\": 4,\n  \"a\": 2,\n  \"a b\": 7,\n  \"aa\": 6,\n  \"b\": 1,\n  \"z\": 10\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_b_1_a_2_b_3_x_4_1_5_p_parse_json_b_1_a_2_p",
+      "sql": "SELECT PARSE_JSON('{\"b\":1,\"a\":2,\"B\":3,\"_x\":4,\"1\":5}') p, PARSE_JSON('{\"b\":1,\"a\":2}') = PARSE_JSON('{\"a\":2,\"b\":1}') eq, OBJECT_CONSTRUCT('k', 1) = OBJECT_CONSTRUCT('k', 1) eq2, TO_JSON(PARSE_JSON('{\"b\":1,\"a\":2}')) tj",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "P",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "EQ",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "EQ2",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "TJ",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"1\": 5,\n  \"B\": 3,\n  \"_x\": 4,\n  \"a\": 2,\n  \"b\": 1\n}"
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "str",
+              "value": "{\"a\":2,\"b\":1}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_object_construct_a_1_a_2",
+      "sql": "SELECT OBJECT_CONSTRUCT('a', 1, 'a', 2)",
+      "setup": null,
+      "expect": {
+        "error": "100103 (22000): Duplicate field key 'a'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_a_2",
+      "sql": "SELECT PARSE_JSON('{\"a\":1,\"a\":2}')",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: duplicate object attribute \"a\", pos 10",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_insert_object_construct_a_1_a_2",
+      "sql": "SELECT OBJECT_INSERT(OBJECT_CONSTRUCT('a', 1), 'a', 2)",
+      "setup": null,
+      "expect": {
+        "error": "100103 (22000): Duplicate field key 'a'",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,2713 @@
+{
+  "name": "structured_types_ddl_metadata_temp_table",
+  "pr": 5,
+  "cases": [
+    {
+      "id": "create_temporary_table_fakesnow_probe_a_array_o_object_v_var",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe (a ARRAY, o OBJECT, v VARIANT, sa ARRAY(INT), so OBJECT(x INT, y VARCHAR), sm MAP(VARCHAR, INT), sn ARRAY(NUMBER(10,2)), nested ARRAY(OBJECT(k INT)), mvv MAP(VARCHAR, VARIANT), nn OBJECT(x INT NOT NULL) NOT NULL, av ARRAY(VARIANT), mn MAP(NUMBER(10,0), VARCHAR), sv ARRAY(VARCHAR(10)), so2 OBJECT(x INT, y OBJECT(z INT), w ARRAY(VARCHAR)), st ARRAY(TIMESTAMP_NTZ(3)))",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "status",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "Table FAKESNOW_PROBE successfully created."
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "describe_table_fakesnow_probe",
+      "sql": "DESCRIBE TABLE fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "type",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "kind",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "null?",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "primary key",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "unique key",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "check",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "expression",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "comment",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "policy name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "privacy domain",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "write default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "A"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "O"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "V"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SA"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(NUMBER(38,0))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SO"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(x NUMBER(38,0), y VARCHAR(16777216))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SM"
+            },
+            {
+              "type": "str",
+              "value": "MAP(VARCHAR(16777216), NUMBER(38,0))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SN"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(NUMBER(10,2))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "NESTED"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(OBJECT(k NUMBER(38,0)))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "MVV"
+            },
+            {
+              "type": "str",
+              "value": "MAP(VARCHAR(16777216), VARIANT)"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "NN"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(x NUMBER(38,0) NOT NULL)"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "AV"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(VARIANT)"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "MN"
+            },
+            {
+              "type": "str",
+              "value": "MAP(NUMBER(10,0), VARCHAR(16777216))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SV"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(VARCHAR(10))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SO2"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT(x NUMBER(38,0), y OBJECT(z NUMBER(38,0)), w ARRAY(VARCHAR(16777216)))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "ST"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY(TIMESTAMP_NTZ(3))"
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": "Y"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "str",
+              "value": "N"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_column_name_data_type_character_maximum_length_charac",
+      "sql": "SELECT column_name, data_type, character_maximum_length, character_octet_length, numeric_precision, numeric_scale, is_nullable FROM information_schema.columns WHERE table_name = 'FAKESNOW_PROBE' AND table_schema = 'PUBLIC' ORDER BY ordinal_position",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "COLUMN_NAME",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "DATA_TYPE",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "CHARACTER_MAXIMUM_LENGTH",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ],
+          [
+            "CHARACTER_OCTET_LENGTH",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ],
+          [
+            "NUMERIC_PRECISION",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ],
+          [
+            "NUMERIC_SCALE",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ],
+          [
+            "IS_NULLABLE",
+            "TEXT",
+            null,
+            null,
+            3,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "A"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "O"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "V"
+            },
+            {
+              "type": "str",
+              "value": "VARIANT"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SA"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SO"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SM"
+            },
+            {
+              "type": "str",
+              "value": "MAP"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SN"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "NESTED"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "MVV"
+            },
+            {
+              "type": "str",
+              "value": "MAP"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "NN"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "NO"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "AV"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "MN"
+            },
+            {
+              "type": "str",
+              "value": "MAP"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SV"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "SO2"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "ST"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "YES"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "show_columns_in_table_fakesnow_probe",
+      "sql": "SHOW COLUMNS IN TABLE fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "table_name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "schema_name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "column_name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "data_type",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "null?",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "kind",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "expression",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "comment",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "database_name",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "autoincrement",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "schema_evolution_record",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ],
+          [
+            "write_default",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "A"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "O"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"OBJECT\",\"nullable\":true}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "V"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"VARIANT\",\"nullable\":true}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SA"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SO"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"OBJECT\",\"nullable\":true,\"fields\":[{\"fieldName\":\"x\",\"fieldType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}},{\"fieldName\":\"y\",\"fieldType\":{\"type\":\"TEXT\",\"length\":16777216,\"byteLength\":67108864,\"nullable\":true,\"fixed\":false}}]}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SM"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"MAP\",\"nullable\":true,\"keyType\":{\"type\":\"TEXT\",\"length\":16777216,\"byteLength\":67108864,\"nullable\":false,\"fixed\":false},\"valueType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SN"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"FIXED\",\"precision\":10,\"scale\":2,\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "NESTED"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"OBJECT\",\"nullable\":true,\"fields\":[{\"fieldName\":\"k\",\"fieldType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}}]}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "MVV"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"MAP\",\"nullable\":true,\"keyType\":{\"type\":\"TEXT\",\"length\":16777216,\"byteLength\":67108864,\"nullable\":false,\"fixed\":false},\"valueType\":{\"type\":\"VARIANT\",\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "NN"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"OBJECT\",\"nullable\":false,\"fields\":[{\"fieldName\":\"x\",\"fieldType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":false}}]}"
+            },
+            {
+              "type": "str",
+              "value": "NOT_NULL"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "AV"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"VARIANT\",\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "MN"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"MAP\",\"nullable\":true,\"keyType\":{\"type\":\"FIXED\",\"precision\":10,\"scale\":0,\"nullable\":false},\"valueType\":{\"type\":\"TEXT\",\"length\":16777216,\"byteLength\":67108864,\"nullable\":true,\"fixed\":false}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SV"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"TEXT\",\"length\":10,\"byteLength\":40,\"nullable\":true,\"fixed\":false}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "SO2"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"OBJECT\",\"nullable\":true,\"fields\":[{\"fieldName\":\"x\",\"fieldType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}},{\"fieldName\":\"y\",\"fieldType\":{\"type\":\"OBJECT\",\"nullable\":true,\"fields\":[{\"fieldName\":\"z\",\"fieldType\":{\"type\":\"FIXED\",\"precision\":38,\"scale\":0,\"nullable\":true}}]}},{\"fieldName\":\"w\",\"fieldType\":{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"TEXT\",\"length\":16777216,\"byteLength\":67108864,\"nullable\":true,\"fixed\":false}}}]}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "FAKESNOW_PROBE"
+            },
+            {
+              "type": "str",
+              "value": "PUBLIC"
+            },
+            {
+              "type": "str",
+              "value": "ST"
+            },
+            {
+              "type": "str",
+              "value": "{\"type\":\"ARRAY\",\"nullable\":true,\"elementType\":{\"type\":\"TIMESTAMP_NTZ\",\"precision\":0,\"scale\":3,\"nullable\":true}}"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "COLUMN"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "str",
+              "value": "SANDBOX_ANALYTICS"
+            },
+            {
+              "type": "str",
+              "value": ""
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "insert_into_fakesnow_probe_select_array_construct_1_a_object",
+      "sql": "INSERT INTO fakesnow_probe SELECT ARRAY_CONSTRUCT(1,'a'), OBJECT_CONSTRUCT('k',1), PARSE_JSON('{\"z\":1}'), [1,2]::ARRAY(INT), {'x':1,'y':'z'}::OBJECT(x INT, y VARCHAR), {'k':1}::MAP(VARCHAR,INT), [1.5]::ARRAY(NUMBER(10,2)), [{'k':1}]::ARRAY(OBJECT(k INT)), {'k': PARSE_JSON('[1]')}::MAP(VARCHAR, VARIANT), {'x':1}::OBJECT(x INT NOT NULL), [1,'a']::ARRAY(VARIANT), {1:'a'}::MAP(NUMBER(10,0), VARCHAR), ['abc']::ARRAY(VARCHAR(10)), {'x':1,'y':{'z':2},'w':['q']}::OBJECT(x INT, y OBJECT(z INT), w ARRAY(VARCHAR)), ['2024-01-01 01:02:03.123456'::TIMESTAMP_NTZ(3)]::ARRAY(TIMESTAMP_NTZ(3))",
+      "setup": null,
+      "expect": {
+        "error": "001003 (42000): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_from_fakesnow_probe",
+      "sql": "SELECT * FROM fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SM",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SN",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "NESTED",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "MVV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "NN",
+            "OBJECT",
+            null,
+            null,
+            null,
+            false
+          ],
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "MN",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO2",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "ST",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sa_so_sm_nested_mvv_av_mn_so2_st_from_fakesnow_probe",
+      "sql": "SELECT sa, so, sm, nested, mvv, av, mn, so2, st FROM fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SM",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "NESTED",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "MVV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "MN",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO2",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "ST",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_a_varchar_o_varchar_sa_varchar_so_varchar_sm_varchar",
+      "sql": "SELECT a::VARCHAR, o::VARCHAR, sa::VARCHAR, so::VARCHAR, sm::VARCHAR, TO_JSON(sa), TO_JSON(so), TO_JSON(sm), TO_JSON(mn), TO_VARIANT(sa), TO_VARIANT(so), TO_VARIANT(sm), TO_VARIANT(mn) FROM fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": "001007 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_to_variant_sa_typeof_to_variant_so_typeof_to_v",
+      "sql": "SELECT TYPEOF(TO_VARIANT(sa)), TYPEOF(TO_VARIANT(so)), TYPEOF(TO_VARIANT(sm)), TYPEOF(TO_VARIANT(mn)), TYPEOF(a), TYPEOF(o), TYPEOF(v) FROM fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "TYPEOF(TO_VARIANT(SA))",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(TO_VARIANT(SO))",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(TO_VARIANT(SM))",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(TO_VARIANT(MN))",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": []
+      }
+    },
+    {
+      "id": "select_array_size_a_a_0_a_0_varchar_o_k_o_k_v_z_sa_0_so_x_so",
+      "sql": "SELECT ARRAY_SIZE(a), a[0], a[0]::VARCHAR, o:k, o['k'], v:z, sa[0], so:x, so:y, sm['k'], mvv['k'], mn[1], nested[0]:k, so2:y:z, so2.w[0], st[0] FROM fakesnow_probe",
+      "setup": null,
+      "expect": {
+        "error": "000904 (42000): SQL compilation error: error line 1 at position 128",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

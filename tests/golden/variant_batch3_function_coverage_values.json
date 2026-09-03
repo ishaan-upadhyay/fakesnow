@@ -1,0 +1,256 @@
+{
+  "name": "function_coverage_values",
+  "pr": 3,
+  "cases": [
+    {
+      "id": "select_array_contains_a_variant_array_construct_a_b_a1_array",
+      "sql": "SELECT ARRAY_CONTAINS('a'::VARIANT, ARRAY_CONSTRUCT('a','b')) a1, ARRAY_CONTAINS(1, ARRAY_CONSTRUCT(1.0)) a2, ARRAY_CONTAINS(NULL, ARRAY_CONSTRUCT(1, NULL)) a3, ARRAY_CONTAINS(NULL, ARRAY_CONSTRUCT(1)) a3b, ARRAY_CONTAINS(PARSE_JSON('null'), ARRAY_CONSTRUCT(PARSE_JSON('null'))) a4, ARRAY_CONTAINS(PARSE_JSON('null'), ARRAY_CONSTRUCT(NULL)) a4b, ARRAY_CONTAINS('1'::VARIANT, ARRAY_CONSTRUCT(1)) a4c, ARRAY_POSITION('b'::VARIANT, ARRAY_CONSTRUCT('a','b')) a5, ARRAY_POSITION(NULL, ARRAY_CONSTRUCT(1, NULL)) a6, ARRAY_POSITION('z'::VARIANT, ARRAY_CONSTRUCT('a')) a6b, ARRAY_APPEND(ARRAY_CONSTRUCT(1), 2) a7, ARRAY_SLICE(ARRAY_CONSTRUCT(1,2,3), 0, 2) a8, ARRAY_SLICE(ARRAY_CONSTRUCT(1,2,3), -2, 3) a9, ARRAY_SLICE(ARRAY_CONSTRUCT(1,2,3), 1, 10) a9b, ARRAY_SLICE(ARRAY_CONSTRUCT(1,2,3), 2, 1) a9c, ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL, 'a', PARSE_JSON('null'), 1.5, TRUE, [1], {'x':1}), ',') a10, ARRAY_TO_STRING(ARRAY_CONSTRUCT(), ',') a10b, ARRAY_TO_STRING(NULL, ',') a10c, ARRAY_DISTINCT(ARRAY_CONSTRUCT(1,1,'1',1.0, NULL, NULL, PARSE_JSON('null'), PARSE_JSON('null'))) a11, ARRAY_SIZE(PARSE_JSON('{\"a\":1}')) a12, ARRAY_SIZE(NULL) a13, ARRAY_SIZE(PARSE_JSON('\"x\"')) a14, ARRAY_SIZE(ARRAY_CONSTRUCT()) a15, ARRAY_FLATTEN(ARRAY_CONSTRUCT(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(2, ARRAY_CONSTRUCT(3)))) a16, ARRAY_SORT(ARRAY_CONSTRUCT(3,'b',1,NULL,PARSE_JSON('null'), 2.5, TRUE, [1], {'a':1})) a17, ARRAY_SORT(ARRAY_CONSTRUCT(3,1,NULL,2), FALSE) a17b, ARRAY_SORT(ARRAY_CONSTRUCT(3,1,NULL,2), TRUE, FALSE) a17c, ARRAY_MAX(ARRAY_CONSTRUCT(1,'a',NULL)) a18, ARRAY_MIN(ARRAY_CONSTRUCT(1,'a',NULL)) a18b, ARRAY_REMOVE(ARRAY_CONSTRUCT(1,2,1,'1',1.0), 1) a19, ARRAY_REMOVE(ARRAY_CONSTRUCT(1,NULL), NULL) a19b, ARRAY_INSERT(ARRAY_CONSTRUCT(1,2), 0, 'x') a20, ARRAY_INSERT(ARRAY_CONSTRUCT(1,2), 5, 'x') a20b, ARRAY_INSERT(ARRAY_CONSTRUCT(1,2), -1, 'x') a20c, ARRAY_COMPACT(ARRAY_CONSTRUCT(1, NULL, PARSE_JSON('null'))) a21, ARRAY_EXCEPT(ARRAY_CONSTRUCT(1,2,2,NULL), ARRAY_CONSTRUCT(2)) a22, ARRAY_INTERSECTION(ARRAY_CONSTRUCT(1,2,2), ARRAY_CONSTRUCT(2,2,3)) a23, ARRAYS_OVERLAP(ARRAY_CONSTRUCT(1, NULL), ARRAY_CONSTRUCT(NULL, 2)) a24, ARRAYS_OVERLAP(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(2)) a24b, ARRAY_GENERATE_RANGE(0,3) a25, ARRAY_GENERATE_RANGE(5,0,-2) a25b, ARRAYS_ZIP(ARRAY_CONSTRUCT(1,2), ARRAY_CONSTRUCT('a')) a26, ARRAY_PREPEND(ARRAY_CONSTRUCT(1), 0) a27, ARRAY_CAT(ARRAY_CONSTRUCT(1), NULL) a28, ARRAY_CAT(ARRAY_CONSTRUCT('a', 1), ARRAY_CONSTRUCT('b', '2')) a29, SPLIT('a,b,,c', ',') a30, SPLIT('', ',') a30b, SPLIT(NULL, ',') a30c, STRTOK_TO_ARRAY('a b  c', ' ') a31, ARRAY_UNIQUE_AGG(x) a32, ARRAY_AGG(x) a33, ARRAY_AGG(DISTINCT x) a34, ARRAY_AGG(x) WITHIN GROUP (ORDER BY x DESC) a35 FROM (SELECT column1 x FROM VALUES (1), (1), (NULL), (2))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value from array to string",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_keys_object_construct_b_1_a_2_o1_object_keys_p",
+      "sql": "SELECT OBJECT_KEYS(OBJECT_CONSTRUCT('b',1,'a',2)) o1, OBJECT_KEYS(PARSE_JSON('[1]')) o1b, OBJECT_INSERT(OBJECT_CONSTRUCT('a',1), 'b', 2) o2, OBJECT_INSERT(OBJECT_CONSTRUCT('a',1), 'a', 2, TRUE) o3, OBJECT_INSERT(OBJECT_CONSTRUCT('a',1), 'b', NULL) o4, OBJECT_INSERT(OBJECT_CONSTRUCT('a',1), 'b', PARSE_JSON('null')) o4b, OBJECT_DELETE(OBJECT_CONSTRUCT('a',1,'b',2), 'a', 'zz') o5, OBJECT_PICK(OBJECT_CONSTRUCT('a',1,'b',2), 'a', 'zz') o6, OBJECT_PICK(OBJECT_CONSTRUCT('a',1,'b',2), ARRAY_CONSTRUCT('b')) o6b, OBJECT_AGG(k, v) o7 FROM (SELECT 'b' k, TO_VARIANT(1) v UNION ALL SELECT 'a', TO_VARIANT('x') UNION ALL SELECT NULL, TO_VARIANT(1) UNION ALL SELECT 'c', NULL UNION ALL SELECT 'd', PARSE_JSON('null'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_agg_k_v_from_select_a_k_to_variant_1_v_union_a",
+      "sql": "SELECT OBJECT_AGG(k, v) FROM (SELECT 'a' k, TO_VARIANT(1) v UNION ALL SELECT 'a', TO_VARIANT(2))",
+      "setup": null,
+      "expect": {
+        "error": "100103 (22000): Duplicate field key 'a'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_keys_parse_json_1",
+      "sql": "SELECT OBJECT_KEYS(PARSE_JSON('1'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value 1 to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_insert_parse_json_1_a_1",
+      "sql": "SELECT OBJECT_INSERT(PARSE_JSON('[1]'), 'a', 1)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_to_array_1_t1_to_array_null_t2_to_array_parse_json_1",
+      "sql": "SELECT TO_ARRAY(1) t1, TO_ARRAY(NULL) t2, TO_ARRAY(PARSE_JSON('[1]')) t3, TO_ARRAY(PARSE_JSON('{\"a\":1}')) t4, TO_ARRAY(PARSE_JSON('null')) t5, TO_ARRAY('x') t5b, TO_OBJECT(PARSE_JSON('{\"a\":1}')) t6, TO_OBJECT(NULL) t7, TO_OBJECT(PARSE_JSON('null')) t8, AS_VARCHAR(PARSE_JSON('\"x\"')) t9, AS_VARCHAR(PARSE_JSON('1')) t10, AS_INTEGER(PARSE_JSON('1')) t11, AS_INTEGER(PARSE_JSON('\"1\"')) t12, AS_INTEGER(PARSE_JSON('1.5')) t13, AS_DOUBLE(PARSE_JSON('1')) t14, AS_DOUBLE(PARSE_JSON('1.5')) t14b, AS_ARRAY(PARSE_JSON('[1]')) t15, AS_ARRAY(PARSE_JSON('1')) t16, AS_OBJECT(PARSE_JSON('{}')) t17, AS_OBJECT(PARSE_JSON('[]')) t17b, AS_BOOLEAN(PARSE_JSON('true')) t18, AS_BOOLEAN(PARSE_JSON('1')) t18b, AS_DECIMAL(PARSE_JSON('1.5'), 10, 2) t19, AS_DECIMAL(PARSE_JSON('1.5')) t19b, AS_NUMBER(PARSE_JSON('1.5'), 10, 1) t19c, IS_ARRAY(PARSE_JSON('[1]')) t20, IS_ARRAY(NULL) t20b, IS_OBJECT(PARSE_JSON('{}')) t21, IS_INTEGER(PARSE_JSON('1')) t22, IS_INTEGER(PARSE_JSON('1.0')) t22b, IS_DECIMAL(PARSE_JSON('1.5')) t23, IS_DECIMAL(PARSE_JSON('1')) t23b, IS_DOUBLE(PARSE_JSON('1.5')) t24, IS_DOUBLE(PARSE_JSON('1')) t24b, IS_VARCHAR(PARSE_JSON('\"x\"')) t25, IS_CHAR(PARSE_JSON('\"x\"')) t25b, IS_BOOLEAN(PARSE_JSON('true')) t26, IS_NULL_VALUE(PARSE_JSON('null')) t27, IS_DATE(TO_VARIANT(CURRENT_DATE)) t28, IS_DATE_VALUE(TO_VARIANT(CURRENT_DATE)) t28b, IS_TIME(TO_VARIANT('01:02:03'::TIME)) t29, IS_TIMESTAMP_NTZ(TO_VARIANT(CURRENT_TIMESTAMP::TIMESTAMP_NTZ)) t30, IS_BINARY(TO_VARIANT(TO_BINARY('ab','hex'))) t31, CHECK_JSON('{') t32, CHECK_JSON('{}') t33, CHECK_JSON(NULL) t34, CHECK_JSON('') t34b, CHECK_JSON('{\"a\":1,\"a\":2}') t34c, TRY_PARSE_JSON('{') t35, TRY_PARSE_JSON('{\"a\":1}') t36, TRY_PARSE_JSON(NULL) t37, TRY_PARSE_JSON('') t38, PARSE_JSON('') t39, PARSE_JSON(NULL) t40, PARSE_JSON('  ') t41, STRIP_NULL_VALUE(PARSE_JSON('1')) t42, STRIP_NULL_VALUE(NULL) t43, TO_JSON(OBJECT_CONSTRUCT('b',1,'a',ARRAY_CONSTRUCT(1.5::DOUBLE, NULL, '2024-01-02'::DATE))) t44, TO_JSON(NULL) t45, TO_JSON('x') t46, TO_JSON(1.5::DOUBLE) t47, TO_JSON(CURRENT_DATE) t48, TO_JSON(ARRAY_CONSTRUCT(NULL)) t49, TO_VARCHAR(ARRAY_CONSTRUCT(1, NULL, 'a', 1.5::DOUBLE, '2024-01-02'::DATE)) t50, ARRAY_CONSTRUCT(1, NULL, 'a', 1.5::DOUBLE)::VARCHAR t51, OBJECT_CONSTRUCT('a', 1.5::DOUBLE)::VARCHAR t52, TO_VARIANT(1.5::DOUBLE)::VARCHAR t53, TO_VARIANT(1.5::DOUBLE)::VARIANT t54, ARRAY_CONSTRUCT(1.5::DOUBLE)::VARIANT t55, TO_CHAR(PARSE_JSON('{\"a\":1.5e0}')) t56",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 1,965",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_to_object_parse_json_1",
+      "sql": "SELECT TO_OBJECT(PARSE_JSON('1'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value 1 to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_to_object_parse_json_1_2",
+      "sql": "SELECT TO_OBJECT(PARSE_JSON('[1]'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json",
+      "sql": "SELECT PARSE_JSON('{')",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: incomplete object value, pos 2",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1",
+      "sql": "SELECT PARSE_JSON('[1,]')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,]')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  undefined\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1",
+      "sql": "SELECT PARSE_JSON('{a:1}')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('{A:1}')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_nan_parse_json_infinity_parse_json_infinit",
+      "sql": "SELECT PARSE_JSON('NaN'), PARSE_JSON('Infinity'), PARSE_JSON('-Infinity'), PARSE_JSON('undefined')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('NAN')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('INFINITY')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('-INFINITY')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('UNDEFINED')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "NaN"
+            },
+            {
+              "type": "str",
+              "value": "Infinity"
+            },
+            {
+              "type": "str",
+              "value": "-Infinity"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2",
+      "sql": "SELECT PARSE_JSON('1 2')",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: garbage after valid input document",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_2",
+      "sql": "SELECT PARSE_JSON(' {\"a\": 1} ')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON(' {\"A\": 1} ')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_ud83d",
+      "sql": "SELECT PARSE_JSON('\"\\ud83d\"')",
+      "setup": null,
+      "expect": {
+        "error": "001834 (42601): SQL compilation error: error line 1 at position 18",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

@@ -1,0 +1,769 @@
+{
+  "name": "typeof_to_variant_renderings",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_typeof_parse_json_1_a_typeof_parse_json_1_5_b_typeof",
+      "sql": "SELECT TYPEOF(PARSE_JSON('1')) a, TYPEOF(PARSE_JSON('1.5')) b, TYPEOF(PARSE_JSON('1e10')) c, TYPEOF(PARSE_JSON('\"s\"')) d, TYPEOF(PARSE_JSON('true')) e, TYPEOF(PARSE_JSON('[1]')) f, TYPEOF(PARSE_JSON('{\"a\":1}')) g, TYPEOF(TO_VARIANT(1.50)) h, TYPEOF(TO_VARIANT(1.5::DOUBLE)) i, TYPEOF(TO_VARIANT(1::NUMBER(38,0))) j, TYPEOF(TO_VARIANT(CURRENT_DATE)) k, TYPEOF(TO_VARIANT(CURRENT_TIMESTAMP)) l, TYPEOF(TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_NTZ)) m, TYPEOF(TO_VARIANT('2024-01-01 01:02:03 +05:00'::TIMESTAMP_TZ)) n, TYPEOF(TO_VARIANT('01:02:03'::TIME)) o, TYPEOF(TO_VARIANT(TO_BINARY('ab','hex'))) p, TYPEOF(TO_VARIANT(TRUE)) q, TYPEOF(TO_VARIANT('x')) r, TYPEOF(TO_VARIANT(ARRAY_CONSTRUCT())) s, TYPEOF(TO_VARIANT(OBJECT_CONSTRUCT())) t, TYPEOF(TO_VARIANT(1.5::FLOAT)) u, TYPEOF(TO_VARIANT(1::INT)) w, TYPEOF(TO_VARIANT(1::SMALLINT)) x, TYPEOF(TO_VARIANT(12345678901234567890)) y, TYPEOF(TO_VARIANT(1::NUMBER(10,2))) z",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "B",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "C",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "D",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "E",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "F",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "G",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "H",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "I",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "J",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "K",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "L",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "M",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "N",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "O",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "P",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "Q",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "R",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "S",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "T",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "U",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "W",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "X",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "Y",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "Z",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "DATE"
+            },
+            {
+              "type": "str",
+              "value": "TIMESTAMP_LTZ"
+            },
+            {
+              "type": "str",
+              "value": "TIMESTAMP_NTZ"
+            },
+            {
+              "type": "str",
+              "value": "TIMESTAMP_TZ"
+            },
+            {
+              "type": "str",
+              "value": "TIME"
+            },
+            {
+              "type": "str",
+              "value": "BINARY"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_to_variant_1_50_a_to_variant_1_5_double_b_to_variant",
+      "sql": "SELECT TO_VARIANT(1.50) a, TO_VARIANT(1.5::DOUBLE) b, TO_VARIANT('2024-01-02'::DATE) c, TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_NTZ) d, TO_VARIANT('2024-01-01 01:02:03.123456789'::TIMESTAMP_NTZ(9)) d9, TO_VARIANT('2024-01-01 01:02:03 +05:00'::TIMESTAMP_TZ) e, TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_LTZ) e2, TO_VARIANT('01:02:03'::TIME) t, TO_VARIANT(TO_BINARY('ab','hex')) f, TO_VARIANT(TRUE) g, TO_VARIANT(1::NUMBER(38,0)) i, TO_VARIANT(1e10) j, TO_VARIANT(1/3) k, TO_VARIANT(2.0::DOUBLE) l, TO_VARIANT(1.5::FLOAT) m, TO_VARIANT(123456789.123456789) n, TO_VARIANT(0.1+0.2) o, TO_VARIANT('quote\"d') p, TO_VARIANT(-0.0::DOUBLE) q, TO_VARIANT(1e300::DOUBLE) r, TO_VARIANT('NaN'::DOUBLE) s, TO_VARIANT('inf'::DOUBLE) t2, TO_VARIANT(1::NUMBER(10,2)) u, TO_VARIANT(10000000000000000000000000000000000000) w, TO_VARIANT(0.000001) x, TO_VARIANT(1e-7::DOUBLE) y, TO_VARIANT(123456789012345.678::DOUBLE) z",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "B",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "C",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "D",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "D9",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "E",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "E2",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "T",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "F",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "G",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "I",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "J",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "K",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "L",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "M",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "N",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "O",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "P",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "Q",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "R",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "S",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "T2",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "U",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "W",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "X",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "Y",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "Z",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "1.500000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "\"2024-01-02\""
+            },
+            {
+              "type": "str",
+              "value": "\"2024-01-01 01:02:03.000\""
+            },
+            {
+              "type": "str",
+              "value": "\"2024-01-01 01:02:03.123\""
+            },
+            {
+              "type": "str",
+              "value": "\"2024-01-01 01:02:03.000 +0500\""
+            },
+            {
+              "type": "str",
+              "value": "\"2024-01-01 01:02:03.000 Z\""
+            },
+            {
+              "type": "str",
+              "value": "\"01:02:03\""
+            },
+            {
+              "type": "str",
+              "value": "\"AB\""
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "10000000000"
+            },
+            {
+              "type": "str",
+              "value": "0.333333"
+            },
+            {
+              "type": "str",
+              "value": "2.000000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "1.500000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "123456789.123456789"
+            },
+            {
+              "type": "str",
+              "value": "0.3"
+            },
+            {
+              "type": "str",
+              "value": "\"quote\\\"d\""
+            },
+            {
+              "type": "str",
+              "value": "-0.000000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "1.000000000000000e+300"
+            },
+            {
+              "type": "str",
+              "value": "NaN"
+            },
+            {
+              "type": "str",
+              "value": "Infinity"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "10000000000000000000000000000000000000"
+            },
+            {
+              "type": "str",
+              "value": "0.000001"
+            },
+            {
+              "type": "str",
+              "value": "1.000000000000000e-07"
+            },
+            {
+              "type": "str",
+              "value": "1.234567890123457e+14"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_array_construct_2024_01_02_date_2024_01_01_01_02_03_t",
+      "sql": "SELECT ARRAY_CONSTRUCT('2024-01-02'::DATE, '2024-01-01 01:02:03'::TIMESTAMP_NTZ, 1.50, 1.5::DOUBLE, 1::NUMBER(38,0), 1e10, TO_BINARY('ab','hex'), TRUE, 'x', '01:02:03'::TIME, '2024-01-01 01:02:03 +05:00'::TIMESTAMP_TZ) a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"2024-01-02\",\n  \"2024-01-01 01:02:03.000\",\n  1.5,\n  1.500000000000000e+00,\n  1,\n  10000000000,\n  \"AB\",\n  true,\n  \"x\",\n  \"01:02:03\",\n  \"2024-01-01 01:02:03.000 +0500\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_object_construct_d_2024_01_02_date_ts_2024_01_01_01_0",
+      "sql": "SELECT OBJECT_CONSTRUCT('d', '2024-01-02'::DATE, 'ts', '2024-01-01 01:02:03'::TIMESTAMP_NTZ, 'dec', 1.50, 'dbl', 1.5::DOUBLE, 'bin', TO_BINARY('ab','hex')) o",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"bin\": \"AB\",\n  \"d\": \"2024-01-02\",\n  \"dbl\": 1.500000000000000e+00,\n  \"dec\": 1.5,\n  \"ts\": \"2024-01-01 01:02:03.000\"\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_to_variant_2024_01_02_date_varchar_a_to_variant_2024",
+      "sql": "SELECT TO_VARIANT('2024-01-02'::DATE)::VARCHAR a, TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_NTZ)::VARCHAR b, TO_VARIANT('2024-01-02'::DATE)::DATE c, TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_NTZ)::TIMESTAMP_NTZ d, TO_VARIANT(TO_BINARY('ab','hex'))::BINARY e, TO_VARIANT(1.50)::VARCHAR f, TO_VARIANT(TRUE)::VARCHAR g, TO_VARIANT(1.5::DOUBLE)::VARCHAR h, TO_VARIANT(1e10)::VARCHAR i",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "B",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "C",
+            "DATE",
+            null,
+            null,
+            null
+          ],
+          [
+            "D",
+            "TIMESTAMP_NTZ",
+            0,
+            9,
+            null
+          ],
+          [
+            "E",
+            "BINARY",
+            null,
+            null,
+            67108864
+          ],
+          [
+            "F",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "G",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "H",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "I",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "2024-01-02"
+            },
+            {
+              "type": "str",
+              "value": "2024-01-01 01:02:03.000"
+            },
+            {
+              "type": "date",
+              "value": "2024-01-02"
+            },
+            {
+              "type": "datetime",
+              "value": "2024-01-01T01:02:03"
+            },
+            {
+              "type": "bytearray",
+              "value": "ab"
+            },
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "10000000000"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

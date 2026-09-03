@@ -1,0 +1,64 @@
+{
+  "name": "string_escaping_dollar_quoted",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_parse_json_o_unicode_u00e9_u4e2d_nl_n_tab_t_quote_sla",
+      "sql": "SELECT PARSE_JSON($${\"o\":\"unicode \\u00e9 \\u4e2d nl\\n tab\\t quote\\\" slash\\/ back\\\\ <>& ctrl\\u0001 emoji \\ud83d\\ude00 plain é\"}$$) v, TO_VARIANT($$a\"b\\c\nnewline\ttab é 中$$) s, OBJECT_CONSTRUCT($$k\"ey$$, 1) k, PARSE_JSON($$[\"\\u003c\", \"\\u2028\", \"</script>\"]$$) u",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "S",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "K",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "U",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"o\": \"unicode é 中 nl\\n tab\\t quote\\\" slash/ back\\\\ <>& ctrl\\u0001 emoji 😀 plain é\"\n}"
+            },
+            {
+              "type": "str",
+              "value": "\"a\\\"b\\\\c\\nnewline\\ttab é 中\""
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"k\\\"ey\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  \"<\",\n  \" \",\n  \"</script>\"\n]"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}
