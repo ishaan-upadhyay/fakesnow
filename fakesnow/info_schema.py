@@ -29,6 +29,11 @@ create table if not exists _fs_global._fs_information_schema._fs_columns_ext (
     ext_column_name varchar,
     ext_character_maximum_length integer,
     ext_character_octet_length integer,
+    source_table_catalog varchar,
+    source_table_schema varchar,
+    ext_data_type varchar,
+    ext_describe_type varchar,
+    ext_show_data_type varchar,
     PRIMARY KEY(ext_table_catalog, ext_table_schema, ext_table_name, ext_column_name)
 )
 """
@@ -84,14 +89,15 @@ select * from _fs_global._fs_information_schema._fs_columns where table_catalog 
 SQL_CREATE_GLOBAL_INFORMATION_SCHEMA_COLUMNS_VIEW = """
 create view if not exists _fs_global._fs_information_schema._fs_columns AS
 select
-    columns.table_catalog AS TABLE_CATALOG,
-    columns.table_schema AS TABLE_SCHEMA,
+    coalesce(ext.ext_table_catalog, columns.table_catalog) AS TABLE_CATALOG,
+    coalesce(ext.ext_table_schema, columns.table_schema) AS TABLE_SCHEMA,
     columns.table_name AS TABLE_NAME,
     columns.column_name AS COLUMN_NAME,
     columns.ordinal_position AS ORDINAL_POSITION,
     columns.column_default AS COLUMN_DEFAULT,
     columns.is_nullable AS IS_NULLABLE,
-case when starts_with(columns.data_type, 'DECIMAL') or columns.data_type='BIGINT' then 'NUMBER'
+case when ext.ext_data_type is not null then ext.ext_data_type
+     when starts_with(columns.data_type, 'DECIMAL') or columns.data_type='BIGINT' then 'NUMBER'
      when columns.data_type='VARCHAR' then 'TEXT'
      when columns.data_type='DOUBLE' then 'FLOAT'
      when columns.data_type='BLOB' then 'BINARY'
@@ -117,8 +123,8 @@ COLLATION_NAME, IS_IDENTITY, IDENTITY_GENERATION, IDENTITY_CYCLE,
     null::VARCHAR as DATA_TYPE_ALIAS
 from system.information_schema.columns columns
 left join _fs_global._fs_information_schema._fs_columns_ext ext
-  on ext_table_catalog = columns.table_catalog
- AND ext_table_schema = columns.table_schema
+  on coalesce(source_table_catalog, ext_table_catalog) = columns.table_catalog
+ AND coalesce(source_table_schema, ext_table_schema) = columns.table_schema
  AND ext_table_name = columns.table_name
  AND ext_column_name = columns.column_name
 LEFT JOIN duckdb_columns ddb_columns
@@ -300,9 +306,54 @@ def insert_text_lengths_sql(catalog: str, schema: str, table: str, text_lengths:
     )
 
     return f"""
-        INSERT INTO _fs_global._fs_information_schema._fs_columns_ext
+        INSERT INTO _fs_global._fs_information_schema._fs_columns_ext (
+            ext_table_catalog, ext_table_schema, ext_table_name, ext_column_name,
+            ext_character_maximum_length, ext_character_octet_length
+        )
         values {values}
         ON CONFLICT (ext_table_catalog, ext_table_schema, ext_table_name, ext_column_name)
         DO UPDATE SET ext_character_maximum_length = excluded.ext_character_maximum_length,
             ext_character_octet_length = excluded.ext_character_octet_length
+    """
+
+
+def insert_structured_types_sql(
+    catalog: str,
+    schema: str,
+    table: str,
+    source_catalog: str,
+    source_schema: str,
+    metadata: list[tuple[str, str, str, str]],
+) -> str:
+    values = ", ".join(
+        "({})".format(
+            ", ".join(
+                f"'{value.replace(chr(39), chr(39) * 2)}'"
+                for value in (
+                    catalog,
+                    schema,
+                    table,
+                    column,
+                    source_catalog,
+                    source_schema,
+                    data_type,
+                    describe_type,
+                    show_data_type,
+                )
+            )
+        )
+        for column, data_type, describe_type, show_data_type in metadata
+    )
+    return f"""
+        INSERT INTO _fs_global._fs_information_schema._fs_columns_ext (
+            ext_table_catalog, ext_table_schema, ext_table_name, ext_column_name,
+            source_table_catalog, source_table_schema, ext_data_type, ext_describe_type, ext_show_data_type
+        )
+        values {values}
+        ON CONFLICT (ext_table_catalog, ext_table_schema, ext_table_name, ext_column_name)
+        DO UPDATE SET source_table_catalog = excluded.source_table_catalog,
+            source_table_schema = excluded.source_table_schema,
+            ext_data_type = excluded.ext_data_type,
+            ext_describe_type = excluded.ext_describe_type,
+            ext_show_data_type = excluded.ext_show_data_type
     """
