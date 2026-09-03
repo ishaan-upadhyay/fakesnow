@@ -14,7 +14,7 @@ def test_show_columns(dcur: snowflake.connector.cursor.SnowflakeCursor):
             XBOOLEAN BOOLEAN, XINT INT, XFLOAT FLOAT, XDECIMAL DECIMAL(10,2),
             XVARCHAR VARCHAR, XVARCHAR20 VARCHAR(20),
             XDATE DATE, XTIME TIME, XTIMESTAMP TIMESTAMP_TZ, XTIMESTAMP_NTZ TIMESTAMP_NTZ,
-            XBINARY BINARY, /* XARRAY ARRAY, */ XOBJECT OBJECT, XVARIANT VARIANT)
+            XBINARY BINARY, XARRAY ARRAY, XOBJECT OBJECT, XVARIANT VARIANT)
         """)
     dcur.execute("create view view1 as select xboolean from example")
     dcur.execute("create schema schema3")
@@ -46,6 +46,7 @@ def test_show_columns(dcur: snowflake.connector.cursor.SnowflakeCursor):
         {**common_fields, "column_name": "XTIMESTAMP", "data_type": '{"type":"TIMESTAMP_TZ","precision":0,"scale":9,"nullable":true}'},
         {**common_fields, "column_name": "XTIMESTAMP_NTZ", "data_type": '{"type":"TIMESTAMP_NTZ","precision":0,"scale":9,"nullable":true}'},
         {**common_fields, "column_name": "XBINARY", "data_type": '{"type":"BINARY","length":8388608,"byteLength":8388608,"nullable":true,"fixed":true}'},
+        {**common_fields, "column_name": "XARRAY", "data_type": '{"type":"ARRAY","nullable":true}'},
         {**common_fields, "column_name": "XOBJECT", "data_type": '{"type":"OBJECT","nullable":true}'},
         {**common_fields, "column_name": "XVARIANT", "data_type": '{"type":"VARIANT","nullable":true}'},
     ]
