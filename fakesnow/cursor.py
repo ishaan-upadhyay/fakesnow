@@ -205,12 +205,14 @@ class FakeSnowflakeCursor:
                         function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
                     hash_result = any(function.name.upper() == "HASH" for function in source.find_all(exp.Anonymous))
+                    wide_text = isinstance(source, (exp.ArrayToString, exp.CheckJson))
+                    fixed_nine = bool(source.args.get("_fs_array_size")) or isinstance(source, exp.ArrayPosition)
                     fixed_width_text = isinstance(source, exp.MD5)
                     if (
                         index < len(rows)
                         and rows[index][1] == "VARCHAR"
                         and not fixed_width_text
-                        and (variant_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
+                        and (variant_text or wide_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
                     ):
                         row = list(rows[index])
                         row[1] = "VARCHAR(134217728)"
@@ -218,6 +220,16 @@ class FakeSnowflakeCursor:
                     elif index < len(rows) and hash_result:
                         row = list(rows[index])
                         row[1] = "DECIMAL(19,0)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and fixed_nine:
+                        row = list(rows[index])
+                        row[1] = "DECIMAL(9,0)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and (sequence_metadata := source.args.get("_fs_flatten_sequence_source")):
+                        precision, nullable = sequence_metadata
+                        row = list(rows[index])
+                        row[1] = f"DECIMAL({precision},0)"
+                        row[2] = "YES" if nullable else "NO"
                         rows[index] = tuple(row)
                     elif index < len(rows) and isinstance(
                         source,
@@ -392,12 +404,12 @@ class FakeSnowflakeCursor:
             .transform(transforms.json_extract_cased_as_varchar)
             .transform(transforms.json_extract_precedence)
             .transform(transforms.flatten_value_cast_as_varchar)
-            .transform(transforms.flatten)
             .transform(transforms.regex_replace)
             .transform(transforms.regex_substr)
             .transform(transforms.result_scan)
             .transform(transforms.sequence_nextval)
             .transform(transforms.values_columns)
+            .transform(transforms.flatten)
             .transform(transforms.to_date)
             .transform(transforms.timestamp_offsets)
             .transform(transforms.to_decimal)

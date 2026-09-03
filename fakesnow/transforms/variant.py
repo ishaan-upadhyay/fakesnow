@@ -68,6 +68,10 @@ def _path_cast_output_name(expression: Expr) -> str | None:
 def preserve_output_names(expression: Expr) -> Expr:
     if not isinstance(expression, exp.Select):
         return expression
+    if expression.find(exp.Explode):
+        for column in expression.find_all(exp.Column):
+            if column.name.upper() == "VALUE":
+                column.args["_fs_variant"] = True
     variant_columns: set[str] = set()
     for subquery in expression.find_all(exp.Subquery):
         if not isinstance(subquery.this, exp.Select):
@@ -249,8 +253,7 @@ def variant_operators(expression: Expr) -> Expr:
         )
 
     if isinstance(expression, (exp.Add, exp.Sub, exp.Mul, exp.Div)) and (
-        _contains_variant_expression(expression.this)
-        or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
         return expression.__class__(
             this=numeric_value(expression.this),
@@ -260,17 +263,15 @@ def variant_operators(expression: Expr) -> Expr:
     if isinstance(expression, exp.Neg) and _contains_variant_expression(expression.this):
         return exp.Neg(this=numeric_value(expression.this))
 
-    if isinstance(expression, (exp.Abs, exp.Round, exp.Sum, exp.Avg)) and _contains_variant_expression(
-        expression.this
-    ):
+    if isinstance(expression, (exp.Abs, exp.Round, exp.Sum, exp.Avg)) and _contains_variant_expression(expression.this):
         result = expression.copy()
         result.set("this", numeric_value(expression.this))
         return result
 
     if isinstance(expression, exp.DPipe) and (
-        _contains_variant_expression(expression.this)
-        or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
+
         def text_value(value: Expr) -> Expr:
             if not _contains_variant_expression(value):
                 return value.copy()
@@ -294,8 +295,7 @@ def variant_operators(expression: Expr) -> Expr:
         )
 
     if isinstance(expression, (exp.And, exp.Or)) and (
-        _contains_variant_expression(expression.this)
-        or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
         return expression.__class__(
             this=boolean_value(expression.this),
@@ -306,12 +306,11 @@ def variant_operators(expression: Expr) -> Expr:
         return exp.Not(this=boolean_value(expression.this))
 
     if isinstance(expression, (exp.EQ, exp.NEQ)) and (
-        _contains_variant_expression(expression.this)
-        or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
-        both_variant = _contains_variant_expression(
-            expression.this
-        ) and _contains_variant_expression(expression.expression)
+        both_variant = _contains_variant_expression(expression.this) and _contains_variant_expression(
+            expression.expression
+        )
         equals = exp.Anonymous(
             this="_fs_variant_eq" if both_variant else "_fs_variant_eq_sql",
             expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
@@ -319,8 +318,7 @@ def variant_operators(expression: Expr) -> Expr:
         return exp.Not(this=equals) if isinstance(expression, exp.NEQ) else equals
 
     if isinstance(expression, (exp.GT, exp.GTE, exp.LT, exp.LTE)) and (
-        _contains_variant_expression(expression.this)
-        or _contains_variant_expression(expression.expression)
+        _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
         left = exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression.this)])
         right = exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression.expression)])
@@ -417,14 +415,11 @@ def _to_variant_value(value: Expr) -> Expr:
 
 def to_variant(expression: Expr) -> Expr:
     if isinstance(expression, exp.ToVariant):
-        if (
-            (isinstance(expression.this, exp.Struct) and not expression.this.expressions)
-            or (
-                isinstance(expression.this, exp.Anonymous)
-                and expression.this.name.upper() == "_FS_OBJECT_CONSTRUCT"
-                and isinstance(expression.this.expressions[0], exp.Array)
-                and not expression.this.expressions[0].expressions
-            )
+        if (isinstance(expression.this, exp.Struct) and not expression.this.expressions) or (
+            isinstance(expression.this, exp.Anonymous)
+            and expression.this.name.upper() == "_FS_OBJECT_CONSTRUCT"
+            and isinstance(expression.this.expressions[0], exp.Array)
+            and not expression.this.expressions[0].expressions
         ):
             return exp.Anonymous(
                 this="_fs_parse_json",
@@ -450,11 +445,10 @@ def typeof_fn(expression: Expr) -> Expr:
             ]
         elif isinstance(expression.this, (exp.Case, exp.If)):
             arguments = _branch_values(expression.this)
-        if arguments and any(
-            _contains_variant_expression(argument) for argument in arguments
-        ) and any(
-            isinstance(argument, exp.Literal) and argument.is_string
-            for argument in arguments
+        if (
+            arguments
+            and any(_contains_variant_expression(argument) for argument in arguments)
+            and any(isinstance(argument, exp.Literal) and argument.is_string for argument in arguments)
         ):
             raise snowflake.connector.errors.ProgrammingError(
                 msg="SQL compilation error:",
@@ -492,7 +486,6 @@ def variant_functions(expression: Expr) -> Expr:
         )
 
     if (argument := _zeroifnull_argument(expression)) is not None and _contains_variant_expression(argument):
-        # ZEROIFNULL converts its argument to a number, so a VARIANT argument returns REAL
         return exp.Coalesce(
             this=exp.Anonymous(
                 this="_fs_variant_to_double",
@@ -502,8 +495,6 @@ def variant_functions(expression: Expr) -> Expr:
         )
 
     if branch_values := _branch_values(expression):
-        # Snowflake unifies the branch types of a CASE or IFF. VARIANT absorbs any scalar, but
-        # ARRAY has no common type with a scalar, so mixing the two is a compilation error.
         if any(_is_array_expression(branch) for branch in branch_values) and any(
             isinstance(branch, exp.Literal) for branch in branch_values
         ):
@@ -517,10 +508,14 @@ def variant_functions(expression: Expr) -> Expr:
         ):
             return _convert_branches(expression, "_fs_variant_to_varchar")
 
-    if isinstance(expression, exp.ToBinary) and isinstance(
-        value,
-        Expr,
-    ) and _contains_variant_expression(value):
+    if (
+        isinstance(expression, exp.ToBinary)
+        and isinstance(
+            value,
+            Expr,
+        )
+        and _contains_variant_expression(value)
+    ):
         raise snowflake.connector.errors.ProgrammingError(
             msg="SQL compilation error:",
             errno=939,
@@ -537,16 +532,13 @@ def variant_functions(expression: Expr) -> Expr:
             default=argument.copy(),
         )
 
-    coalesce_arguments = (
-        [expression.this, *expression.expressions]
-        if isinstance(expression, exp.Coalesce)
-        else []
-    )
+    coalesce_arguments = [expression.this, *expression.expressions] if isinstance(expression, exp.Coalesce) else []
     if (
         isinstance(expression, exp.Coalesce)
         and any(_contains_variant_expression(argument) for argument in coalesce_arguments)
         and any(isinstance(argument, exp.Literal) and argument.is_string for argument in coalesce_arguments)
     ):
+
         def coalesce_value(argument: Expr) -> Expr:
             if not _contains_variant_expression(argument):
                 return argument.copy()
@@ -564,9 +556,9 @@ def variant_functions(expression: Expr) -> Expr:
     if isinstance(expression, (exp.Least, exp.Greatest)):
         arguments = [expression.this, *expression.expressions]
         if any(_contains_variant_expression(argument) for argument in arguments) and any(
-            isinstance(argument, exp.Literal) and argument.is_string
-            for argument in arguments
+            isinstance(argument, exp.Literal) and argument.is_string for argument in arguments
         ):
+
             def text_value(argument: Expr) -> Expr:
                 if not _contains_variant_expression(argument):
                     return argument.copy()
@@ -585,12 +577,7 @@ def variant_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.Count) and _contains_variant_expression(expression.this):
         if isinstance(expression.this, exp.Distinct):
             return exp.Count(
-                this=exp.Distinct(
-                    expressions=[
-                        strip_json_null(argument)
-                        for argument in expression.this.expressions
-                    ]
-                )
+                this=exp.Distinct(expressions=[strip_json_null(argument) for argument in expression.this.expressions])
             )
         return exp.Count(this=strip_json_null(expression.this))
 
@@ -611,11 +598,7 @@ def variant_functions(expression: Expr) -> Expr:
             this="_fs_sf_json_compact",
             expressions=[_as_variant(expression.this)],
         )
-    if (
-        isinstance(expression, exp.ToChar)
-        and isinstance(value, Expr)
-        and _contains_variant_expression(value)
-    ):
+    if isinstance(expression, exp.ToChar) and isinstance(value, Expr) and _contains_variant_expression(value):
         return exp.Anonymous(
             this="_fs_variant_to_varchar",
             expressions=[_as_variant(value)],
@@ -697,9 +680,7 @@ def variant_functions(expression: Expr) -> Expr:
             "IS_TIMESTAMP_TZ": "TIMESTAMP_TZ",
             "IS_VARCHAR": "VARCHAR",
         }
-        if len(expression.expressions) == 1 and (
-            expected := anonymous_predicates.get(name)
-        ):
+        if len(expression.expressions) == 1 and (expected := anonymous_predicates.get(name)):
             actual = exp.Anonymous(this="_fs_typeof", expressions=[_as_variant(argument)])
             return exp.EQ(this=actual, expression=exp.Literal.string(expected))
 
@@ -719,11 +700,7 @@ def variant_functions(expression: Expr) -> Expr:
             target_type, expected = type_spec
             target = exp.DataType(this=target_type, nested=False)
             converted = exp.Cast(this=argument.copy(), to=target).transform(variant_cast)
-            expected_types = (
-                ["DOUBLE", "INTEGER", "DECIMAL"]
-                if name in {"AS_DOUBLE", "AS_REAL"}
-                else [expected]
-            )
+            expected_types = ["DOUBLE", "INTEGER", "DECIMAL"] if name in {"AS_DOUBLE", "AS_REAL"} else [expected]
             return exp.Case(
                 ifs=[
                     exp.If(
@@ -732,10 +709,7 @@ def variant_functions(expression: Expr) -> Expr:
                                 this="_fs_typeof",
                                 expressions=[_as_variant(argument)],
                             ),
-                            expressions=[
-                                exp.Literal.string(kind)
-                                for kind in expected_types
-                            ],
+                            expressions=[exp.Literal.string(kind) for kind in expected_types],
                         ),
                         true=converted,
                     )
@@ -745,11 +719,7 @@ def variant_functions(expression: Expr) -> Expr:
 
         if name in {"AS_ARRAY", "AS_OBJECT"} and len(expression.expressions) == 1:
             expected = name.removeprefix("AS_")
-            if (
-                expected == "OBJECT"
-                and isinstance(argument, exp.Struct)
-                and not argument.expressions
-            ):
+            if expected == "OBJECT" and isinstance(argument, exp.Struct) and not argument.expressions:
                 return exp.Anonymous(
                     this="_fs_variant_to_object",
                     expressions=[
@@ -759,11 +729,7 @@ def variant_functions(expression: Expr) -> Expr:
                         )
                     ],
                 )
-            converter = (
-                "_fs_variant_to_array"
-                if expected == "ARRAY"
-                else "_fs_variant_to_object"
-            )
+            converter = "_fs_variant_to_array" if expected == "ARRAY" else "_fs_variant_to_object"
             return exp.Case(
                 ifs=[
                     exp.If(
@@ -784,16 +750,8 @@ def variant_functions(expression: Expr) -> Expr:
             )
 
         if name == "AS_DECIMAL":
-            precision = (
-                expression.expressions[1].copy()
-                if len(expression.expressions) > 1
-                else exp.Literal.number(38)
-            )
-            scale = (
-                expression.expressions[2].copy()
-                if len(expression.expressions) > 2
-                else exp.Literal.number(0)
-            )
+            precision = expression.expressions[1].copy() if len(expression.expressions) > 1 else exp.Literal.number(38)
+            scale = expression.expressions[2].copy() if len(expression.expressions) > 2 else exp.Literal.number(0)
             converted = exp.Anonymous(
                 this="_fs_variant_to_decimal",
                 expressions=[_as_variant(argument), precision, scale],
@@ -900,11 +858,7 @@ def structured_cast(expression: Expr) -> Expr:
     }
     fields: list[Expr] = []
     for field in expression.to.expressions:
-        if (
-            not isinstance(field, exp.ColumnDef)
-            or field.kind is None
-            or field.name.upper() not in values
-        ):
+        if not isinstance(field, exp.ColumnDef) or field.kind is None or field.name.upper() not in values:
             return expression
         fields.append(
             exp.PropertyEQ(
