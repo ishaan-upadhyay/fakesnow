@@ -206,7 +206,9 @@ class FakeSnowflakeCursor:
                     )
                     hash_result = any(function.name.upper() == "HASH" for function in source.find_all(exp.Anonymous))
                     wide_text = isinstance(source, (exp.ArrayToString, exp.CheckJson))
-                    fixed_nine = bool(source.args.get("_fs_array_size")) or isinstance(source, exp.ArrayPosition)
+                    fixed_nine = bool(
+                        source.args.get("_fs_array_size") or source.args.get("_fs_array_position")
+                    ) or isinstance(source, exp.ArrayPosition)
                     fixed_width_text = isinstance(source, exp.MD5)
                     if (
                         index < len(rows)
@@ -424,6 +426,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.hash_fn)
             .transform(transforms.extract_text_length)
             .transform(transforms.sample)
+            .transform(transforms.array_functions)
             .transform(transforms.array_size)
             .transform(transforms.random)
             .transform(transforms.array_agg_within_group)

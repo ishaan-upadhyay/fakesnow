@@ -42,6 +42,7 @@ CREATE OR REPLACE MACRO ${catalog}._fs_flatten_array(
         input AS THIS
     FROM UNNEST(input) WITH ORDINALITY AS e(value, index)
     WHERE UPPER(mode_arg) IN ('ARRAY', 'BOTH')
+      AND _fs_typeof(CAST(e.value AS VARIANT)) IS NOT NULL
     """
 )
 

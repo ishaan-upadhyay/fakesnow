@@ -34,7 +34,9 @@ from fakesnow.variant.sentinels import (
     TIMESTAMP_LTZ_PREFIX,
     TIMESTAMP_NTZ_PREFIX,
     TIMESTAMP_TZ_PREFIX,
+    UNDEFINED,
     is_json_null,
+    is_undefined,
 )
 from fakesnow.variant.typeof import typeof
 
@@ -131,6 +133,234 @@ def _to_array(value: Any) -> Any:
     return [duckdb.Value(_variant_output(item), sqltypes.VARIANT) for item in values]
 
 
+def _array_output(values: list[Any] | tuple[Any, ...] | None) -> Any:
+    if values is None:
+        return None
+    return [duckdb.Value(_variant_output(item), sqltypes.VARIANT) for item in values]
+
+
+def _array_values(value: Any, *, coerce: bool = False) -> list[Any] | None:
+    if value is None or is_json_null(value):
+        return None
+    if isinstance(value, (list, tuple)) and _map_items(value) is None:
+        return list(value)
+    return [value] if coerce else None
+
+
+def _array_contains(array: Any, value: Any) -> bool | None:
+    values = _array_values(array)
+    if values is None:
+        return None if array is None else False
+    if value is None:
+        return True if any(is_undefined(item) or item is None for item in values) else None
+    return any(variant_eq(item, value) is True for item in values)
+
+
+def _array_position(array: Any, value: Any) -> int | None:
+    values = _array_values(array)
+    if values is None:
+        return None
+    for index, item in enumerate(values):
+        if value is None:
+            if is_undefined(item) or item is None:
+                return index
+        elif variant_eq(item, value) is True:
+            return index
+    return None
+
+
+def _array_append(array: Any, value: Any) -> Any:
+    values = _array_values(array, coerce=True)
+    return _array_output(None if values is None else [*values, UNDEFINED if value is None else value])
+
+
+def _array_prepend(array: Any, value: Any) -> Any:
+    values = _array_values(array, coerce=True)
+    return _array_output(None if values is None else [UNDEFINED if value is None else value, *values])
+
+
+def _array_slice(array: Any, start: int | None, end: int | None) -> Any:
+    values = _array_values(array)
+    if values is None or start is None or end is None:
+        return None
+    length = len(values)
+    start = max(0, length + start) if start < 0 else min(start, length)
+    end = max(0, length + end) if end < 0 else min(end, length)
+    return _array_output(values[start:end] if end >= start else [])
+
+
+def _array_to_string(array: Any, delimiter: str | None) -> str | None:
+    values = _array_values(array)
+    if values is None or delimiter is None:
+        return None
+
+    def render(value: Any) -> str:
+        if value is None or is_undefined(value) or is_json_null(value):
+            return ""
+        if isinstance(value, (list, tuple)) or _map_items(value) is not None:
+            return sf_json_compact(value) or ""
+        if isinstance(value, Decimal):
+            raise VariantRuntimeError("Failed to cast variant value from array to string", 100071)
+        rendered = to_varchar(value)
+        if rendered is None:
+            raise VariantRuntimeError("Failed to cast variant value from array to string", 100071)
+        return rendered
+
+    return delimiter.join(render(value) for value in values)
+
+
+def _array_distinct(array: Any) -> Any:
+    values = _array_values(array)
+    if values is None:
+        return None
+    ordinary = [value for value in values if not is_undefined(value) and not is_json_null(value)]
+    sentinels = [
+        *([JSON_NULL] if any(is_json_null(value) for value in values) else []),
+        *([UNDEFINED] if any(is_undefined(value) for value in values) else []),
+    ]
+    result: list[Any] = []
+    for value in [*ordinary, *sentinels]:
+        if not any(variant_eq(value, existing) is True for existing in result):
+            result.append(value)
+    return _array_output(result)
+
+
+def _array_flatten(array: Any) -> Any:
+    values = _array_values(array)
+    if values is None:
+        return None
+    result: list[Any] = []
+    for value in values:
+        if is_undefined(value) or value is None:
+            return None
+        nested = _array_values(value)
+        if nested is None:
+            raise VariantRuntimeError(
+                "Not an array: 'Input argument to ARRAY_FLATTEN is not an array of arrays'",
+                100107,
+            )
+        result.extend(nested)
+    return _array_output(result)
+
+
+def _array_sort(array: Any, ascending: bool | None, nulls_first: bool | None) -> Any:
+    values = _array_values(array)
+    if values is None:
+        return None
+    ascending = True if ascending is None else ascending
+    nulls_first = not ascending if nulls_first is None else nulls_first
+    nulls = [value for value in values if is_undefined(value)]
+    json_nulls = [value for value in values if is_json_null(value)]
+    ordinary = [value for value in values if not is_undefined(value) and not is_json_null(value)]
+    ordinary.sort(key=variant_key, reverse=not ascending)
+    trailing = json_nulls + nulls
+    return _array_output([*trailing, *ordinary] if nulls_first else [*ordinary, *trailing])
+
+
+def _array_extreme(array: Any, maximum: bool) -> Any:
+    values = _array_values(array)
+    if values is None:
+        return None
+    candidates = [value for value in values if not is_undefined(value) and not is_json_null(value)]
+    if not candidates:
+        return None
+    value = (max if maximum else min)(candidates, key=variant_key)
+    return duckdb.Value(_variant_output(value), sqltypes.VARIANT)
+
+
+def _array_remove(array: Any, value: Any) -> Any:
+    values = _array_values(array)
+    if values is None or value is None:
+        return None
+    return _array_output([item for item in values if variant_eq(item, value) is not True])
+
+
+def _array_insert(array: Any, position: int | None, value: Any) -> Any:
+    values = _array_values(array)
+    if values is None or position is None:
+        return None
+    value = UNDEFINED if value is None else value
+    if position < 0:
+        position = max(0, len(values) + position)
+    if position > len(values):
+        values.extend([UNDEFINED] * (position - len(values)))
+    values.insert(position, value)
+    return _array_output(values)
+
+
+def _array_compact(array: Any) -> Any:
+    values = _array_values(array)
+    if values is None:
+        return None
+    return _array_output(
+        [value for value in values if value is not None and not is_undefined(value) and not is_json_null(value)]
+    )
+
+
+def _array_cat(left: Any, right: Any) -> Any:
+    if left is None or right is None:
+        return None
+    left_values = _array_values(left)
+    right_values = _array_values(right)
+    if left_values is None:
+        raise VariantRuntimeError("Left argument of ARRAY_CAT is not an array", 100098)
+    if right_values is None:
+        raise VariantRuntimeError("Right argument of ARRAY_CAT is not an array", 100098)
+    return _array_output([*left_values, *right_values])
+
+
+def _array_except(left: Any, right: Any) -> Any:
+    left_values = _array_values(left)
+    right_values = _array_values(right)
+    if left_values is None or right_values is None:
+        return None
+    result = list(left_values)
+    for value in right_values:
+        index = next((i for i, item in enumerate(result) if variant_eq(item, value) is True), None)
+        if index is not None:
+            result.pop(index)
+    return _array_output(result)
+
+
+def _array_intersection(left: Any, right: Any) -> Any:
+    left_values = _array_values(left)
+    right_values = _array_values(right)
+    if left_values is None or right_values is None:
+        return None
+    available = list(right_values)
+    result: list[Any] = []
+    for value in left_values:
+        index = next((i for i, item in enumerate(available) if variant_eq(item, value) is True), None)
+        if index is not None:
+            result.append(value)
+            available.pop(index)
+    return _array_output(result)
+
+
+def _arrays_overlap(left: Any, right: Any) -> bool | None:
+    left_values = _array_values(left)
+    right_values = _array_values(right)
+    if left_values is None or right_values is None:
+        return None
+    return any(variant_eq(a, b) is True for a in left_values for b in right_values)
+
+
+def _arrays_zip(left: Any, right: Any) -> Any:
+    left_values = _array_values(left)
+    right_values = _array_values(right)
+    if left_values is None or right_values is None:
+        return None
+    return _array_output(
+        [
+            {
+                "$1": left_values[index] if index < len(left_values) else JSON_NULL,
+                "$2": right_values[index] if index < len(right_values) else JSON_NULL,
+            }
+            for index in range(max(len(left_values), len(right_values)))
+        ]
+    )
+
+
 def _to_object(value: Any) -> Any:
     if value is None or is_json_null(value):
         return None
@@ -159,7 +389,7 @@ def _get(value: Any, key: Any) -> Any:
         result = value[int(key)] if int(key) < len(value) else None
     else:
         return None
-    if result is None:
+    if result is None or is_undefined(result):
         return None
     return duckdb.Value(_variant_output(result), sqltypes.VARIANT)
 
@@ -264,6 +494,8 @@ def _flatten_rows(
             return
         if isinstance(container, (list, tuple)) and flatten_mode in {"BOTH", "ARRAY"}:
             for index, child in enumerate(container):
+                if is_undefined(child):
+                    continue
                 child_path = f"{prefix}[{index}]"
                 rows.append(
                     {
@@ -367,6 +599,25 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
         ("_fs_object_drop_null", _object_drop_null, [variant], variant),
         ("_fs_object_keep_null", _object_keep_null, [variant], variant),
         ("_fs_variant_to_array", _to_array, [variant], duckdb.list_type(variant)),
+        ("_fs_array_contains", _array_contains, [variant, variant], sqltypes.BOOLEAN),
+        ("_fs_array_position", _array_position, [variant, variant], integer),
+        ("_fs_array_append", _array_append, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_array_prepend", _array_prepend, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_array_slice", _array_slice, [variant, integer, integer], duckdb.list_type(variant)),
+        ("_fs_array_to_string", _array_to_string, [variant, sqltypes.VARCHAR], sqltypes.VARCHAR),
+        ("_fs_array_distinct", _array_distinct, [variant], duckdb.list_type(variant)),
+        ("_fs_array_flatten", _array_flatten, [variant], duckdb.list_type(variant)),
+        ("_fs_array_sort", _array_sort, [variant, sqltypes.BOOLEAN, sqltypes.BOOLEAN], duckdb.list_type(variant)),
+        ("_fs_array_max", lambda value: _array_extreme(value, True), [variant], variant),
+        ("_fs_array_min", lambda value: _array_extreme(value, False), [variant], variant),
+        ("_fs_array_remove", _array_remove, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_array_insert", _array_insert, [variant, integer, variant], duckdb.list_type(variant)),
+        ("_fs_array_compact", _array_compact, [variant], duckdb.list_type(variant)),
+        ("_fs_array_cat", _array_cat, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_array_except", _array_except, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_array_intersection", _array_intersection, [variant, variant], duckdb.list_type(variant)),
+        ("_fs_arrays_overlap", _arrays_overlap, [variant, variant], sqltypes.BOOLEAN),
+        ("_fs_arrays_zip", _arrays_zip, [variant, variant], duckdb.list_type(variant)),
         ("_fs_variant_get", _get, [variant, variant], variant),
         ("_fs_variant_get_ignore_case", _get_ignore_case, [variant, sqltypes.VARCHAR], variant),
         ("_fs_variant_get_path", _get_path, [variant, sqltypes.VARCHAR], variant),

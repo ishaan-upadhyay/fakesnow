@@ -30,6 +30,7 @@ from fakesnow.transforms.transforms import (
     array_agg as array_agg,
     array_agg_within_group as array_agg_within_group,
     array_construct_etc as array_construct_etc,
+    array_functions as array_functions,
     array_size as array_size,
     create_clone as create_clone,
     create_database as create_database,
