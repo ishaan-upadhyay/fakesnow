@@ -97,13 +97,7 @@ def _object_drop_null(value: Any) -> Any:
 def _to_array(value: Any) -> Any:
     if value is None or is_json_null(value):
         return None
-    values = (
-        [value]
-        if _map_items(value) is not None
-        else value
-        if isinstance(value, list)
-        else [value]
-    )
+    values = [value] if _map_items(value) is not None else value if isinstance(value, list) else [value]
     return [duckdb.Value(_variant_output(item), sqltypes.VARIANT) for item in values]
 
 
@@ -181,9 +175,13 @@ def _get_ignore_case(value: Any, key: str | None) -> Any:
     if items is None or key is None:
         return None
     values = dict(items)
-    actual_key = key if key in values else next(
-        (candidate for candidate in reversed(values) if candidate.lower() == key.lower()),
-        None,
+    actual_key = (
+        key
+        if key in values
+        else next(
+            (candidate for candidate in reversed(values) if candidate.lower() == key.lower()),
+            None,
+        )
     )
     if actual_key is None:
         return None
@@ -209,6 +207,7 @@ def _flatten_rows(
     outer: bool | None,
     recursive: bool | None,
     mode: str | None,
+    sequence: int | None,
 ) -> Any:
     target = _resolve_path(value, path) if path else value
     flatten_mode = (mode or "BOTH").upper()
@@ -222,6 +221,7 @@ def _flatten_rows(
                     child_path = f"{prefix}.{key}" if prefix else key
                     rows.append(
                         {
+                            "seq": sequence,
                             "key": key,
                             "path": child_path,
                             "index": None,
@@ -237,6 +237,7 @@ def _flatten_rows(
                 child_path = f"{prefix}[{index}]"
                 rows.append(
                     {
+                        "seq": sequence,
                         "key": None,
                         "path": child_path,
                         "index": index,
@@ -252,6 +253,7 @@ def _flatten_rows(
     if not rows and outer:
         rows.append(
             {
+                "seq": sequence,
                 "key": None,
                 "path": "" if isinstance(target, (list, dict)) else None,
                 "index": None,
@@ -264,6 +266,28 @@ def _flatten_rows(
             }
         )
     return rows
+
+
+def _flatten_map_rows(
+    value: dict[str, int] | None,
+    path: str | None,
+    mode: str | None,
+    sequence: int | None,
+) -> Any:
+    if value is None or (mode or "BOTH").upper() not in {"BOTH", "OBJECT"}:
+        return []
+    prefix = f"{path}." if path else ""
+    return [
+        {
+            "seq": sequence,
+            "key": key,
+            "path": f"{prefix}{key}",
+            "index": None,
+            "value": item,
+            "this": value,
+        }
+        for key, item in sorted(value.items())
+    ]
 
 
 def _key(value: Any) -> str:
@@ -314,9 +338,7 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
             "_fs_variant_object_entries",
             _object_entries,
             [variant],
-            duckdb.list_type(
-                duckdb.struct_type({"key": sqltypes.VARCHAR, "value": variant})
-            ),
+            duckdb.list_type(duckdb.struct_type({"key": sqltypes.VARCHAR, "value": variant})),
         ),
         (
             "_fs_variant_flatten_rows",
@@ -327,15 +349,39 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
                 sqltypes.BOOLEAN,
                 sqltypes.BOOLEAN,
                 sqltypes.VARCHAR,
+                sqltypes.UBIGINT,
             ],
             duckdb.list_type(
                 duckdb.struct_type(
                     {
+                        "seq": sqltypes.UBIGINT,
                         "key": sqltypes.VARCHAR,
                         "path": sqltypes.VARCHAR,
                         "index": sqltypes.BIGINT,
                         "value": variant,
                         "this": variant,
+                    }
+                )
+            ),
+        ),
+        (
+            "_fs_variant_flatten_map_rows",
+            _flatten_map_rows,
+            [
+                duckdb.map_type(sqltypes.VARCHAR, sqltypes.BIGINT),
+                sqltypes.VARCHAR,
+                sqltypes.VARCHAR,
+                sqltypes.UBIGINT,
+            ],
+            duckdb.list_type(
+                duckdb.struct_type(
+                    {
+                        "seq": sqltypes.UBIGINT,
+                        "key": sqltypes.VARCHAR,
+                        "path": sqltypes.VARCHAR,
+                        "index": sqltypes.BIGINT,
+                        "value": sqltypes.BIGINT,
+                        "this": duckdb.map_type(sqltypes.VARCHAR, sqltypes.BIGINT),
                     }
                 )
             ),

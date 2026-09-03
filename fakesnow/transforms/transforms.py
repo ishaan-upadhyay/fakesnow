@@ -56,8 +56,7 @@ def array_construct_etc(expression: Expr) -> Expr:
         values = [as_variant(item) for item in expression.expressions if not isinstance(item, exp.Null)]
         return exp.Array(expressions=values)
     if isinstance(expression, exp.ArrayConcat) and (
-        isinstance(expression.this, exp.Null)
-        or any(isinstance(item, exp.Null) for item in expression.expressions)
+        isinstance(expression.this, exp.Null) or any(isinstance(item, exp.Null) for item in expression.expressions)
     ):
         return exp.Null()
     if (
@@ -91,7 +90,7 @@ def array_size(expression: Expr) -> Expr:
             this=exp.Anonymous(this="_fs_typeof", expressions=[variant]),
             expression=exp.Literal.string("ARRAY"),
         )
-        return exp.Case(
+        result = exp.Case(
             ifs=[
                 exp.If(
                     this=is_array,
@@ -99,6 +98,8 @@ def array_size(expression: Expr) -> Expr:
                 )
             ]
         )
+        result.args["_fs_array_size"] = True
+        return result
 
     return expression
 
@@ -561,24 +562,65 @@ def flatten(expression: Expr) -> Expr:
         explode = expression.this
         arguments = [explode.this, *explode.expressions]
         kwargs = {
-            argument.this.name.lower(): argument.expression
-            for argument in arguments
-            if isinstance(argument, exp.Kwarg)
+            argument.this.name.lower(): argument.expression for argument in arguments if isinstance(argument, exp.Kwarg)
         }
         input_ = kwargs.get("input", explode.this)
         if isinstance(input_, exp.Kwarg):
             input_ = input_.expression
+        sequence: Expr = exp.Literal.number(1)
+        if isinstance(input_, exp.Column) and input_.table:
+            select = expression.find_ancestor(exp.Select)
+            from_ = select.args.get("from_") if select else None
+            source = from_.this if isinstance(from_, exp.From) else None
+            if (
+                select is not None
+                and isinstance(source, exp.Subquery)
+                and isinstance(source.this, exp.Select)
+                and source.alias_or_name.upper() == input_.table.upper()
+                and source.this.expressions
+            ):
+                sequence_name = source.this.expressions[0].alias_or_name
+                if sequence_name:
+                    sequence = exp.column(sequence_name, table=input_.table)
+                    precision = 38
+                    nullable = True
+                    if values := source.this.find(exp.Values):
+                        first_values = [row.expressions[0] for row in values.expressions if row.expressions]
+                        numeric_values = [
+                            value for value in first_values if isinstance(value, exp.Literal) and not value.is_string
+                        ]
+                        if len(numeric_values) == len(first_values):
+                            precision = max(len(str(value.this).lstrip("-")) for value in numeric_values)
+                            nullable = False
+                    for item in select.expressions:
+                        selected = item.this if isinstance(item, exp.Alias) else item
+                        if (
+                            isinstance(selected, exp.Column)
+                            and selected.table.upper() == input_.table.upper()
+                            and selected.name.upper() == sequence_name.upper()
+                        ):
+                            selected.args["_fs_flatten_sequence_source"] = (precision, nullable)
+
+        function_name = "_fs_flatten"
+        if isinstance(input_, exp.Cast):
+            if input_.to.this == exp.DataType.Type.ARRAY:
+                function_name = "_fs_flatten_array"
+            elif input_.to.this == exp.DataType.Type.MAP:
+                function_name = "_fs_flatten_map"
+        arguments = [
+            input_,
+            kwargs.get("path", exp.Literal.string("")),
+            kwargs.get("outer", exp.false()),
+            kwargs.get("recursive", exp.false()),
+            kwargs.get("mode", exp.Literal.string("BOTH")),
+        ]
+        if not isinstance(sequence, exp.Literal):
+            arguments.append(sequence)
         alias = expression.args.get("alias")
         return exp.Table(
             this=exp.Anonymous(
-                this="_fs_flatten",
-                expressions=[
-                    input_,
-                    kwargs.get("path", exp.Literal.string("")),
-                    kwargs.get("outer", exp.false()),
-                    kwargs.get("recursive", exp.false()),
-                    kwargs.get("mode", exp.Literal.string("BOTH")),
-                ],
+                this=function_name,
+                expressions=arguments,
             ),
             alias=alias,
         )
@@ -724,6 +766,7 @@ def indices_to_json_extract(expression: Expr) -> Expr:
     DuckDB VARIANT arrays are one-based while Snowflake ARRAY/VARIANT paths are
     zero-based. Object keys use the same bracket syntax in both engines.
     """
+
     def bracket(this: Expr, index: Expr) -> Expr:
         if isinstance(index, exp.Literal) and not index.is_string:
             try:
