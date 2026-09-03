@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import re
 from collections.abc import Callable
+from datetime import datetime
 from typing import Any
 
 import duckdb
@@ -25,7 +26,14 @@ from fakesnow.variant.compare import variant_eq, variant_eq_sql, variant_key
 from fakesnow.variant.errors import VariantRuntimeError
 from fakesnow.variant.parser import parse_json
 from fakesnow.variant.render import _map_items, sf_json, sf_json_compact
-from fakesnow.variant.sentinels import BIGINT_PREFIX, JSON_NULL, is_json_null
+from fakesnow.variant.sentinels import (
+    BIGINT_PREFIX,
+    JSON_NULL,
+    TIMESTAMP_LTZ_PREFIX,
+    TIMESTAMP_NTZ_PREFIX,
+    TIMESTAMP_TZ_PREFIX,
+    is_json_null,
+)
 from fakesnow.variant.typeof import typeof
 
 
@@ -60,6 +68,24 @@ def _parse_json(value: str | None) -> Any:
     if parsed is None:
         return None
     return duckdb.Value(_variant_output(parsed), sqltypes.VARIANT)
+
+
+def _to_variant_timestamp(value: str | None, kind: str) -> Any:
+    if value is None:
+        return None
+    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    rendered = parsed.replace(tzinfo=None).isoformat(sep=" ", timespec="milliseconds")
+    prefixes = {
+        "LTZ": TIMESTAMP_LTZ_PREFIX,
+        "NTZ": TIMESTAMP_NTZ_PREFIX,
+        "TZ": TIMESTAMP_TZ_PREFIX,
+    }
+    if kind == "LTZ":
+        rendered += " Z"
+    elif kind == "TZ":
+        offset = parsed.strftime("%z")
+        rendered += f" {'Z' if offset == '+0000' else offset}"
+    return duckdb.Value(prefixes[kind] + rendered, sqltypes.VARIANT)
 
 
 def _object_keep_null(value: Any) -> Any:
@@ -304,6 +330,12 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
     decimal = duckdb.decimal_type(38, 18)
     definitions: list[tuple[str, Callable[..., Any], list[DuckDBPyType], DuckDBPyType]] = [
         ("_fs_parse_json", _parse_json, [sqltypes.VARCHAR], variant),
+        (
+            "_fs_to_variant_timestamp",
+            _to_variant_timestamp,
+            [sqltypes.VARCHAR, sqltypes.VARCHAR],
+            variant,
+        ),
         ("_fs_object_drop_null", _object_drop_null, [variant], variant),
         ("_fs_object_keep_null", _object_keep_null, [variant], variant),
         ("_fs_variant_to_array", _to_array, [variant], duckdb.list_type(variant)),
