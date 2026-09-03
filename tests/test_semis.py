@@ -16,12 +16,12 @@ def test_array_cat(cur: snowflake.connector.cursor.SnowflakeCursor):
     assert indent(cur.fetchall()) == [('[\n  "a",\n  "b",\n  "c",\n  "d"\n]',)]
 
     # TODO: with mixed types
-    # cur.execute("select array_cat(['a', 1], ['b', '2'])")
-    # assert indent(cur.fetchall()) == [('[\n  "a",\n     1,\n  "b",\n  "2"\n]',)]
+    cur.execute("select array_cat(['a', 1], ['b', '2'])")
+    assert indent(cur.fetchall()) == [('[\n  "a",\n  1,\n  "b",\n  "2"\n]',)]
 
     # TODO: with null values
-    # cur.execute("select array_cat(['a', 'b'], null)")
-    # assert cur.fetchall() == [(None,)]
+    cur.execute("select array_cat(['a', 'b'], null)")
+    assert cur.fetchall() == [(None,)]
 
 
 def test_array_construct(cur: snowflake.connector.cursor.SnowflakeCursor):
