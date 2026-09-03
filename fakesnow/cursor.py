@@ -190,39 +190,26 @@ class FakeSnowflakeCursor:
             expression = sqlglot.parse_one(f"DESCRIBE {self._last_sql}", read="duckdb")
             cur._execute(expression, self._last_params)
             rows: list[Any] = list(cur.fetchall())
-            select = (
-                self._last_transformed.find(exp.Select)
-                if self._last_transformed is not None
-                else None
-            )
+            select = self._last_transformed.find(exp.Select) if self._last_transformed is not None else None
             if select:
                 output_names = select.args.get("_fs_output_names") or {}
                 has_flatten = any(
-                    function.name.upper() == "_FS_FLATTEN"
-                    for function in select.find_all(exp.Anonymous)
+                    function.name.upper() == "_FS_FLATTEN" for function in select.find_all(exp.Anonymous)
                 ) or (
                     self._last_transformed is not None
-                    and "_FS_FLATTEN"
-                    in self._last_transformed.sql(dialect="duckdb").upper()
+                    and "_FS_FLATTEN" in self._last_transformed.sql(dialect="duckdb").upper()
                 )
                 for index, item in enumerate(select.expressions):
                     source = item.this if isinstance(item, exp.Alias) else item
                     variant_text = any(
-                        function.name.upper().startswith("_FS_")
-                        for function in source.find_all(exp.Anonymous)
+                        function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
                     fixed_width_text = isinstance(source, exp.MD5)
                     if (
                         index < len(rows)
                         and rows[index][1] == "VARCHAR"
                         and not fixed_width_text
-                        and (
-                            variant_text
-                            or (
-                                has_flatten
-                                and source.name.upper() in {"KEY", "PATH"}
-                            )
-                        )
+                        and (variant_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
                     ):
                         row = list(rows[index])
                         row[1] = "VARCHAR(134217728)"
@@ -238,10 +225,13 @@ class FakeSnowflakeCursor:
                         row = list(rows[index])
                         row[1] = "VARCHAR(32)"
                         rows[index] = tuple(row)
-                    elif index < len(rows) and rows[index][1] == "BLOB" and any(
-                        function.name.upper()
-                        in {"_FS_TYPEOF", "_FS_VARIANT_TO_BINARY"}
-                        for function in source.find_all(exp.Anonymous)
+                    elif (
+                        index < len(rows)
+                        and rows[index][1] == "BLOB"
+                        and any(
+                            function.name.upper() in {"_FS_TYPEOF", "_FS_VARIANT_TO_BINARY"}
+                            for function in source.find_all(exp.Anonymous)
+                        )
                     ):
                         row = list(rows[index])
                         row[1] = "BLOB(67108864)"
@@ -553,9 +543,7 @@ class FakeSnowflakeCursor:
                     quoted = f'"{column.replace(chr(34), chr(34) * 2)}"'
                     duck_type = str(column_type)
                     if duck_type.startswith(("MAP(", "STRUCT(")):
-                        projections.append(
-                            f"_fs_sf_object_json(CAST({quoted} AS VARIANT)) AS {quoted}"
-                        )
+                        projections.append(f"_fs_sf_object_json(CAST({quoted} AS VARIANT)) AS {quoted}")
                     elif duck_type == "VARIANT" or duck_type.endswith("[]"):
                         projections.append(f"_fs_sf_json(CAST({quoted} AS VARIANT)) AS {quoted}")
                     else:
