@@ -8,7 +8,15 @@ from typing import Any, TypeVar
 
 from fakesnow.variant.errors import cast_error
 from fakesnow.variant.render import sf_json_compact
-from fakesnow.variant.sentinels import is_json_null, is_nan, is_undefined, timestamp_kind, timestamp_value
+from fakesnow.variant.sentinels import (
+    DECIMAL_PREFIX,
+    is_decimal,
+    is_json_null,
+    is_nan,
+    is_undefined,
+    timestamp_kind,
+    timestamp_value,
+)
 
 T = TypeVar("T")
 
@@ -61,6 +69,8 @@ def to_decimal(value: Any, precision: int = 38, scale: int = 0) -> Decimal | Non
             number = Decimal(int(value))
         elif isinstance(value, Decimal):
             number = value
+        elif is_decimal(value):
+            number = Decimal(value.removeprefix(DECIMAL_PREFIX))
         elif isinstance(value, (int, float, str)):
             number = Decimal(str(value))
         else:
@@ -82,6 +92,8 @@ def to_double(value: Any) -> float | None:
     def convert() -> float:
         if isinstance(value, bool):
             return float(value)
+        if is_decimal(value):
+            return float(value.removeprefix(DECIMAL_PREFIX))
         if isinstance(value, (int, float, Decimal, str)) and not is_nan(value):
             return float(value)
         raise ValueError

@@ -9,6 +9,7 @@ JSON_NULL = UUID("00000000-0000-0000-0000-000000000000")
 UNDEFINED = timedelta(0)
 NAN = UUID("00000000-0000-0000-0000-000000000001")
 BIGINT_PREFIX = "__FAKESNOW_BIGINT__"
+DECIMAL_PREFIX = "__FAKESNOW_DECIMAL__"
 TIMESTAMP_LTZ_PREFIX = "__FAKESNOW_TIMESTAMP_LTZ__"
 TIMESTAMP_NTZ_PREFIX = "__FAKESNOW_TIMESTAMP_NTZ__"
 TIMESTAMP_TZ_PREFIX = "__FAKESNOW_TIMESTAMP_TZ__"
@@ -28,6 +29,10 @@ def is_nan(value: object) -> bool:
 
 def is_bigint(value: object) -> TypeGuard[str]:
     return isinstance(value, str) and value.startswith(BIGINT_PREFIX)
+
+
+def is_decimal(value: object) -> TypeGuard[str]:
+    return isinstance(value, str) and value.startswith(DECIMAL_PREFIX)
 
 
 def timestamp_kind(value: object) -> str | None:
