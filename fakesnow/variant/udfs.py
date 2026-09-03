@@ -5,6 +5,7 @@ import contextlib
 import re
 from collections.abc import Callable
 from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 import duckdb
@@ -28,6 +29,7 @@ from fakesnow.variant.parser import parse_json
 from fakesnow.variant.render import _map_items, sf_json, sf_json_compact
 from fakesnow.variant.sentinels import (
     BIGINT_PREFIX,
+    DECIMAL_PREFIX,
     JSON_NULL,
     TIMESTAMP_LTZ_PREFIX,
     TIMESTAMP_NTZ_PREFIX,
@@ -40,6 +42,8 @@ from fakesnow.variant.typeof import typeof
 def _variant_output(value: Any) -> Any:
     if isinstance(value, int) and not isinstance(value, bool) and len(str(abs(value))) > 38:
         return f"{BIGINT_PREFIX}{value}"
+    if isinstance(value, Decimal) and len(value.as_tuple().digits) > 38:
+        return f"{DECIMAL_PREFIX}{value:f}"
     if isinstance(value, dict) and not value:
         return duckdb.Value("{}", duckdb.sqltype("JSON"))
     if (items := _map_items(value)) is not None:

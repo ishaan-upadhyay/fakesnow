@@ -1122,6 +1122,36 @@ def random(expression: Expr) -> Expr:
     return expression
 
 
+def hash_fn(expression: Expr) -> Expr:
+    """Convert DuckDB's unsigned HASH result to Snowflake's signed 64-bit range."""
+    if not isinstance(expression, exp.Anonymous) or expression.name.upper() != "HASH":
+        return expression
+
+    unsigned_hash = exp.Cast(
+        this=expression.copy(),
+        to=exp.DataType(this=exp.DataType.Type.INT128, nested=False, prefix=False),
+    )
+    signed_hash = exp.Case(
+        ifs=[
+            exp.If(
+                this=exp.GT(
+                    this=unsigned_hash.copy(),
+                    expression=exp.Literal.number("9223372036854775807"),
+                ),
+                true=exp.Sub(
+                    this=unsigned_hash.copy(),
+                    expression=exp.Literal.number("18446744073709551616"),
+                ),
+            )
+        ],
+        default=unsigned_hash,
+    )
+    return exp.Cast(
+        this=signed_hash,
+        to=exp.DataType(this=exp.DataType.Type.BIGINT, nested=False, prefix=False),
+    )
+
+
 def sample(expression: Expr) -> Expr:
     if isinstance(expression, exp.TableSample) and not expression.args.get("method"):
         # set snowflake default (bernoulli) rather than use the duckdb default (system)

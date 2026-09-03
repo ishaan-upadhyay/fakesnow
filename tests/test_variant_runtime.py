@@ -19,6 +19,12 @@ def test_parse_json_number_typing() -> None:
     assert typeof(parse_json("1.000")) == "INTEGER"
     assert typeof(parse_json("1e10")) == "DOUBLE"
     assert sf_json_compact(parse_json("1e10")) == "1.000000000000000e+10"
+    assert sf_json_compact(parse_json("123456789012345678901234567890.123456789")) == (
+        "123456789012345678901234567890.123456789"
+    )
+    assert typeof(parse_json("123456789012345678901234567890.123456789")) == "DECIMAL"
+    assert sf_json_compact(parse_json("9999999999999999999999999999999999999999")) == "1.000000000000000e+40"
+    assert typeof(parse_json("9999999999999999999999999999999999999999")) == "DOUBLE"
 
 
 def test_object_key_sort_order() -> None:

@@ -292,6 +292,23 @@ def test_description_uint64(cur: snowflake.connector.cursor.DictCursor):
     assert cur.description == [ResultMetadata(name='C', type_code=0, display_size=None, internal_size=None, precision=38, scale=0, is_nullable=True)]  # fmt: skip
 
 
+def test_description_variant_hash(cur: snowflake.connector.cursor.SnowflakeCursor):
+    cur.execute("SELECT HASH(PARSE_JSON('1')) AS h")
+
+    assert cur.fetchall() == [(-5531146046121084888,)]
+    assert cur.description == [
+        ResultMetadata(
+            name="H",
+            type_code=0,
+            display_size=None,
+            internal_size=None,
+            precision=19,
+            scale=0,
+            is_nullable=True,
+        )
+    ]
+
+
 def test_description_select(dcur: snowflake.connector.cursor.DictCursor):
     dcur.execute("SELECT DATEDIFF( DAY, '2023-04-02'::DATE, '2023-04-05'::DATE) as days")
     assert dcur.fetchall() == [{"DAYS": 3}]
