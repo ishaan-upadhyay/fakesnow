@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
+
 import snowflake.connector
 from sqlglot import Dialect, errors, exp
 from sqlglot.expressions import Expr
@@ -120,11 +122,12 @@ def preserve_output_names(expression: Expr) -> Expr:
 def _is_variant_expression(expression: Expr) -> bool:
     if isinstance(expression, exp.Column) and expression.args.get("_fs_variant"):
         return True
-    if isinstance(expression, (exp.Bracket, exp.GetExtract, exp.JSONExtract)):
+    if isinstance(expression, (exp.Bracket, exp.GetExtract, exp.JSONExtract, exp.ToVariant)):
         return True
     if isinstance(expression, exp.Anonymous):
         return expression.name.upper() in {
             "_FS_PARSE_JSON",
+            "_FS_TO_VARIANT_TIMESTAMP",
             "_FS_VARIANT_GET",
             "_FS_VARIANT_GET_PATH",
             "_FS_VARIANT_GET_IGNORE_CASE",
@@ -361,6 +364,57 @@ def try_parse_json_variant(expression: Expr) -> Expr:
     return expression
 
 
+def _to_variant_value(value: Expr) -> Expr:
+    timestamp_kinds = {
+        exp.DataType.Type.TIMESTAMPLTZ: "LTZ",
+        exp.DataType.Type.TIMESTAMPNTZ: "NTZ",
+        exp.DataType.Type.TIMESTAMPTZ: "TZ",
+    }
+    if isinstance(value, exp.Cast) and (kind := timestamp_kinds.get(value.to.this)):
+        source = value.this.copy() if isinstance(value.this, exp.Literal) and value.this.is_string else exp.Cast(
+            this=value.copy(),
+            to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+        )
+        return exp.Anonymous(
+            this="_fs_to_variant_timestamp",
+            expressions=[source, exp.Literal.string(kind)],
+        )
+    if isinstance(value, exp.CurrentTimestamp):
+        return exp.Anonymous(
+            this="_fs_to_variant_timestamp",
+            expressions=[
+                exp.Cast(
+                    this=value.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+                ),
+                exp.Literal.string("LTZ"),
+            ],
+        )
+    if isinstance(value, exp.Literal) and not value.is_string and "e" in value.this.lower():
+        try:
+            number = Decimal(value.this)
+        except InvalidOperation:
+            pass
+        else:
+            if number == number.to_integral_value() and len(number.as_tuple().digits) <= 38:
+                value = exp.Literal.number(format(number, "f"))
+    if (
+        isinstance(value, exp.Div)
+        and isinstance(value.this, exp.Literal)
+        and isinstance(value.expression, exp.Literal)
+        and not value.this.is_string
+        and not value.expression.is_string
+    ):
+        value = exp.Cast(
+            this=value.copy(),
+            to=exp.DataType.build("DECIMAL(38, 6)", dialect="duckdb"),
+        )
+    return exp.Cast(
+        this=value.copy(),
+        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+    )
+
+
 def to_variant(expression: Expr) -> Expr:
     if isinstance(expression, exp.ToVariant):
         if (
@@ -376,10 +430,13 @@ def to_variant(expression: Expr) -> Expr:
                 this="_fs_parse_json",
                 expressions=[exp.Literal.string("{}")],
             )
-        return exp.Cast(
-            this=expression.this.copy(),
-            to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-        )
+        return _to_variant_value(expression.this)
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.VARIANT
+        and isinstance(expression.this, (exp.Cast, exp.CurrentTimestamp, exp.Literal, exp.Div))
+    ):
+        return _to_variant_value(expression.this)
     return expression
 
 
