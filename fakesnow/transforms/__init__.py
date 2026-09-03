@@ -39,6 +39,7 @@ from fakesnow.transforms.transforms import (
     dateadd_date_cast as dateadd_date_cast,
     dateadd_string_literal_timestamp_cast as dateadd_string_literal_timestamp_cast,
     datediff_string_literal_timestamp_cast as datediff_string_literal_timestamp_cast,
+    decimal_arithmetic_precision as decimal_arithmetic_precision,
     describe_table as describe_table,
     drop_schema_cascade as drop_schema_cascade,
     extract_comment_on_columns as extract_comment_on_columns,

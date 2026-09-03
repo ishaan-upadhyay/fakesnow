@@ -395,6 +395,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.to_date)
             .transform(transforms.timestamp_offsets)
             .transform(transforms.to_decimal)
+            .transform(transforms.decimal_arithmetic_precision)
             .transform(transforms.to_timestamp)
             .transform(transforms.to_variant)
             .transform(transforms.object_construct)

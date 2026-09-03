@@ -427,6 +427,63 @@ def datediff_string_literal_timestamp_cast(expression: Expr) -> Expr:
     return new_datediff
 
 
+def _snowflake_decimal_type(expression: Expr) -> tuple[int, int] | None:
+    """The Snowflake (precision, scale) of expression, when it can be determined statically."""
+
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.DECIMAL
+        and expression.to.expressions
+    ):
+        params = [int(param.name) for param in expression.to.expressions]
+        return params[0], params[1] if len(params) > 1 else 0
+    if (
+        isinstance(expression, exp.Literal)
+        and not expression.is_string
+        and (match := re.fullmatch(r"(\d+)(?:\.(\d+))?", expression.name))
+    ):
+        digits, decimals = match[1], match[2] or ""
+        return len(digits) + len(decimals), len(decimals)
+    return None
+
+
+def decimal_arithmetic_precision(expression: Expr) -> Expr:
+    """Cast decimal addition and subtraction to Snowflake's result precision and scale.
+
+    DuckDB widens more than Snowflake, eg: DECIMAL(10,2) + 1 is DECIMAL(13,2) in DuckDB but
+    DECIMAL(11,2) in Snowflake, which uses scale = max(s1, s2) and
+    precision = max(p1 - s1, p2 - s2) + scale + 1.
+
+    See https://docs.snowflake.com/en/sql-reference/operators-arithmetic#addition-and-subtraction
+    """
+
+    if not isinstance(expression, (exp.Add, exp.Sub)):
+        return expression
+
+    left = _snowflake_decimal_type(expression.this)
+    right = _snowflake_decimal_type(expression.expression)
+    if left is None or right is None:
+        return expression
+
+    scale = max(left[1], right[1])
+    if not scale:
+        # integer arithmetic, which duckdb already returns as a bigint
+        return expression
+
+    precision = min(max(left[0] - left[1], right[0] - right[1]) + scale + 1, 38)
+    return exp.Cast(
+        this=expression.copy(),
+        to=exp.DataType(
+            this=exp.DataType.Type.DECIMAL,
+            expressions=[
+                exp.DataTypeParam(this=exp.Literal.number(precision)),
+                exp.DataTypeParam(this=exp.Literal.number(scale)),
+            ],
+            nested=False,
+        ),
+    )
+
+
 def extract_comment_on_columns(expression: Expr) -> Expr:
     """Extract column comments, removing it from the Expression.
 
