@@ -31,6 +31,7 @@ def test_show_columns(dcur: snowflake.connector.cursor.SnowflakeCursor):
         "database_name": "DB1",
         "autoincrement": "",
         "schema_evolution_record": None,
+        "write_default": None,
     }
 
     # fmt: off
@@ -66,6 +67,7 @@ def test_show_columns(dcur: snowflake.connector.cursor.SnowflakeCursor):
             "database_name": "DB1",
             "autoincrement": "",
             "schema_evolution_record": None,
+            "write_default": None,
         }
     ]
 
@@ -101,6 +103,7 @@ def test_show_columns(dcur: snowflake.connector.cursor.SnowflakeCursor):
         "database_name",
         "autoincrement",
         "schema_evolution_record",
+        "write_default",
     ]
 
 

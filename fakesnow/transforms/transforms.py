@@ -417,13 +417,14 @@ SQL_DESCRIBE_TABLE = Template(
     """
 SELECT
     column_name AS "name",
-    CASE WHEN data_type = 'NUMBER' THEN 'NUMBER(' || numeric_precision || ',' || numeric_scale || ')'
+    COALESCE(ext.ext_describe_type,
+      CASE WHEN data_type = 'NUMBER' THEN 'NUMBER(' || numeric_precision || ',' || numeric_scale || ')'
          WHEN data_type = 'TEXT' THEN 'VARCHAR(' || coalesce(character_maximum_length,16777216)  || ')'
          WHEN data_type = 'TIMESTAMP_NTZ' THEN 'TIMESTAMP_NTZ(9)'
          WHEN data_type = 'TIMESTAMP_TZ' THEN 'TIMESTAMP_TZ(9)'
          WHEN data_type = 'TIME' THEN 'TIME(9)'
          WHEN data_type = 'BINARY' THEN 'BINARY(8388608)'
-        ELSE data_type END AS "type",
+        ELSE data_type END) AS "type",
     'COLUMN' AS "kind",
     CASE WHEN is_nullable = 'YES' THEN 'Y' ELSE 'N' END AS "null?",
     column_default AS "default",
@@ -434,7 +435,13 @@ SELECT
     NULL::VARCHAR AS "comment",
     NULL::VARCHAR AS "policy name",
     NULL::JSON AS "privacy domain",
+    NULL::VARCHAR AS "write default",
 FROM _fs_information_schema._fs_columns
+LEFT JOIN _fs_global._fs_information_schema._fs_columns_ext ext
+  ON ext.ext_table_catalog = table_catalog
+ AND ext.ext_table_schema = table_schema
+ AND ext.ext_table_name = table_name
+ AND ext.ext_column_name = column_name
 WHERE table_catalog = '${catalog}' AND table_schema = '${schema}' AND table_name = '${table}'
 ORDER BY ordinal_position
 """
@@ -455,6 +462,7 @@ SELECT
     NULL::VARCHAR AS "comment",
     NULL::VARCHAR AS "policy name",
     NULL::JSON AS "privacy domain",
+    NULL::VARCHAR AS "write default",
 FROM (DESCRIBE ${view})
 """
 )
@@ -1007,7 +1015,27 @@ def indices_to_json_extract(expression: Expr) -> Expr:
     zero-based. Object keys use the same bracket syntax in both engines.
     """
 
+    def structured_bracket(this: Expr, index: Expr) -> Expr | None:
+        data_type = this.args.get("_fs_structured_type")
+        if not isinstance(data_type, exp.DataType):
+            return None
+        if data_type.this == exp.DataType.Type.ARRAY:
+            if isinstance(index, exp.Literal) and index.is_string:
+                return None
+        elif data_type.this in {exp.DataType.Type.OBJECT, exp.DataType.Type.STRUCT}:
+            if not isinstance(index, exp.Literal) or not index.is_string:
+                return None
+        elif data_type.this != exp.DataType.Type.MAP:
+            return None
+        return exp.Bracket(
+            this=this.copy(),
+            expressions=[index.copy()],
+            _fs_zero_based_adjusted=True,
+        )
+
     def bracket(this: Expr, index: Expr) -> Expr:
+        if result := structured_bracket(this, index):
+            return result
         if isinstance(index, exp.Literal) and not index.is_string:
             try:
                 numeric_index = int(index.this)
@@ -1126,6 +1154,8 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                 errno=1852,
                 sqlstate="22023",
             )
+        if result := structured_bracket(expression.this, index):
+            return result
         return exp.Anonymous(
             this="_fs_variant_get",
             expressions=[
@@ -1148,6 +1178,19 @@ def indices_to_json_extract(expression: Expr) -> Expr:
         return bracket(
             expression.this.copy().transform(indices_to_json_extract),
             exp.Literal.string(expression.expression.name),
+        )
+
+    if (
+        isinstance(expression, exp.Dot)
+        and isinstance(expression.this, exp.Column)
+        and isinstance(expression.expression, exp.Identifier)
+        and isinstance((data_type := expression.this.args.get("_fs_structured_type")), exp.DataType)
+        and data_type.this in {exp.DataType.Type.OBJECT, exp.DataType.Type.STRUCT}
+    ):
+        raise snowflake.connector.errors.ProgrammingError(
+            msg=f"SQL compilation error: error line 1 at position 7\ninvalid identifier '{expression.sql()}'",
+            errno=904,
+            sqlstate="42000",
         )
 
     if (
@@ -2081,8 +2124,7 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
     except Exception:
         return expression
     target_types = {
-        name.upper(): exp.DataType.build(column_type, dialect="duckdb")
-        for name, column_type, *_ in described
+        name.upper(): exp.DataType.build(column_type, dialect="duckdb") for name, column_type, *_ in described
     }
 
     if isinstance(expression, exp.Update):
@@ -2113,9 +2155,7 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
             value = item.this if isinstance(item, exp.Alias) else item
             coerced = _coerce_semi_structured_value(value, target)
             projections.append(
-                exp.Alias(this=coerced, alias=item.args["alias"].copy())
-                if isinstance(item, exp.Alias)
-                else coerced
+                exp.Alias(this=coerced, alias=item.args["alias"].copy()) if isinstance(item, exp.Alias) else coerced
             )
         source.set("expressions", projections)
     elif isinstance(source, exp.Values):

@@ -1,11 +1,174 @@
 from __future__ import annotations
 
+import json
+from collections.abc import Sequence
 from decimal import Decimal, InvalidOperation
 
 import snowflake.connector
 from sqlglot import Dialect, errors, exp
 from sqlglot.expressions import Expr
 from sqlglot.tokenizer_core import TokenType
+
+
+def _has_not_null(constraints: Sequence[exp.ColumnConstraint]) -> bool:
+    return any(
+        isinstance(constraint, exp.ColumnConstraint) and isinstance(constraint.kind, exp.NotNullColumnConstraint)
+        for constraint in constraints
+    )
+
+
+def _structured_type_name(data_type: exp.DataType, *, defaults: bool = True) -> str:
+    if data_type.this in {
+        exp.DataType.Type.INT,
+        exp.DataType.Type.BIGINT,
+        exp.DataType.Type.SMALLINT,
+        exp.DataType.Type.TINYINT,
+    }:
+        return "NUMBER(38,0)"
+    if data_type.this == exp.DataType.Type.DECIMAL:
+        precision = data_type.expressions[0].name if data_type.expressions else "38"
+        scale = data_type.expressions[1].name if len(data_type.expressions) > 1 else "0"
+        return f"NUMBER({precision},{scale})"
+    if data_type.this in {exp.DataType.Type.VARCHAR, exp.DataType.Type.TEXT}:
+        if data_type.expressions:
+            return f"VARCHAR({data_type.expressions[0].name})"
+        return "VARCHAR(16777216)" if defaults else "VARCHAR"
+    if data_type.this == exp.DataType.Type.ARRAY:
+        if not data_type.expressions:
+            return "ARRAY"
+        inner = data_type.expressions[0]
+        return (
+            f"ARRAY({_structured_type_name(inner, defaults=defaults)})" if isinstance(inner, exp.DataType) else "ARRAY"
+        )
+    if data_type.this in {exp.DataType.Type.OBJECT, exp.DataType.Type.STRUCT}:
+        if not data_type.expressions:
+            return "OBJECT"
+        fields = []
+        for field in data_type.expressions:
+            if not isinstance(field, exp.ColumnDef) or field.kind is None:
+                continue
+            suffix = " NOT NULL" if _has_not_null(field.constraints) else ""
+            fields.append(f"{field.name} {_structured_type_name(field.kind, defaults=defaults)}{suffix}")
+        return f"OBJECT({', '.join(fields)})"
+    if data_type.this == exp.DataType.Type.MAP and len(data_type.expressions) == 2:
+        key, value = data_type.expressions
+        if isinstance(key, exp.DataType) and isinstance(value, exp.DataType):
+            return (
+                f"MAP({_structured_type_name(key, defaults=defaults)}, "
+                f"{_structured_type_name(value, defaults=defaults)})"
+            )
+    if data_type.this == exp.DataType.Type.VARIANT:
+        return "VARIANT"
+    if data_type.this == exp.DataType.Type.BOOLEAN:
+        return "BOOLEAN"
+    if data_type.this in {exp.DataType.Type.DOUBLE, exp.DataType.Type.FLOAT}:
+        return "DOUBLE"
+    if data_type.this == exp.DataType.Type.DATE:
+        return "DATE"
+    if data_type.this in {exp.DataType.Type.TIMESTAMP, exp.DataType.Type.TIMESTAMPNTZ}:
+        precision = data_type.expressions[0].name if data_type.expressions else "9"
+        return f"TIMESTAMP_NTZ({precision})"
+    if data_type.this in {exp.DataType.Type.BINARY, exp.DataType.Type.VARBINARY}:
+        return "BINARY"
+    return data_type.sql(dialect="snowflake")
+
+
+def _structured_type_json(data_type: exp.DataType, nullable: bool) -> dict[str, object]:
+    result: dict[str, object] = {"type": "VARIANT", "nullable": nullable}
+    if data_type.this in {
+        exp.DataType.Type.INT,
+        exp.DataType.Type.BIGINT,
+        exp.DataType.Type.SMALLINT,
+        exp.DataType.Type.TINYINT,
+    }:
+        return {"type": "FIXED", "precision": 38, "scale": 0, "nullable": nullable}
+    if data_type.this == exp.DataType.Type.DECIMAL:
+        precision = int(data_type.expressions[0].name) if data_type.expressions else 38
+        scale = int(data_type.expressions[1].name) if len(data_type.expressions) > 1 else 0
+        return {"type": "FIXED", "precision": precision, "scale": scale, "nullable": nullable}
+    if data_type.this in {exp.DataType.Type.VARCHAR, exp.DataType.Type.TEXT}:
+        length = int(data_type.expressions[0].name) if data_type.expressions else 16777216
+        return {
+            "type": "TEXT",
+            "length": length,
+            "byteLength": min(length * 4, 67108864),
+            "nullable": nullable,
+            "fixed": False,
+        }
+    if data_type.this == exp.DataType.Type.ARRAY:
+        result = {"type": "ARRAY", "nullable": nullable}
+        if data_type.expressions and isinstance(data_type.expressions[0], exp.DataType):
+            result["elementType"] = _structured_type_json(data_type.expressions[0], True)
+        return result
+    if data_type.this == exp.DataType.Type.OBJECT:
+        result = {"type": "OBJECT", "nullable": nullable}
+        if data_type.expressions:
+            result["fields"] = [
+                {
+                    "fieldName": field.name,
+                    "fieldType": _structured_type_json(field.kind, not _has_not_null(field.constraints)),
+                }
+                for field in data_type.expressions
+                if isinstance(field, exp.ColumnDef) and field.kind is not None
+            ]
+        return result
+    if data_type.this == exp.DataType.Type.MAP and len(data_type.expressions) == 2:
+        key, value = data_type.expressions
+        if isinstance(key, exp.DataType) and isinstance(value, exp.DataType):
+            return {
+                "type": "MAP",
+                "nullable": nullable,
+                "keyType": _structured_type_json(key, False),
+                "valueType": _structured_type_json(value, True),
+            }
+    if data_type.this == exp.DataType.Type.VARIANT:
+        return result
+    if data_type.this == exp.DataType.Type.BOOLEAN:
+        return {"type": "BOOLEAN", "nullable": nullable}
+    if data_type.this in {exp.DataType.Type.DOUBLE, exp.DataType.Type.FLOAT}:
+        return {"type": "REAL", "nullable": nullable}
+    if data_type.this in {exp.DataType.Type.TIMESTAMP, exp.DataType.Type.TIMESTAMPNTZ}:
+        scale = int(data_type.expressions[0].name) if data_type.expressions else 9
+        return {"type": "TIMESTAMP_NTZ", "precision": 0, "scale": scale, "nullable": nullable}
+    if data_type.this in {exp.DataType.Type.BINARY, exp.DataType.Type.VARBINARY}:
+        return {"type": "BINARY", "length": 8388608, "byteLength": 8388608, "nullable": nullable, "fixed": True}
+    return result
+
+
+def capture_structured_types(expression: Expr) -> Expr:
+    if not isinstance(expression, exp.Create) or not isinstance(expression.this, exp.Schema):
+        return expression
+    properties = expression.args.get("properties")
+    if isinstance(properties, exp.Properties):
+        properties.set(
+            "expressions",
+            [prop for prop in properties.expressions if not isinstance(prop, exp.TemporaryProperty)],
+        )
+    metadata: list[tuple[str, str, str, str]] = []
+    for column in expression.this.expressions:
+        if not isinstance(column, exp.ColumnDef) or column.kind is None:
+            continue
+        data_type = column.kind
+        if data_type.this not in {
+            exp.DataType.Type.ARRAY,
+            exp.DataType.Type.OBJECT,
+            exp.DataType.Type.MAP,
+            exp.DataType.Type.VARIANT,
+        }:
+            continue
+        nullable = not _has_not_null(column.constraints)
+        logical = "OBJECT" if data_type.this == exp.DataType.Type.OBJECT else data_type.this.value.upper()
+        metadata.append(
+            (
+                column.name,
+                logical,
+                _structured_type_name(data_type),
+                json.dumps(_structured_type_json(data_type, nullable), separators=(",", ":")),
+            )
+        )
+    if metadata:
+        expression.args["_fs_structured_types"] = metadata
+    return expression
 
 
 def capture_source_output_names(expression: Expr, sql: str) -> None:
@@ -73,6 +236,7 @@ def preserve_output_names(expression: Expr) -> Expr:
             if column.name.upper() == "VALUE":
                 column.args["_fs_variant"] = True
     variant_columns: set[str] = set()
+    structured_columns: dict[str, exp.DataType] = {}
     for subquery in expression.find_all(exp.Subquery):
         if not isinstance(subquery.this, exp.Select):
             continue
@@ -83,10 +247,26 @@ def preserve_output_names(expression: Expr) -> Expr:
                 (exp.ParseJSON, exp.ToVariant),
             ):
                 variant_columns.add(item.alias_or_name.upper())
+            if isinstance(source, exp.Cast) and source.to.this in {
+                exp.DataType.Type.ARRAY,
+                exp.DataType.Type.OBJECT,
+                exp.DataType.Type.MAP,
+            }:
+                structured_columns[item.alias_or_name.upper()] = source.to.copy()
     if variant_columns:
         for column in expression.find_all(exp.Column):
             if column.name.upper() in variant_columns:
                 column.args["_fs_variant"] = True
+    if structured_columns:
+        for column in expression.find_all(exp.Column):
+            if column.table.upper() in structured_columns:
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg=f"SQL compilation error: error line 1 at position 7\ninvalid identifier '{column.sql()}'",
+                    errno=904,
+                    sqlstate="42000",
+                )
+            if data_type := structured_columns.get(column.name.upper()):
+                column.args["_fs_structured_type"] = data_type.copy()
 
     output_names: dict[str, str] = {}
     for index, item in enumerate(list(expression.expressions)):
@@ -319,8 +499,7 @@ def variant_operators(expression: Expr) -> Expr:
         or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
     ):
         both_variant = (
-            _contains_variant_expression(expression.this)
-            and _contains_variant_expression(expression.expression)
+            _contains_variant_expression(expression.this) and _contains_variant_expression(expression.expression)
         ) or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
         equals = (
             exp.EQ(
@@ -442,9 +621,7 @@ def variant_relational_keys(expression: Expr) -> Expr:
                 distinct_groups.append(_variant_key(source))
                 first = _first_variant(source)
                 alias = (
-                    item.args["alias"].copy()
-                    if isinstance(item, exp.Alias)
-                    else exp.to_identifier(item.alias_or_name)
+                    item.args["alias"].copy() if isinstance(item, exp.Alias) else exp.to_identifier(item.alias_or_name)
                 )
                 rewritten.append(exp.Alias(this=first, alias=alias))
             else:
@@ -536,9 +713,13 @@ def _to_variant_value(value: Expr) -> Expr:
         exp.DataType.Type.TIMESTAMPTZ: "TZ",
     }
     if isinstance(value, exp.Cast) and (kind := timestamp_kinds.get(value.to.this)):
-        source = value.this.copy() if isinstance(value.this, exp.Literal) and value.this.is_string else exp.Cast(
-            this=value.copy(),
-            to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+        source = (
+            value.this.copy()
+            if isinstance(value.this, exp.Literal) and value.this.is_string
+            else exp.Cast(
+                this=value.copy(),
+                to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+            )
         )
         return exp.Anonymous(
             this="_fs_to_variant_timestamp",
@@ -604,6 +785,16 @@ def to_variant(expression: Expr) -> Expr:
 
 def typeof_fn(expression: Expr) -> Expr:
     if isinstance(expression, exp.Typeof):
+        if (
+            isinstance(expression.this, exp.Cast)
+            and isinstance(expression.this.to, exp.DataType)
+            and expression.this.to.args.get("_fs_structured")
+        ) or (isinstance(expression.this, exp.Column) and expression.this.args.get("_fs_structured_type") is not None):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="SQL compilation error: error line 1 at position 7",
+                errno=1044,
+                sqlstate="42P13",
+            )
         arguments: list[Expr] = []
         if isinstance(expression.this, exp.Coalesce):
             arguments = [
@@ -630,6 +821,24 @@ def typeof_fn(expression: Expr) -> Expr:
 
 def variant_functions(expression: Expr) -> Expr:
     value = getattr(expression, "this", None)
+    structured_value = isinstance(value, exp.Column) and isinstance(value.args.get("_fs_structured_type"), exp.DataType)
+
+    if (
+        isinstance(expression, exp.Cast)
+        and structured_value
+        and expression.to.this in {exp.DataType.Type.VARCHAR, exp.DataType.Type.TEXT}
+    ):
+        raise snowflake.connector.errors.ProgrammingError(
+            msg="SQL compilation error:",
+            errno=1007,
+            sqlstate="22023",
+        )
+    if isinstance(expression, exp.JSONFormat) and structured_value:
+        raise snowflake.connector.errors.ProgrammingError(
+            msg="SQL compilation error: error line 1 at position 7",
+            errno=1044,
+            sqlstate="42P13",
+        )
 
     if isinstance(expression, exp.If) and _is_variant_expression(expression.this):
         errno = 1044 if expression.args.get("false") is not None else 1038
@@ -833,6 +1042,22 @@ def variant_functions(expression: Expr) -> Expr:
                 expressions=[_as_variant(argument)],
             )
         if name == "SYSTEM$TYPEOF" and len(expression.expressions) == 1:
+            if isinstance(argument, exp.Cast) and argument.to.this in {
+                exp.DataType.Type.ARRAY,
+                exp.DataType.Type.STRUCT,
+                exp.DataType.Type.MAP,
+            }:
+                return exp.Literal.string(f"{_structured_type_name(argument.to, defaults=False)}[LOB]")
+            if isinstance(argument, exp.Array):
+                return exp.Literal.string("ARRAY[LOB]")
+            if isinstance(argument, exp.Struct):
+                return exp.Literal.string("OBJECT[LOB]")
+            if isinstance(argument, exp.Literal):
+                if argument.is_string:
+                    return exp.Literal.string(f"VARCHAR({len(argument.this)})[LOB]")
+                whole, _, fractional = argument.this.partition(".")
+                precision = len(whole.lstrip("-")) + len(fractional)
+                return exp.Literal.string(f"NUMBER({precision},{len(fractional)})[SB1]")
             return exp.Anonymous(
                 this="_fs_variant_to_varchar",
                 expressions=[_as_variant(exp.Literal.string("VARIANT[LOB]"))],
@@ -999,8 +1224,20 @@ def variant_cast(expression: Expr) -> Expr:
     }:
         return exp.Anonymous(this="_fs_sf_json_compact", expressions=[variant_value])
     if target.this == exp.DataType.Type.ARRAY:
+        if (
+            target.expressions
+            and isinstance(target.expressions[0], exp.DataType)
+            and target.expressions[0].this != exp.DataType.Type.VARIANT
+        ):
+            return expression
         return exp.Anonymous(this="_fs_variant_to_array", expressions=[variant_value])
     if target.this == exp.DataType.Type.MAP:
+        if (
+            len(target.expressions) == 2
+            and isinstance(target.expressions[1], exp.DataType)
+            and target.expressions[1].this != exp.DataType.Type.VARIANT
+        ):
+            return expression
         return exp.Anonymous(this="_fs_variant_to_object", expressions=[variant_value])
     function_by_type = {
         exp.DataType.Type.VARCHAR: "_fs_variant_to_varchar",
@@ -1041,6 +1278,43 @@ def variant_cast(expression: Expr) -> Expr:
 
 
 def structured_cast(expression: Expr) -> Expr:
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.STRUCT
+        and isinstance(expression.this, exp.Anonymous)
+        and expression.this.name.upper() == "_FS_PARSE_JSON"
+        and len(expression.this.expressions) == 1
+        and isinstance(expression.this.expressions[0], exp.Literal)
+        and expression.this.expressions[0].is_string
+    ):
+        try:
+            value = json.loads(expression.this.expressions[0].this)
+        except json.JSONDecodeError:
+            value = None
+        json_fields = [
+            field for field in expression.to.expressions if isinstance(field, exp.ColumnDef) and field.kind is not None
+        ]
+        if not isinstance(value, dict) or set(value) != {field.name for field in json_fields}:
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="Typed object schema mismatch in conversion",
+                errno=220000,
+                sqlstate="22000",
+            )
+        properties: list[Expr] = []
+        for field in json_fields:
+            field_kind = field.kind
+            assert field_kind is not None
+            properties.append(
+                exp.PropertyEQ(
+                    this=exp.Identifier(this=field.name, quoted=False),
+                    expression=exp.Cast(this=exp.convert(value[field.name]), to=field_kind.copy()),
+                )
+            )
+        return exp.Cast(
+            this=exp.Struct(expressions=properties),
+            to=expression.to.copy(),
+        )
+
     if not (
         isinstance(expression, exp.Cast)
         and expression.to.this == exp.DataType.Type.STRUCT
@@ -1063,6 +1337,12 @@ def structured_cast(expression: Expr) -> Expr:
     for field in expression.to.expressions:
         if not isinstance(field, exp.ColumnDef) or field.kind is None or field.name.upper() not in values:
             return expression
+        if isinstance(values[field.name.upper()], exp.Null) or values[field.name.upper()].find(exp.Null):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="Typed object schema mismatch in conversion",
+                errno=220000,
+                sqlstate="22000",
+            )
         fields.append(
             exp.PropertyEQ(
                 this=exp.Identifier(this=field.name, quoted=False),
@@ -1076,43 +1356,62 @@ def semi_structured_types(expression: Expr) -> Expr:
     if not isinstance(expression, exp.DataType):
         return expression
 
-    if expression.this == exp.DataType.Type.VARIANT:
-        return exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+    def lower(data_type: exp.DataType) -> exp.DataType:
+        if data_type.this == exp.DataType.Type.VARIANT:
+            return exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
 
-    if expression.this == exp.DataType.Type.ARRAY:
-        if expression.expressions:
-            inner = expression.expressions[0]
+        if data_type.this == exp.DataType.Type.ARRAY:
+            inner = (
+                data_type.expressions[0]
+                if data_type.expressions
+                else exp.DataType(
+                    this=exp.DataType.Type.VARIANT,
+                    nested=False,
+                )
+            )
             return exp.DataType(
                 this=exp.DataType.Type.ARRAY,
-                expressions=[inner],
+                expressions=[lower(inner) if isinstance(inner, exp.DataType) else inner.copy()],
                 nested=False,
+                _fs_structured=bool(data_type.expressions),
             )
-        return exp.DataType(
-            this=exp.DataType.Type.ARRAY,
-            expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
-            nested=False,
-        )
 
-    if expression.this == exp.DataType.Type.OBJECT:
-        if expression.expressions:
-            fields: list[Expr] = []
-            for field in expression.expressions:
-                copied = field.copy()
-                if isinstance(copied, exp.ColumnDef):
-                    copied.set("constraints", [])
-                fields.append(copied)
+        if data_type.this == exp.DataType.Type.OBJECT:
+            if data_type.expressions:
+                fields: list[Expr] = []
+                for field in data_type.expressions:
+                    copied = field.copy()
+                    if isinstance(copied, exp.ColumnDef):
+                        copied.set("constraints", [])
+                        if copied.kind is not None:
+                            copied.set("kind", lower(copied.kind))
+                    fields.append(copied)
+                return exp.DataType(
+                    this=exp.DataType.Type.STRUCT,
+                    expressions=fields,
+                    nested=False,
+                    _fs_structured=True,
+                )
             return exp.DataType(
-                this=exp.DataType.Type.STRUCT,
-                expressions=fields,
+                this=exp.DataType.Type.MAP,
+                expressions=[
+                    exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+                    exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                ],
                 nested=False,
+                _fs_structured=bool(data_type.expressions),
             )
-        return exp.DataType(
-            this=exp.DataType.Type.MAP,
-            expressions=[
-                exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
-                exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-            ],
-            nested=False,
-        )
 
-    return expression
+        if data_type.this == exp.DataType.Type.MAP:
+            return exp.DataType(
+                this=exp.DataType.Type.MAP,
+                expressions=[
+                    lower(item) if isinstance(item, exp.DataType) else item.copy() for item in data_type.expressions
+                ],
+                nested=False,
+                _fs_structured=True,
+            )
+
+        return data_type.copy()
+
+    return lower(expression)

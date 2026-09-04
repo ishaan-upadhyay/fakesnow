@@ -923,16 +923,13 @@ def test_to_variant() -> None:
         == "SELECT CAST('hello' AS VARIANT)"
     )
 
-    assert (
-        sqlglot.parse_one("SELECT TO_VARIANT(OBJECT_CONSTRUCT('a', 1, 'b', 2))", read="snowflake")
-        .transform(to_variant)
-        .sql(dialect="duckdb")
-        in {
-            "SELECT CAST(OBJECT_CONSTRUCT('a', 1, 'b', 2) AS VARIANT)",
-            'SELECT CAST({"a": 1, "b": 2} AS VARIANT)',
-            "SELECT CAST({'a': 1, 'b': 2} AS VARIANT)",
-        }
-    )
+    assert sqlglot.parse_one("SELECT TO_VARIANT(OBJECT_CONSTRUCT('a', 1, 'b', 2))", read="snowflake").transform(
+        to_variant
+    ).sql(dialect="duckdb") in {
+        "SELECT CAST(OBJECT_CONSTRUCT('a', 1, 'b', 2) AS VARIANT)",
+        'SELECT CAST({"a": 1, "b": 2} AS VARIANT)',
+        "SELECT CAST({'a': 1, 'b': 2} AS VARIANT)",
+    }
 
 
 def test_use() -> None:

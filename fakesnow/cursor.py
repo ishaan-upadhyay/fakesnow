@@ -289,6 +289,20 @@ class FakeSnowflakeCursor:
             else:
                 command, params = self._rewrite_with_params(command, params)
 
+            if re.search(r"\bARRAY\s*\([^)]*\bNOT\s+NULL\b", command, re.IGNORECASE):
+                if re.search(r"\[[^\]]*\bNULL\b", command, re.IGNORECASE):
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg="NULL result in a non-nullable column",
+                        errno=100072,
+                        sqlstate="22000",
+                    )
+                command = re.sub(
+                    r"(\bARRAY\s*\([^)]*?)\s+NOT\s+NULL(\s*\))",
+                    r"\1\2",
+                    command,
+                    flags=re.IGNORECASE,
+                )
+
             # convert tuple to mutable list
             if not isinstance(params, (list, dict)) and params is not None:
                 params = list(params)
@@ -395,6 +409,7 @@ class FakeSnowflakeCursor:
             .transform(transforms.create_database, db_path=self._conn.db_path)
             .transform(transforms.extract_comment_on_table)
             .transform(transforms.extract_comment_on_columns)
+            .transform(transforms.capture_structured_types)
             .transform(transforms.information_schema_fs)
             .transform(transforms.information_schema_databases, current_schema=self._conn.schema)
             .transform(transforms.drop_schema_cascade)
@@ -595,6 +610,11 @@ class FakeSnowflakeCursor:
                 msg, errno, sqlstate = "SQL compilation error:", 979, "42601"
             elif "Duplicate struct entry name" in msg:
                 errno, sqlstate = 100103, "22000"
+            elif "Could not find key" in msg:
+                match = re.search(r'key "([^"]+)"', msg)
+                field = match[1] if match else "UNKNOWN"
+                msg = f"Function GET: expected structured object to contain field {field} but it did not."
+                errno, sqlstate = 93201, "23001"
             else:
                 errno, sqlstate = 2043, "02000"
             raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=errno, sqlstate=sqlstate) from e
@@ -622,6 +642,35 @@ class FakeSnowflakeCursor:
             # a value that can't be cast, eg: a time zone name snowflake wouldn't accept either.
             # snowflake reports this as an error rather than failing, message content may differ.
             msg = cast(str, e.args[0]).split("\n")[0]
+            structured_targets = [
+                data_type for data_type in transformed.find_all(exp.DataType) if data_type.args.get("_fs_structured")
+            ]
+            if structured_targets:
+                numeric_map_key = any(
+                    data_type.this == exp.DataType.Type.MAP
+                    and data_type.expressions
+                    and isinstance(data_type.expressions[0], exp.DataType)
+                    and data_type.expressions[0].this
+                    in {
+                        exp.DataType.Type.BIGINT,
+                        exp.DataType.Type.DECIMAL,
+                        exp.DataType.Type.INT,
+                    }
+                    for data_type in transformed.find_all(exp.DataType)
+                )
+                if numeric_map_key:
+                    match = re.search(r"""['"]([^'"]+)['"]""", msg)
+                    value = match[1] if match else "k"
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg=f"Numeric value '{value}' is not recognized",
+                        errno=100038,
+                        sqlstate="22018",
+                    ) from e
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg="Typed object schema mismatch in conversion",
+                    errno=220000,
+                    sqlstate="22000",
+                ) from e
             raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=100035, sqlstate="22007") from e
 
         affected_count = None
@@ -744,6 +793,27 @@ class FakeSnowflakeCursor:
             schema = table.db or self._conn.schema
             assert catalog and schema
             self._duck_conn.execute(info_schema.insert_text_lengths_sql(catalog, schema, table.name, text_lengths))
+
+        if (
+            structured_types := cast(
+                list[tuple[str, str, str, str]],
+                transformed.args.get("_fs_structured_types"),
+            )
+        ) and (table := transformed.find(exp.Table)):
+            catalog = table.catalog or self._conn.database
+            schema = table.db or self._conn.schema
+            assert catalog and schema
+            temporary = transformed.find(exp.TemporaryProperty) is not None
+            self._duck_conn.execute(
+                info_schema.insert_structured_types_sql(
+                    catalog,
+                    schema,
+                    table.name,
+                    "temp" if temporary else catalog,
+                    "main" if temporary else schema,
+                    structured_types,
+                )
+            )
 
         if result_sql:
             logger.log_sql(result_sql)
