@@ -7,7 +7,17 @@ from datetime import date, datetime, time
 from decimal import Decimal
 from typing import Any
 
-from fakesnow.variant.sentinels import BIGINT_PREFIX, is_bigint, is_json_null, is_nan, is_undefined
+from fakesnow.variant.sentinels import (
+    BIGINT_PREFIX,
+    DECIMAL_PREFIX,
+    is_bigint,
+    is_decimal,
+    is_json_null,
+    is_nan,
+    is_undefined,
+    timestamp_kind,
+    timestamp_value,
+)
 
 
 def _decimal(value: Decimal) -> str:
@@ -50,6 +60,10 @@ def _map_items(value: object) -> list[tuple[str, Any]] | None:
 def _scalar(value: Any) -> str | None:
     if is_bigint(value):
         return value.removeprefix(BIGINT_PREFIX)
+    if is_decimal(value):
+        return _decimal(Decimal(value.removeprefix(DECIMAL_PREFIX)))
+    if timestamp_kind(value):
+        return json.dumps(timestamp_value(value), ensure_ascii=False)
     if is_json_null(value):
         return "null"
     if is_undefined(value) or value is None:

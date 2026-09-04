@@ -28,6 +28,7 @@ duckdb_to_sf_type = {
     "HUGEINT": "fixed",
     "INTEGER": "fixed",
     "JSON": "variant",
+    "VARIANT": "variant",
     "TIME": "time",
     "TIMESTAMP WITH TIME ZONE": "timestamp_tz",
     "TIMESTAMP_NS": "timestamp_ntz",
@@ -41,7 +42,22 @@ def describe_as_rowtype(describe_results: list) -> list[ColumnInfo]:
     """Convert duckdb column type to snowflake rowtype returned by the API."""
 
     def as_column_info(column_name: str, column_type: str) -> ColumnInfo:
-        if not (sf_type := duckdb_to_sf_type.get("DECIMAL" if column_type.startswith("DECIMAL") else column_type)):
+        if column_type.endswith("[]"):
+            sf_type = "array"
+        elif column_type.startswith(("MAP(", "STRUCT(")):
+            sf_type = "object"
+        else:
+            normalized_type = (
+                "DECIMAL"
+                if column_type.startswith("DECIMAL")
+                else "VARCHAR"
+                if column_type.startswith("VARCHAR")
+                else "BLOB"
+                if column_type.startswith("BLOB")
+                else column_type
+            )
+            sf_type = duckdb_to_sf_type.get(normalized_type)
+        if not sf_type:
             raise NotImplementedError(f"for column type {column_type}")
 
         info: ColumnInfo = {
@@ -68,15 +84,18 @@ def describe_as_rowtype(describe_results: list) -> list[ColumnInfo]:
             info["precision"] = 38
             info["scale"] = 0
         elif sf_type == "text":
-            # TODO: fetch actual varchar size
-            info["byteLength"] = 16777216
-            info["length"] = 16777216
+            match = re.search(r"\((\d+)\)", column_type)
+            length = int(match[1]) if match else 16777216
+            info["byteLength"] = length
+            info["length"] = length
         elif sf_type.startswith("time"):
             info["precision"] = 0
             info["scale"] = 9
         elif sf_type == "binary":
-            info["byteLength"] = 8388608
-            info["length"] = 8388608
+            match = re.search(r"\((\d+)\)", column_type)
+            length = int(match[1]) if match else 8388608
+            info["byteLength"] = length
+            info["length"] = length
 
         return info
 

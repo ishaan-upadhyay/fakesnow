@@ -6,7 +6,7 @@ from decimal import Decimal
 from typing import Any
 
 from fakesnow.variant.render import _map_items
-from fakesnow.variant.sentinels import is_bigint, is_json_null, is_nan, is_undefined
+from fakesnow.variant.sentinels import is_bigint, is_decimal, is_json_null, is_nan, is_undefined, timestamp_kind
 
 
 def typeof(value: Any) -> str | None:
@@ -18,6 +18,10 @@ def typeof(value: Any) -> str | None:
         return None
     if is_bigint(value):
         return "INTEGER"
+    if is_decimal(value):
+        return "DECIMAL"
+    if kind := timestamp_kind(value):
+        return kind
     if is_nan(value) or isinstance(value, float):
         return "DOUBLE"
     if isinstance(value, bool):
