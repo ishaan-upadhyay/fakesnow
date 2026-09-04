@@ -42,6 +42,7 @@ CREATE OR REPLACE MACRO ${catalog}._fs_flatten_array(
         input AS THIS
     FROM UNNEST(input) WITH ORDINALITY AS e(value, index)
     WHERE UPPER(mode_arg) IN ('ARRAY', 'BOTH')
+      AND _fs_typeof(CAST(e.value AS VARIANT)) IS NOT NULL
     """
 )
 
@@ -71,16 +72,12 @@ CREATE OR REPLACE MACRO ${catalog}._fs_flatten_map(
     """
 )
 
-# use json_group_object instead of json_object because it allows filtering pairs before construction
-# see https://github.com/duckdb/duckdb/issues/19357
 FS_OBJECT_CONSTRUCT = Template(
     """
 CREATE OR REPLACE MACRO ${catalog}._fs_object_construct(keys, vals, keep_nulls) AS (
     WITH kv AS (
-        SELECT
-            key,
-            list_extract(vals, idx) AS value
-        FROM UNNEST(keys) WITH ORDINALITY AS u(key, idx)
+        SELECT key, list_extract(vals, idx) AS value
+        FROM UNNEST(_fs_object_validate_keys(keys)) WITH ORDINALITY AS u(key, idx)
         ORDER BY idx
     )
     SELECT CASE
@@ -88,32 +85,11 @@ CREATE OR REPLACE MACRO ${catalog}._fs_object_construct(keys, vals, keep_nulls) 
             WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
         ) = 0 THEN map()
         ELSE map_from_entries(
-            list(struct_pack(key := key::VARCHAR, value := value::VARIANT) ORDER BY key)
+            list(struct_pack(key := key, value := value::VARIANT) ORDER BY key)
             FILTER (WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL))
         )
-    END AS obj
-    FROM kv
-);
-"""
-)
-
-FS_OBJECT_CONSTRUCT_STAR = Template(
-    """
-CREATE OR REPLACE MACRO ${catalog}._fs_object_construct_star(row_value) AS (
-    SELECT CASE
-        WHEN count(*) FILTER (WHERE value IS NOT NULL) = 0 THEN map()
-        ELSE map_from_entries(
-            list(struct_pack(key := key::VARCHAR, value := value::VARIANT) ORDER BY key)
-            FILTER (WHERE value IS NOT NULL)
-        )
     END
-    FROM (
-        UNPIVOT (
-            SELECT CAST(COLUMNS(*) AS VARIANT)
-            FROM (SELECT UNNEST(row_value))
-        ) ON COLUMNS(*)::VARCHAR
-        INTO NAME key VALUE value
-    )
+    FROM kv
 );
 """
 )
@@ -157,6 +133,5 @@ def creation_sql(catalog: str) -> str:
         {FS_FLATTEN_MAP.substitute(catalog=catalog)};
         {FS_HAVERSINE.substitute(catalog=catalog)};
         {FS_OBJECT_CONSTRUCT.substitute(catalog=catalog)};
-        {FS_OBJECT_CONSTRUCT_STAR.substitute(catalog=catalog)};
         {FS_TO_TIMESTAMP.substitute(catalog=catalog)};
     """

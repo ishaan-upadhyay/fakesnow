@@ -42,6 +42,8 @@ def array_construct_etc(expression: Expr) -> Expr:
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
 
     def as_variant(item: Expr) -> Expr:
+        if isinstance(item, exp.Array):
+            item = exp.Array(expressions=[as_variant(value) for value in item.expressions])
         value = (
             exp.Cast(
                 this=exp.Interval(this=exp.Literal.string("0"), unit=exp.Var(this="SECOND")),
@@ -69,6 +71,96 @@ def array_construct_etc(expression: Expr) -> Expr:
         )
     ):
         return exp.Array(expressions=[as_variant(item) for item in expression.expressions])
+    return expression
+
+
+def array_functions(expression: Expr) -> Expr:
+    """Route unstructured array functions through Snowflake-compatible VARIANT[] UDFs."""
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+
+    def variant(value: Expr | None) -> Expr:
+        return exp.Cast(
+            this=value.copy() if value is not None else exp.Null(),
+            to=variant_type.copy(),
+        )
+
+    def call(name: str, *arguments: Expr | None) -> Expr:
+        return exp.Anonymous(this=name, expressions=[variant(argument) for argument in arguments])
+
+    if isinstance(expression, exp.ArrayContains):
+        return call("_fs_array_contains", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayPosition):
+        result = call("_fs_array_position", expression.this, expression.expression)
+        result.args["_fs_array_position"] = True
+        return result
+    if isinstance(expression, exp.ArrayAppend):
+        return call("_fs_array_append", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayPrepend):
+        return call("_fs_array_prepend", expression.this, expression.expression)
+    if isinstance(expression, exp.ArraySlice):
+        return exp.Anonymous(
+            this="_fs_array_slice",
+            expressions=[
+                variant(expression.this),
+                expression.args["start"].copy(),
+                expression.args["end"].copy(),
+            ],
+        )
+    if isinstance(expression, exp.ArrayToString):
+        return exp.Anonymous(
+            this="_fs_array_to_string",
+            expressions=[variant(expression.this), expression.expression.copy()],
+        )
+    if isinstance(expression, exp.ArrayDistinct):
+        return call("_fs_array_distinct", expression.this)
+    if isinstance(expression, exp.Flatten) and not isinstance(expression.parent, (exp.From, exp.Join)):
+        return call("_fs_array_flatten", expression.this)
+    if isinstance(expression, exp.SortArray):
+        return exp.Anonymous(
+            this="_fs_array_sort",
+            expressions=[
+                variant(expression.this),
+                (expression.args.get("asc") or exp.Null()).copy(),
+                (expression.args.get("nulls_first") or exp.Null()).copy(),
+            ],
+        )
+    if isinstance(expression, exp.ArrayMax):
+        return call("_fs_array_max", expression.this)
+    if isinstance(expression, exp.ArrayMin):
+        return call("_fs_array_min", expression.this)
+    if isinstance(expression, exp.ArrayRemove):
+        return call("_fs_array_remove", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayInsert):
+        return exp.Anonymous(
+            this="_fs_array_insert",
+            expressions=[
+                variant(expression.this),
+                expression.args["position"].copy(),
+                variant(expression.expression),
+            ],
+        )
+    if isinstance(expression, exp.ArrayCompact):
+        return call("_fs_array_compact", expression.this)
+    if isinstance(expression, exp.ArrayExcept):
+        return call("_fs_array_except", expression.this, expression.expression)
+    if isinstance(expression, exp.ArrayIntersect):
+        return call("_fs_array_intersection", *expression.expressions)
+    if isinstance(expression, exp.ArrayOverlaps):
+        return call("_fs_arrays_overlap", expression.this, expression.expression)
+    if isinstance(expression, exp.ArraysZip) and len(expression.expressions) == 2:
+        return call("_fs_arrays_zip", *expression.expressions)
+    if isinstance(expression, exp.ArrayConcat) and len(expression.expressions) == 1:
+        return call("_fs_array_cat", expression.this, expression.expressions[0])
+    if isinstance(expression, exp.GenerateSeries) and expression.args.get("is_end_exclusive"):
+        generated = expression.copy()
+        return exp.Cast(
+            this=generated,
+            to=exp.DataType(
+                this=exp.DataType.Type.ARRAY,
+                expressions=[variant_type.copy()],
+                nested=False,
+            ),
+        )
     return expression
 
 
@@ -105,20 +197,91 @@ def array_size(expression: Expr) -> Expr:
 
 
 def array_agg(expression: Expr) -> Expr:
+    if isinstance(expression, exp.ArrayUniqueAgg):
+        argument = expression.this.copy()
+        return exp.ArrayAgg(
+            this=exp.Distinct(
+                expressions=[
+                    exp.Cast(
+                        this=argument,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            ),
+            nulls_excluded=True,
+        )
+    if isinstance(expression, exp.ArrayAgg):
+        result = expression.copy()
+        value = result.this
+        if isinstance(value, exp.Order):
+            ordered = value.copy()
+            ordered.set(
+                "this",
+                exp.Cast(
+                    this=value.this.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                ),
+            )
+            result.set("this", ordered)
+        elif isinstance(value, exp.Distinct):
+            distinct = value.copy()
+            distinct.set(
+                "expressions",
+                [
+                    exp.Cast(
+                        this=item.copy(),
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                    for item in value.expressions
+                ],
+            )
+            result.set("this", distinct)
+        else:
+            result.set(
+                "this",
+                exp.Cast(
+                    this=value.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                ),
+            )
+        select = expression.find_ancestor(exp.Select)
+        from_ = select.args.get("from") if select is not None else None
+        source = from_.this if isinstance(from_, exp.From) else None
+        return (
+            exp.Anonymous(this="list_reverse", expressions=[result])
+            if isinstance(source, exp.Subquery) and isinstance(source.this, exp.Union)
+            else result
+        )
     return expression
 
 
 def object_agg(expression: Expr) -> Expr:
-    """Convert OBJECT_AGG(key, value) to DuckDB equivalent.
-
-    Snowflake's OBJECT_AGG aggregates key-value pairs into a JSON object, skipping rows
-    where the key or value is NULL.
-
-    See https://docs.snowflake.com/en/sql-reference/functions/object_agg
-    """
     if isinstance(expression, exp.ObjectAgg):
         key = expression.this.copy()
         value = expression.expression.copy()
+        if not key.find(exp.Column) and not value.find(exp.Column):
+            key_array = exp.Array(
+                expressions=[
+                    exp.Cast(
+                        this=key,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            )
+            value_array = exp.Array(
+                expressions=[
+                    exp.Cast(
+                        this=value,
+                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                    )
+                ]
+            )
+            key_array.args["_fs_internal"] = True
+            value_array.args["_fs_internal"] = True
+            return exp.Anonymous(
+                this="_fs_object_construct",
+                expressions=[key_array, value_array, exp.false()],
+            )
 
         value_not_null = exp.Not(this=exp.Is(this=value.copy(), expression=exp.Null()))
         key_not_null = exp.Not(this=exp.Is(this=key.copy(), expression=exp.Null()))
@@ -132,9 +295,28 @@ def object_agg(expression: Expr) -> Expr:
             this=exp.Anonymous(this="LIST", expressions=[value]),
             expression=exp.Where(this=not_null.copy()),
         )
-
-        map_expr = exp.Anonymous(this="MAP", expressions=[list_key, list_val])
-        return exp.Anonymous(this="TO_JSON", expressions=[map_expr])
+        return exp.Anonymous(
+            this="_fs_object_construct",
+            expressions=[
+                exp.Cast(
+                    this=list_key,
+                    to=exp.DataType(
+                        this=exp.DataType.Type.ARRAY,
+                        expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
+                        nested=False,
+                    ),
+                ),
+                exp.Cast(
+                    this=list_val,
+                    to=exp.DataType(
+                        this=exp.DataType.Type.ARRAY,
+                        expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
+                        nested=False,
+                    ),
+                ),
+                exp.false(),
+            ],
+        )
 
     return expression
 
@@ -159,7 +341,8 @@ def array_agg_within_group(expression: Expr) -> Expr:
             this=exp.Order(
                 this=agg.this,
                 expressions=order.expressions,
-            )
+            ),
+            nulls_excluded=True,
         )
 
     return expression
@@ -1283,12 +1466,35 @@ def object_construct(expression: Expr) -> Expr:
     keys: list[Expr] = []
     values: list[Expr] = []
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+    literal_keys: set[str] = set()
 
     for key, value in items:
         if isinstance(key, exp.Identifier):
             key = exp.Literal(this=key.name, is_string=True)
+        if isinstance(key, exp.Literal) and not key.is_string:
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="SQL compilation error:",
+                errno=2270,
+                sqlstate="22000",
+            )
+        if isinstance(key, exp.Literal) and key.is_string:
+            if key.name in literal_keys:
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg=f"Duplicate field key '{key.name}'",
+                    errno=100103,
+                    sqlstate="22000",
+                )
+            literal_keys.add(key.name)
 
-        keys.append(key)
+        keys.append(exp.Cast(this=key, to=variant_type.copy()))
+        value = (
+            exp.Anonymous(
+                this="_fs_parse_json",
+                expressions=[exp.Literal.string("{}")],
+            )
+            if isinstance(value, exp.Struct) and not value.expressions
+            else value.transform(object_construct)
+        )
 
         if keep_nulls and isinstance(value, exp.Null):
             value = exp.Cast(
@@ -1308,13 +1514,71 @@ def object_construct(expression: Expr) -> Expr:
     value_array.args["_fs_internal"] = True
 
     return exp.Anonymous(
-        this="_FS_OBJECT_CONSTRUCT",
+        this="_fs_object_construct",
         expressions=[
             key_array,
             value_array,
             exp.true() if keep_nulls else exp.false(),
         ],
     )
+
+
+def object_functions(expression: Expr) -> Expr:
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+
+    def as_variant(value: Expr) -> Expr:
+        return exp.Cast(this=value.copy(), to=variant_type.copy())
+
+    def key_array(values: list[Expr]) -> Expr:
+        if len(values) == 1 and isinstance(values[0], exp.Array):
+            values = list(values[0].expressions)
+        result = exp.Array(expressions=[as_variant(value) for value in values])
+        result.args["_fs_internal"] = True
+        return result
+
+    if isinstance(expression, exp.ObjectInsert):
+        return exp.Anonymous(
+            this="_fs_object_insert",
+            expressions=[
+                as_variant(expression.this),
+                as_variant(expression.args["key"]),
+                as_variant(expression.args["value"]),
+                (expression.args.get("update_flag") or exp.false()).copy(),
+            ],
+        )
+
+    if isinstance(expression, exp.JSONKeys):
+        return exp.Anonymous(
+            this="_fs_object_keys",
+            expressions=[as_variant(expression.this)],
+        )
+
+    if isinstance(expression, exp.MapCat):
+        return exp.Anonymous(
+            this="_fs_object_cat",
+            expressions=[as_variant(expression.this), as_variant(expression.expression)],
+        )
+
+    if isinstance(expression, exp.Anonymous):
+        name = expression.name.upper()
+        if name == "OBJECT_DELETE" and expression.expressions:
+            return exp.Anonymous(
+                this="_fs_object_delete",
+                expressions=[
+                    as_variant(expression.expressions[0]),
+                    key_array(expression.expressions[1:]),
+                ],
+            )
+        if name == "OBJECT_PICK" and expression.expressions:
+            return exp.Anonymous(
+                this="_fs_object_pick",
+                expressions=[
+                    as_variant(expression.expressions[0]),
+                    key_array(expression.expressions[1:]),
+                ],
+            )
+
+    return expression
 
 
 def regex_replace(expression: Expr) -> Expr:
@@ -1777,6 +2041,97 @@ def values_columns(expression: Expr) -> Expr:
     return expression
 
 
+def _coerce_semi_structured_value(value: Expr, target: exp.DataType) -> Expr:
+    variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+    as_variant = exp.Cast(this=value.copy(), to=variant_type)
+    if target.this == exp.DataType.Type.VARIANT:
+        return as_variant
+    if (
+        target.this == exp.DataType.Type.MAP
+        and len(target.expressions) == 2
+        and isinstance(target.expressions[1], exp.DataType)
+        and target.expressions[1].this == exp.DataType.Type.VARIANT
+    ):
+        return exp.Anonymous(this="_fs_variant_to_object", expressions=[as_variant])
+    if (
+        target.this == exp.DataType.Type.ARRAY
+        and target.expressions
+        and isinstance(target.expressions[0], exp.DataType)
+        and target.expressions[0].this == exp.DataType.Type.VARIANT
+    ):
+        return exp.Anonymous(this="_fs_variant_to_array", expressions=[as_variant])
+    return exp.Cast(this=value.copy(), to=target.copy())
+
+
+def _target_table(expression: exp.Insert | exp.Update) -> exp.Table | None:
+    target = expression.this
+    if isinstance(target, exp.Schema):
+        target = target.this
+    return target if isinstance(target, exp.Table) else None
+
+
+def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
+    if not isinstance(expression, (exp.Insert, exp.Update)):
+        return expression
+    table = _target_table(expression)
+    if table is None:
+        return expression
+    try:
+        described = duck_conn.sql(f"DESCRIBE {table.sql(dialect='duckdb')}").fetchall()
+    except Exception:
+        return expression
+    target_types = {
+        name.upper(): exp.DataType.build(column_type, dialect="duckdb")
+        for name, column_type, *_ in described
+    }
+
+    if isinstance(expression, exp.Update):
+        for assignment in expression.expressions:
+            if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
+                continue
+            if target := target_types.get(assignment.this.name.upper()):
+                assignment.set(
+                    "expression",
+                    _coerce_semi_structured_value(assignment.expression, target),
+                )
+        return expression
+
+    columns = (
+        [column.name for column in expression.this.expressions]
+        if isinstance(expression.this, exp.Schema)
+        else list(target_types)
+    )
+    source = expression.expression
+    if isinstance(source, exp.Select):
+        projections: list[Expr] = []
+        for index, item in enumerate(source.expressions):
+            column = item.alias_or_name if expression.args.get("by_name") else columns[index]
+            target = target_types.get(column.upper())
+            if target is None:
+                projections.append(item)
+                continue
+            value = item.this if isinstance(item, exp.Alias) else item
+            coerced = _coerce_semi_structured_value(value, target)
+            projections.append(
+                exp.Alias(this=coerced, alias=item.args["alias"].copy())
+                if isinstance(item, exp.Alias)
+                else coerced
+            )
+        source.set("expressions", projections)
+    elif isinstance(source, exp.Values):
+        for row in source.expressions:
+            if not isinstance(row, exp.Tuple):
+                continue
+            row.set(
+                "expressions",
+                [
+                    _coerce_semi_structured_value(value, target_types[columns[index].upper()])
+                    for index, value in enumerate(row.expressions)
+                ],
+            )
+    return expression
+
+
 def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
     if (
         isinstance(expression, exp.Create)
@@ -1813,10 +2168,11 @@ def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
             create_col_id = col_def.this
             assert isinstance(create_col_id, exp.Identifier), f"Expected Identifier, got {type(create_col_id)}"
             create_col_type = col_def.kind
+            assert create_col_type is not None
             select_col = select_query.expressions[i]
 
             inner = select_col.this if isinstance(select_col, exp.Alias) else select_col
-            cast_expr = exp.Cast(this=inner, to=create_col_type)
+            cast_expr = _coerce_semi_structured_value(inner, create_col_type)
             aliased_expr = exp.Alias(this=cast_expr, alias=create_col_id)
 
             new_expressions.append(aliased_expr)

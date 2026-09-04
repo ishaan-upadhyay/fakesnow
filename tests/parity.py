@@ -98,12 +98,17 @@ def run_snowflake(sql: str, setup: str | None = None) -> dict[str, Any] | None:
     private_key = _load_private_key()
     if private_key is None:
         return None
+    account = os.environ.get("FAKESNOW_PARITY_ACCOUNT")
+    user = os.environ.get("FAKESNOW_PARITY_USER")
+    if not account or not user:
+        return None
     try:
         conn = snowflake.connector.connect(
-            account="TEST_ACCOUNT",
-            user="TEST_USER",
+            account=account,
+            user=user,
             private_key=private_key,
-            warehouse="TEST_WAREHOUSE",
+            warehouse=os.environ.get("FAKESNOW_PARITY_WAREHOUSE"),
+            role=os.environ.get("FAKESNOW_PARITY_ROLE"),
         )
     except Exception:
         return None

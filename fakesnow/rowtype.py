@@ -96,6 +96,9 @@ def describe_as_rowtype(describe_results: list) -> list[ColumnInfo]:
             length = int(match[1]) if match else 8388608
             info["byteLength"] = length
             info["length"] = length
+        elif sf_type == "array":
+            info["byteLength"] = 16777216
+            info["length"] = 16777216
 
         return info
 

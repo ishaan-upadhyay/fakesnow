@@ -155,9 +155,7 @@ def _insert_df(duck_conn: DuckDBPyConnection, df: pd.DataFrame, table_name: str)
         if col in object_cols and target_type == "VARIANT":
             projections.append(f'_fs_parse_json("{col}")')
         elif col in object_cols and target_type.startswith("MAP("):
-            projections.append(
-                f'TRY_CAST(_fs_parse_json("{col}") AS MAP(VARCHAR, VARIANT))'
-            )
+            projections.append(f'_fs_variant_to_object(_fs_parse_json("{col}"))')
         elif col in object_cols and target_type.endswith("[]"):
             projections.append(f'TRY_CAST(_fs_parse_json("{col}") AS {target_type})')
         else:
