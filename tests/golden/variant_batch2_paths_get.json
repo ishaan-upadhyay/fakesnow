@@ -1,0 +1,365 @@
+{
+  "name": "paths_get",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_v_a_v_a_v_a_v_a_v_s_v_s_varchar_v_s_string_v_o_v_o_va",
+      "sql": "SELECT v:a, v:A, v:\"a\", v:\"A\", v:s, v:s::VARCHAR, v:s::STRING, v:o, v:o::VARCHAR, TO_VARCHAR(v:o), TO_JSON(v:o), v:l, v:l::VARCHAR, v:l[0], v:l[2][0], v:l[-1], v:l[5], v:zz, v:o.k, v:o.K, v:o:k, v['o']['k'], v['o'].k, GET(v, 'o'), GET(v:l, 0), GET(v:l, 5), GET(v:l, -1), GET_PATH(v, 'o.k'), GET_PATH(v, 'l[1]'), GET_PATH(v, 'l[2][0]'), v:\"a.b\", GET(v, 'a.b'), GET_PATH(v, '\"a.b\"'), v:\"sp ace\", v:\"q'uote\", v:e::VARCHAR, v:e::NUMBER(10,2), v:e::INT, v:e::DOUBLE, v:a::VARCHAR, v:b::VARCHAR, v:b::BOOLEAN, v:l[0]::VARCHAR, v:o:k::VARCHAR, v:zz::VARCHAR, v:zz IS NULL, GET(v, 'zz') IS NULL, v[0], v:l['x'], v:s[0], v:a:b FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "001852 (22023): Invalid extraction path '-1': array index -1 is off limits; must be between 0 and 2,147,483,647.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_s_int_from_select_parse_json_a_1_s_x_o_k_1_k_2_l_10",
+      "sql": "SELECT v:s::INT FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value \"x\" to FIXED",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_o_int_from_select_parse_json_a_1_s_x_o_k_1_k_2_l_10",
+      "sql": "SELECT v:o::INT FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value {\"K\":2,\"k\":1} to FIXED",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_l_varchar_v_l_array_v_o_object_v_o_array_from_selec",
+      "sql": "SELECT v:l::VARCHAR, v:l::ARRAY, v:o::OBJECT, v:o::ARRAY FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V:L::VARCHAR",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "V:L::ARRAY",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "V:O::OBJECT",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "V:O::ARRAY",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[10,20,[30]]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  10,\n  20,\n  [\n    30\n  ]\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"K\": 2,\n  \"k\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"K\": 2,\n    \"k\": 1\n  }\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_s_object_from_select_parse_json_a_1_s_x_o_k_1_k_2_l",
+      "sql": "SELECT v:s::OBJECT FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value \"x\" to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_s_date_from_select_parse_json_a_1_s_x_o_k_1_k_2_l_1",
+      "sql": "SELECT v:s::DATE FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value \"x\" to DATE",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_e_date_from_select_parse_json_a_1_s_x_o_k_1_k_2_l_1",
+      "sql": "SELECT v:e::DATE FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value 1.5 to DATE",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_a_boolean_v_s_boolean_from_select_parse_json_a_1_s",
+      "sql": "SELECT v:a::BOOLEAN, v:s::BOOLEAN FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value 1 to BOOLEAN",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_b_int_from_select_parse_json_a_1_s_x_o_k_1_k_2_l_10",
+      "sql": "SELECT v:b::INT FROM (SELECT PARSE_JSON($${\"a\":1,\"s\":\"x\",\"o\":{\"k\":1,\"K\":2},\"l\":[10,20,[30]],\"e\":1.50,\"b\":true,\"a.b\":7,\"A\":9,\"sp ace\":3,\"q'uote\":4}$$) v)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V:B::INT",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_get_v_k_gk_get_v_l_i_gi_v_k_vk_v_l_i_vli_get_v_l_i_gl",
+      "sql": "SELECT GET(v, k) gk, GET(v:l, i) gi, v[k] vk, v:l[i] vli, GET(v, 'l')[i] gli, GET_PATH(v, p) gp FROM (SELECT PARSE_JSON('{\"a\":1,\"l\":[10,20]}') v, 'a' k, 1 i, 'l[0]' p)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "GK",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "GI",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "VK",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "VLI",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "GLI",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "GP",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "20"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "20"
+            },
+            {
+              "type": "str",
+              "value": "20"
+            },
+            {
+              "type": "str",
+              "value": "10"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_1_neg_parse_json_1_2_2_oob_parse_json",
+      "sql": "SELECT PARSE_JSON('[1,2]')[-1] neg, PARSE_JSON('[1,2]')[2] oob, PARSE_JSON('[1,2]')['a'] key_on_arr, PARSE_JSON('{\"a\":1}')[0] idx_on_obj, PARSE_JSON('\"s\"')[0] idx_on_str, PARSE_JSON('\"s\"'):a key_on_str, PARSE_JSON('1'):a key_on_num, GET(PARSE_JSON('[1,2]'), 'a') g1, GET(PARSE_JSON('{\"a\":1}'), 0) g2, GET(PARSE_JSON('{\"0\":1}'), 0) g3, GET(PARSE_JSON('{\"0\":1}'), '0') g4, PARSE_JSON('{\"0\":1}')[0] g5, PARSE_JSON('[1,2]')['1'] g6",
+      "setup": null,
+      "expect": {
+        "error": "001852 (22023): Invalid extraction path '-1': array index -1 is off limits; must be between 0 and 2,147,483,647.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_1_5",
+      "sql": "SELECT PARSE_JSON('[1,2]')[1.5]",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,2]')[1.5]",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_null",
+      "sql": "SELECT PARSE_JSON('[1,2]')[NULL]",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,2]')[NULL]",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_get_path_parse_json_a_1_b_2_a_1_b_a_get_path_parse_js",
+      "sql": "SELECT GET_PATH(PARSE_JSON('{\"a\":[1,{\"b\":2}]}'), 'a[1].b') a, GET_PATH(PARSE_JSON('{\"a\":[1,{\"b\":2}]}'), 'a.1.b') b, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '[\"a\"][\"b\"]') c, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), 'a[\"b\"]') d, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '$.a.b') e, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), '') f, GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), NULL) g",
+      "setup": null,
+      "expect": {
+        "error": "001840 (22023): Invalid extraction path 'a.1.b': invalid field at position 2.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_get_path_parse_json_a_b_2_a_b",
+      "sql": "SELECT GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), 'a..b')",
+      "setup": null,
+      "expect": {
+        "error": "001842 (22023): Invalid extraction path 'a..b': empty (unquoted) field name at position 2.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_get_path_parse_json_a_b_2_a_b_2",
+      "sql": "SELECT GET_PATH(PARSE_JSON('{\"a\":{\"b\":2}}'), 'a[b]')",
+      "setup": null,
+      "expect": {
+        "error": "001841 (22023): Invalid extraction path 'a[b]': invalid number at position 3.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_get_ignore_case_parse_json_ab_1_ab_gic_get_ignore_cas",
+      "sql": "SELECT GET_IGNORE_CASE(PARSE_JSON('{\"Ab\":1}'), 'ab') gic, GET_IGNORE_CASE(PARSE_JSON('{\"Ab\":1, \"AB\": 2}'), 'ab') gic2",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "GIC",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "GIC2",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "2"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,1158 @@
+{
+  "name": "coercion_via_ctas_with_schema_full_errors",
+  "pr": 5,
+  "cases": [
+    {
+      "id": "v_variant_as_select_object_construct_a_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_array_construct_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT ARRAY_CONSTRUCT(1)",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_str",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C2 failed on column V with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "v_variant_as_select_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_50",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1.50",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_current_date",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT CURRENT_DATE",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [DATE] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_5_double",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1.5::DOUBLE",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.500000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_true",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT TRUE",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_2_array_int",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT [1,2]::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY(NUMBER(38,0))] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "v_variant_as_select_k_1_map_varchar_int",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT {'k':1}::MAP(VARCHAR,INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [MAP(VARCHAR(134217728), NUMBER(38,0))] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_parse_json_a_1",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1\n  }\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_parse_json_1",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('[1]')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_str",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C12 failed on column A with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_1",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT 1",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [NUMBER(1,0)] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_array_construct_1_a",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT ARRAY_CONSTRUCT(1,'a')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_1_a",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT [1,'a']",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_object_construct_a_1",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_1_2_array_int",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT [1,2]::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY(NUMBER(38,0))] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_parse_json_null",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('null')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_null",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT NULL",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_1",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C20 failed on column O with error: Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_a_1",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_a_1",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'a':1}",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_str",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C23 failed on column O with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_array_construct_1",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT ARRAY_CONSTRUCT(1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_k_1_map_varchar_int",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'k':1}::MAP(VARCHAR,INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [MAP(VARCHAR(134217728), NUMBER(38,0))] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_a_1_object_a_int",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'a':1}::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT(a NUMBER(38,0))] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_null",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('null')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_parse_json_1_x",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT PARSE_JSON('[1,\"x\"]')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_parse_json_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT PARSE_JSON('[1,2]')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_array_construct_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,2]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_null",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,NULL]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT ['1','2']",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_5",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1.5]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2_array_number_10_2",
+      "sql": "SELECT sa, TYPEOF(sa) FROM t",
+      "setup": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,2]::ARRAY(NUMBER(10,2))",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(SA)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1_y_z",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1_y_z_2",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z', 'extra', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_x_1_y_z",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT {'x':1,'y':'z'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_y_z_x_1",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT {'y':'z','x':1}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_parse_json_x_1_y_2",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT PARSE_JSON('{\"x\":\"1\",\"y\":2}')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "nn_object_x_int_not_null_not_null_as_select_x_null_object_x",
+      "sql": "CREATE TEMP TABLE t (nn OBJECT(x INT NOT NULL) NOT NULL) AS SELECT {'x':NULL}::OBJECT(x INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C42 failed on column NN with error: Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "nn_object_x_int_not_null_not_null_as_select_object_construct",
+      "sql": "CREATE TEMP TABLE t (nn OBJECT(x INT NOT NULL) NOT NULL) AS SELECT OBJECT_CONSTRUCT_KEEP_NULL('x', NULL)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0) NOT NULL)]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_object_construct_k_1",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT OBJECT_CONSTRUCT('k', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_k_x",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'k': 'x'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_k_1",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'k': '1'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_a_1_object_a_int",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'a':1}::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT(a NUMBER(38,0))] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_1",
+      "sql": "SELECT i, TYPEOF(i) FROM t",
+      "setup": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('1')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "I",
+            "FIXED",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(I)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_1_2",
+      "sql": "SELECT i, TYPEOF(i) FROM t",
+      "setup": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('\"1\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "I",
+            "FIXED",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(I)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_x",
+      "sql": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('\"x\"')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C50 failed on column I with error: Failed to cast variant value \"x\" to FIXED",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "s_varchar_as_select_parse_json_a_1",
+      "sql": "SELECT s, TYPEOF(s) FROM t",
+      "setup": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "S",
+            "TEXT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(S)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "s_varchar_as_select_parse_json_x",
+      "sql": "SELECT s, TYPEOF(s) FROM t",
+      "setup": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT PARSE_JSON('\"x\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "S",
+            "TEXT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(S)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "s_varchar_as_select_object_construct_a_1",
+      "sql": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [VARCHAR(16777216)]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "s_varchar_as_select_array_construct_1_null",
+      "sql": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT ARRAY_CONSTRUCT(1,NULL)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [VARCHAR(16777216)]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "d_date_as_select_parse_json_2024_01_02",
+      "sql": "SELECT d, TYPEOF(d) FROM t",
+      "setup": "CREATE TEMP TABLE t (d DATE) AS SELECT PARSE_JSON('\"2024-01-02\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "D",
+            "DATE",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(D)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "date",
+              "value": "2024-01-02"
+            },
+            {
+              "type": "str",
+              "value": "DATE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b_boolean_as_select_parse_json_true",
+      "sql": "SELECT b, TYPEOF(b) FROM t",
+      "setup": "CREATE TEMP TABLE t (b BOOLEAN) AS SELECT PARSE_JSON('true')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "B",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(B)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b_boolean_as_select_parse_json_1",
+      "sql": "CREATE TEMP TABLE t (b BOOLEAN) AS SELECT PARSE_JSON('1')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C57 failed on column B with error: Failed to cast variant value 1 to BOOLEAN",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

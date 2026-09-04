@@ -1,0 +1,355 @@
+{
+  "name": "formatting_numbers",
+  "pr": 2,
+  "cases": [
+    {
+      "id": "select_parse_json_b_1_a_1_2_c_null_d_x_e_1_50_f_true_g_null",
+      "sql": "SELECT PARSE_JSON('{\"b\":1,\"a\":[1,2,{\"c\":null}],\"d\":\"x\",\"e\":1.50,\"f\":true,\"g\":null,\"h\":1e10,\"i\":12345678901234567890123,\"j\":3.14159265358979323846,\"k\":1.000,\"l\":-0,\"m\":1E2,\"n\":0.1,\"o\":\"unicode \\u00e9 nl\\n tab\\t quote\\\" slash/ back\\\\ <>&\"}') v",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: unterminated string, line 2, pos 0",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_50_a_parse_json_1_000_b_parse_json_12345",
+      "sql": "SELECT PARSE_JSON('1.50') a, PARSE_JSON('1.000') b, PARSE_JSON('12345678901234567890123') c, PARSE_JSON('3.14159265358979323846') d, PARSE_JSON('1e10') e, PARSE_JSON('1E2') f, PARSE_JSON('-0') g, PARSE_JSON('0.1') h, PARSE_JSON('100') i, PARSE_JSON('1.0e-5') j, PARSE_JSON('123456789012345678901234567890123456789') k, PARSE_JSON('1.5e400') l, PARSE_JSON('99999999999999999999999999999999999999') m",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "B",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "C",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "D",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "E",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "F",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "G",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "H",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "I",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "J",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "K",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "L",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "M",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "12345678901234567890123"
+            },
+            {
+              "type": "str",
+              "value": "3.14159265358979323846"
+            },
+            {
+              "type": "str",
+              "value": "1.000000000000000e+10"
+            },
+            {
+              "type": "str",
+              "value": "1.000000000000000e+02"
+            },
+            {
+              "type": "str",
+              "value": "0"
+            },
+            {
+              "type": "str",
+              "value": "0.1"
+            },
+            {
+              "type": "str",
+              "value": "100"
+            },
+            {
+              "type": "str",
+              "value": "1.000000000000000e-05"
+            },
+            {
+              "type": "str",
+              "value": "123456789012345678901234567890123456789"
+            },
+            {
+              "type": "str",
+              "value": "Infinity"
+            },
+            {
+              "type": "str",
+              "value": "99999999999999999999999999999999999999"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_typeof_parse_json_1_50_a_typeof_parse_json_1_000_b_ty",
+      "sql": "SELECT TYPEOF(PARSE_JSON('1.50')) a, TYPEOF(PARSE_JSON('1.000')) b, TYPEOF(PARSE_JSON('12345678901234567890123')) c, TYPEOF(PARSE_JSON('3.14159265358979323846')) d, TYPEOF(PARSE_JSON('1e10')) e, TYPEOF(PARSE_JSON('100')) f, TYPEOF(PARSE_JSON('123456789012345678901234567890123456789')) g, TYPEOF(PARSE_JSON('1E2')) h, TYPEOF(PARSE_JSON('-0')) i",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "B",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "C",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "D",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "E",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "F",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "G",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "H",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "I",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_50_a_x_parse_json_a_1_50_a_varchar_y_t",
+      "sql": "SELECT PARSE_JSON('{\"a\":1.50}'):a x, PARSE_JSON('{\"a\":1.50}'):a::VARCHAR y, TO_VARCHAR(PARSE_JSON('1.50')) z, TO_JSON(PARSE_JSON('{\"a\":1.50, \"b\": 1.000}')) w, PARSE_JSON('[1.50, 1.000, 1e10]') arr",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "X",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "Y",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "Z",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "W",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "ARR",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "{\"a\":1.5,\"b\":1}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1.5,\n  1,\n  1.000000000000000e+10\n]"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

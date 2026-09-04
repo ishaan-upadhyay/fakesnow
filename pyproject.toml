@@ -71,12 +71,16 @@ reportMatchNotExhaustive = true
 reportUnnecessaryTypeIgnoreComment = true
 
 [tool.pytest.ini_options]
+pythonpath = ["."]
 testpaths = ["tests"]
+markers = [
+    "live_snowflake: replay golden fixtures against a live Snowflake account (skipped by default)",
+]
+addopts = ["-m", "not live_snowflake"]
 # error on unhandled exceptions in background threads
 # useful for catching errors in server or snowflake connector threads
 filterwarnings = [
     "error::pytest.PytestUnhandledThreadExceptionWarning",
-    "ignore::pytest.PytestUnknownMarkWarning",
 ]
 
 [tool.ruff]

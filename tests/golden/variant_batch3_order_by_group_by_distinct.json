@@ -1,0 +1,576 @@
+{
+  "name": "order_by_group_by_distinct",
+  "pr": 6,
+  "cases": [
+    {
+      "id": "select_v_typeof_v_from_select_parse_json_column1_v_from_valu",
+      "sql": "SELECT v, TYPEOF(v) FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('2'), ('\"a\"'), ('1'), ('null'), ('[1]'), ('true'), ('1.5'), ('{\"a\":1}'), ('false'), ('\"B\"'), ('-1'), ('[0]'), ('{}'), ('[]'), ('\"a\"'), ('1e2'), ('[1,2]'), ('{\"b\":1}'), ('{\"a\":2}'), ('\"aa\"'), ('\"\"'), ('0')) ORDER BY v",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "false"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "-1"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "0"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "2"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "1.000000000000000e+02"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"\""
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"B\""
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"a\""
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"a\""
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"aa\""
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "{}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"b\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 2\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[\n  0\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "str",
+              "value": "NULL_VALUE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_v_typeof_v_from_select_column1_v_from_values_to_varia",
+      "sql": "SELECT v, TYPEOF(v) FROM (SELECT column1 v FROM VALUES (TO_VARIANT(1)), (TO_VARIANT('2024-01-02'::DATE)), (TO_VARIANT('2024-01-01 01:02:03'::TIMESTAMP_NTZ)), (TO_VARIANT(TO_BINARY('ab','hex'))), (TO_VARIANT('01:02:03'::TIME)), (TO_VARIANT('x')), (TO_VARIANT(TRUE)), (TO_VARIANT(1.5::DOUBLE)), (PARSE_JSON('null')), (NULL), (TO_VARIANT(1.5))) ORDER BY v",
+      "setup": null,
+      "expect": {
+        "error": "002014 (22000): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_v_count_from_select_parse_json_column1_v_from_values",
+      "sql": "SELECT v, COUNT(*) FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('1'), ('1'), ('1.0'), ('\"1\"'), ('null'), ('null'), ('1.5'), ('1.50'), ('[1]'), ('[1.0]'), ('{\"a\":1}'), ('{\"a\":1.0}')) GROUP BY v ORDER BY v",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "COUNT(*)",
+            "FIXED",
+            18,
+            0,
+            null,
+            false
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "int",
+              "value": 3
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "int",
+              "value": 2
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"1\""
+            },
+            {
+              "type": "int",
+              "value": 1
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "int",
+              "value": 2
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "int",
+              "value": 2
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "int",
+              "value": 2
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_distinct_v_from_select_parse_json_column1_v_from_valu",
+      "sql": "SELECT DISTINCT v FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('1'), ('1.0'), ('\"1\"'), ('null'), (NULL), (NULL)) ORDER BY v",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"1\""
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            }
+          ],
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_parse_json_1_0_a_parse_json_1_parse_json",
+      "sql": "SELECT PARSE_JSON('1') = PARSE_JSON('1.0') a, PARSE_JSON('1') = PARSE_JSON('\"1\"') b, PARSE_JSON('[1]') = PARSE_JSON('[1.0]') c, PARSE_JSON('{\"a\":1}') = PARSE_JSON('{\"a\":1.0}') d, PARSE_JSON('1.5') = PARSE_JSON('1.50') e, TO_VARIANT(1.5::DOUBLE) = TO_VARIANT(1.5) f, PARSE_JSON('1e0') = PARSE_JSON('1') g, TO_VARIANT('2024-01-02'::DATE) = TO_VARIANT('2024-01-02') h, PARSE_JSON('true') = PARSE_JSON('1') i",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "B",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "C",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "D",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "E",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "F",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "G",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "H",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "I",
+            "BOOLEAN",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "bool",
+              "value": false
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_a_v_b_v_from_select_parse_json_column1_v_from_values",
+      "sql": "SELECT a.v, b.v FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('1'), ('\"a\"'), ('null')) a JOIN (SELECT PARSE_JSON(column1) v FROM VALUES ('1.0'), ('\"a\"'), ('null')) b ON a.v = b.v ORDER BY 1",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"a\""
+            },
+            {
+              "type": "str",
+              "value": "\"a\""
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "str",
+              "value": "null"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

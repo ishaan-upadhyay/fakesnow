@@ -1,0 +1,432 @@
+{
+  "name": "arrays_null_vs_undefined",
+  "pr": 3,
+  "cases": [
+    {
+      "id": "select_array_construct_1_a_null_parse_json_null_1_50_true_1",
+      "sql": "SELECT ARRAY_CONSTRUCT(1, 'a', NULL, PARSE_JSON('null'), 1.50, TRUE, [1,2], {'x':1}, '2024-01-02'::DATE, '2024-01-01 01:02:03'::TIMESTAMP_NTZ, TO_BINARY('ab','hex'), 1.5::DOUBLE) a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\",\n  undefined,\n  null,\n  1.5,\n  true,\n  [\n    1,\n    2\n  ],\n  {\n    \"x\": 1\n  },\n  \"2024-01-02\",\n  \"2024-01-01 01:02:03.000\",\n  \"AB\",\n  1.500000000000000e+00\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_array_construct_null_a1_array_construct_parse_json_nu",
+      "sql": "SELECT ARRAY_CONSTRUCT(NULL) a1, ARRAY_CONSTRUCT(PARSE_JSON('null')) a2, ARRAY_CONSTRUCT_COMPACT(NULL, 1, PARSE_JSON('null')) a3, ARRAY_CONSTRUCT() a4, OBJECT_CONSTRUCT() o4, ARRAY_APPEND(ARRAY_CONSTRUCT(1), NULL) a5, ARRAY_CAT(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(NULL)) a6, ARRAY_CAT(ARRAY_CONSTRUCT(1), NULL) a7, [NULL, 1] a8, [1, PARSE_JSON('null')] a9",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A1",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A2",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A3",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A4",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "O4",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "A5",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A6",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A7",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A8",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "A9",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  undefined\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  null\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  null\n]"
+            },
+            {
+              "type": "str",
+              "value": "[]"
+            },
+            {
+              "type": "str",
+              "value": "{}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  undefined\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  undefined\n]"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[\n  undefined,\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  null\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_array_agg_x_ax_array_agg_v_av_count_v_cv_count_x_cx_f",
+      "sql": "SELECT ARRAY_AGG(x) ax, ARRAY_AGG(v) av, COUNT(v) cv, COUNT(x) cx FROM (SELECT 1 x, PARSE_JSON('null') v UNION ALL SELECT NULL, NULL UNION ALL SELECT 2, PARSE_JSON('1'))",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "AX",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "CV",
+            "FIXED",
+            18,
+            0,
+            null
+          ],
+          [
+            "CX",
+            "FIXED",
+            18,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  null,\n  1\n]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "int",
+              "value": 2
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_array_construct_null_0_e0_array_construct_null_0_is_n",
+      "sql": "SELECT ARRAY_CONSTRUCT(NULL)[0] e0, ARRAY_CONSTRUCT(NULL)[0] IS NULL n0, TYPEOF(ARRAY_CONSTRUCT(NULL)[0]) t0, IS_NULL_VALUE(ARRAY_CONSTRUCT(NULL)[0]) inv0, TO_JSON(ARRAY_CONSTRUCT(NULL)) tj, ARRAY_CONSTRUCT(NULL)::VARCHAR vc, ARRAY_SIZE(ARRAY_CONSTRUCT(NULL)) sz, ARRAY_CONSTRUCT(NULL) = ARRAY_CONSTRUCT(PARSE_JSON('null')) eq, OBJECT_CONSTRUCT('a', ARRAY_CONSTRUCT(NULL)) oa",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "E0",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "N0",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "T0",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "INV0",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "TJ",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "VC",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "SZ",
+            "FIXED",
+            9,
+            0,
+            null
+          ],
+          [
+            "EQ",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "OA",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[undefined]"
+            },
+            {
+              "type": "str",
+              "value": "[undefined]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "bool",
+              "value": false
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": [\n    undefined\n  ]\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_f_from_table_flatten_input_array_construct_null_1_par",
+      "sql": "SELECT f.* FROM TABLE(FLATTEN(input => ARRAY_CONSTRUCT(NULL, 1, PARSE_JSON('null')))) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SEQ",
+            "FIXED",
+            38,
+            0,
+            null
+          ],
+          [
+            "KEY",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "PATH",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ],
+          [
+            "INDEX",
+            "FIXED",
+            38,
+            0,
+            null
+          ],
+          [
+            "VALUE",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "THIS",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[1]"
+            },
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "[\n  undefined,\n  1,\n  null\n]"
+            }
+          ],
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "str",
+              "value": "[2]"
+            },
+            {
+              "type": "int",
+              "value": 2
+            },
+            {
+              "type": "str",
+              "value": "null"
+            },
+            {
+              "type": "str",
+              "value": "[\n  undefined,\n  1,\n  null\n]"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}
