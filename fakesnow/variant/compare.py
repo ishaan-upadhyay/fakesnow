@@ -22,6 +22,10 @@ _KIND_ORDER = {
     "BOOLEAN": 0,
     "NUMBER": 1,
     "VARCHAR": 2,
+    "BINARY": 2,
+    "DATE": 2,
+    "TIME": 2,
+    "TIMESTAMP": 2,
     "OBJECT": 3,
     "ARRAY": 4,
     "JSON_NULL": 5,
@@ -48,12 +52,18 @@ def _kind(value: Any) -> str:
         return "OBJECT"
     if isinstance(value, (list, tuple)):
         return "ARRAY"
-    if isinstance(value, (date, datetime, time, bytes)):
-        return "VARCHAR"
+    if isinstance(value, bytes):
+        return "BINARY"
+    if isinstance(value, datetime):
+        return "TIMESTAMP"
+    if isinstance(value, date):
+        return "DATE"
+    if isinstance(value, time):
+        return "TIME"
     raise TypeError(f"Unsupported VARIANT value: {type(value).__name__}")
 
 
-def _numeric_key(value: Any) -> Decimal | float:
+def _numeric_key(value: Any) -> Decimal:
     if is_bigint(value):
         return Decimal(value.removeprefix(BIGINT_PREFIX))
     if is_decimal(value):
@@ -129,6 +139,10 @@ def variant_eq_sql(left: Any, right: Any) -> bool | None:
         return left.lower() == str(right).lower()
     if isinstance(right, str) and isinstance(left, bool):
         return str(left).lower() == right.lower()
+    if isinstance(left, str) and isinstance(right, (date, datetime, time)):
+        return left == str(right)
+    if isinstance(right, str) and isinstance(left, (date, datetime, time)):
+        return str(left) == right
     return False
 
 
@@ -140,18 +154,39 @@ def variant_key(value: Any) -> str:
     kind = _kind(value)
     prefix = f"{_KIND_ORDER[kind]:02d}"
     if kind == "BOOLEAN":
-        return prefix + ("0" if value else "1")
+        return prefix + ("1" if value else "0")
     if kind == "NUMBER":
         num = _numeric_key(value)
-        return prefix + f"{num:.38f}"
-    if kind == "VARCHAR":
-        if isinstance(value, (date, datetime, time, bytes)):
+        if num.is_nan():
+            return prefix + "5"
+        if num.is_infinite():
+            return prefix + ("4" if num > 0 else "0")
+        normalized = num.normalize()
+        if not normalized:
+            return prefix + "2"
+        digits = "".join(str(digit) for digit in normalized.as_tuple().digits).ljust(64, "0")
+        magnitude = f"{normalized.adjusted() + 1_000_000:07d}:{digits}"
+        if normalized < 0:
+            magnitude = "".join(str(9 - int(char)) if char.isdigit() else char for char in magnitude)
+            return prefix + "1" + magnitude
+        return prefix + "3" + magnitude
+    if kind in {"VARCHAR", "BINARY", "DATE", "TIME", "TIMESTAMP"}:
+        subtype = {
+            "VARCHAR": "0",
+            "BINARY": "1",
+            "DATE": "2",
+            "TIME": "3",
+            "TIMESTAMP": "4",
+        }[kind]
+        if kind != "VARCHAR":
             value = sf_json_compact(value)
-        return prefix + json.dumps(value, ensure_ascii=False)
+        return prefix + subtype + json.dumps(value, ensure_ascii=False)
     if kind == "OBJECT":
         items = _map_items(value)
         assert items is not None
-        body = ",".join(f"{json.dumps(k, ensure_ascii=False)}:{variant_key(v)}" for k, v in sorted(items))
+        body = ",".join(
+            f"{''.join(chr(0x10FFFF - ord(char)) for char in k)}:{variant_key(v)}" for k, v in sorted(items)
+        )
         return prefix + "{" + body + "}"
     if kind == "ARRAY":
         body = ",".join(variant_key(item) for item in value)

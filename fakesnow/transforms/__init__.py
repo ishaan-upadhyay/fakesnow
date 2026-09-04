@@ -97,4 +97,5 @@ from fakesnow.transforms.variant import (
     variant_cast as variant_cast,
     variant_functions as variant_functions,
     variant_operators as variant_operators,
+    variant_relational_keys as variant_relational_keys,
 )
