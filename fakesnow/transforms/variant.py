@@ -443,9 +443,7 @@ def variant_relational_keys(expression: Expr) -> Expr:
                 distinct_groups.append(_variant_key(source))
                 first = _first_variant(source)
                 alias = (
-                    item.args["alias"].copy()
-                    if isinstance(item, exp.Alias)
-                    else exp.to_identifier(item.alias_or_name)
+                    item.args["alias"].copy() if isinstance(item, exp.Alias) else exp.to_identifier(item.alias_or_name)
                 )
                 rewritten.append(exp.Alias(this=first, alias=alias))
             else:
