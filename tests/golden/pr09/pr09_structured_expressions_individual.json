@@ -1,0 +1,201 @@
+{
+  "name": "pr09_structured_expressions_individual",
+  "cases": [
+    {
+      "id": "array_distinct_sa",
+      "sql": "SELECT ARRAY_DISTINCT(sa) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2,\n  3\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_delete_so_a",
+      "sql": "SELECT OBJECT_DELETE(so, 'a') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"b\": \"x\"\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_pick_so_a",
+      "sql": "SELECT OBJECT_PICK(so, 'a') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "map_cat_sm_k2_2_map_varchar_int",
+      "sql": "SELECT MAP_CAT(sm, {'k2':2}::MAP(VARCHAR,INT)) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"k1\": 1,\n  \"k2\": 2\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_null",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1,"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_parse_json_null",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, PARSE_JSON('null')), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value from array to string",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_null_a",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL, 'a'), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1,,a"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_null_a_parse_json_null",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL, 'a', PARSE_JSON('null')), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value from array to string",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_null_a_parse_json_null_1_5",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL, 'a', PARSE_JSON('null'), 1.5), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value from array to string",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "array_to_string_array_construct_1_null_a_parse_json_null_1_5_2",
+      "sql": "SELECT ARRAY_TO_STRING(ARRAY_CONSTRUCT(1, NULL, 'a', PARSE_JSON('null'), 1.5, TRUE), ',') AS a",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value from array to string",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

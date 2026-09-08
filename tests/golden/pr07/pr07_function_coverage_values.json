@@ -1,0 +1,77 @@
+{
+  "name": "pr07_function_coverage_values",
+  "cases": [
+    {
+      "id": "select_to_object_parse_json_1",
+      "sql": "SELECT TO_OBJECT(PARSE_JSON('1'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value 1 to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_to_object_parse_json_1_2",
+      "sql": "SELECT TO_OBJECT(PARSE_JSON('[1]'))",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_a_1",
+      "sql": "SELECT PARSE_JSON('{a:1}')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('{A:1}')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_2",
+      "sql": "SELECT PARSE_JSON(' {\"a\": 1} ')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON(' {\"A\": 1} ')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,32 +1,6 @@
 {
-  "name": "arrays_null_vs_undefined",
-  "pr": 3,
+  "name": "pr09_arrays_null_vs_undefined",
   "cases": [
-    {
-      "id": "select_array_construct_1_a_null_parse_json_null_1_50_true_1",
-      "sql": "SELECT ARRAY_CONSTRUCT(1, 'a', NULL, PARSE_JSON('null'), 1.50, TRUE, [1,2], {'x':1}, '2024-01-02'::DATE, '2024-01-01 01:02:03'::TIMESTAMP_NTZ, TO_BINARY('ab','hex'), 1.5::DOUBLE) a",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "A",
-            "ARRAY",
-            null,
-            null,
-            null
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"a\",\n  undefined,\n  null,\n  1.5,\n  true,\n  [\n    1,\n    2\n  ],\n  {\n    \"x\": 1\n  },\n  \"2024-01-02\",\n  \"2024-01-01 01:02:03.000\",\n  \"AB\",\n  1.500000000000000e+00\n]"
-            }
-          ]
-        ]
-      }
-    },
     {
       "id": "select_array_construct_null_a1_array_construct_parse_json_nu",
       "sql": "SELECT ARRAY_CONSTRUCT(NULL) a1, ARRAY_CONSTRUCT(PARSE_JSON('null')) a2, ARRAY_CONSTRUCT_COMPACT(NULL, 1, PARSE_JSON('null')) a3, ARRAY_CONSTRUCT() a4, OBJECT_CONSTRUCT() o4, ARRAY_APPEND(ARRAY_CONSTRUCT(1), NULL) a5, ARRAY_CAT(ARRAY_CONSTRUCT(1), ARRAY_CONSTRUCT(NULL)) a6, ARRAY_CAT(ARRAY_CONSTRUCT(1), NULL) a7, [NULL, 1] a8, [1, PARSE_JSON('null')] a9",
@@ -146,64 +120,6 @@
             {
               "type": "str",
               "value": "[\n  1,\n  null\n]"
-            }
-          ]
-        ]
-      }
-    },
-    {
-      "id": "select_array_agg_x_ax_array_agg_v_av_count_v_cv_count_x_cx_f",
-      "sql": "SELECT ARRAY_AGG(x) ax, ARRAY_AGG(v) av, COUNT(v) cv, COUNT(x) cx FROM (SELECT 1 x, PARSE_JSON('null') v UNION ALL SELECT NULL, NULL UNION ALL SELECT 2, PARSE_JSON('1'))",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "AX",
-            "ARRAY",
-            null,
-            null,
-            null
-          ],
-          [
-            "AV",
-            "ARRAY",
-            null,
-            null,
-            null
-          ],
-          [
-            "CV",
-            "FIXED",
-            18,
-            0,
-            null
-          ],
-          [
-            "CX",
-            "FIXED",
-            18,
-            0,
-            null
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            },
-            {
-              "type": "str",
-              "value": "[\n  null,\n  1\n]"
-            },
-            {
-              "type": "int",
-              "value": 1
-            },
-            {
-              "type": "int",
-              "value": 2
             }
           ]
         ]

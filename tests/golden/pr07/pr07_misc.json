@@ -1,6 +1,5 @@
 {
-  "name": "misc",
-  "pr": 2,
+  "name": "pr07_misc",
   "cases": [
     {
       "id": "parse_json_a_1_a_parse_json_a_1_a",
