@@ -1,0 +1,193 @@
+{
+  "name": "deferred_coercion_via_ctas_with_schema_full_errors",
+  "cases": [
+    {
+      "id": "v_variant_as_select_str",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C2 failed on column V with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_str",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C12 failed on column A with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_1",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('[1]')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C20 failed on column O with error: Failed to cast variant value [1] to OBJECT",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_str",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT 'str'",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C23 failed on column O with error: Error parsing JSON: unknown keyword \"str\", pos 4",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "nn_object_x_int_not_null_not_null_as_select_x_null_object_x",
+      "sql": "CREATE TEMP TABLE t (nn OBJECT(x INT NOT NULL) NOT NULL) AS SELECT {'x':NULL}::OBJECT(x INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C42 failed on column NN with error: Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "nn_object_x_int_not_null_not_null_as_select_object_construct",
+      "sql": "CREATE TEMP TABLE t (nn OBJECT(x INT NOT NULL) NOT NULL) AS SELECT OBJECT_CONSTRUCT_KEEP_NULL('x', NULL)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0) NOT NULL)]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_1",
+      "sql": "SELECT i, TYPEOF(i) FROM t",
+      "setup": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('1')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "I",
+            "FIXED",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(I)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_1_2",
+      "sql": "SELECT i, TYPEOF(i) FROM t",
+      "setup": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('\"1\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "I",
+            "FIXED",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(I)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "i_int_as_select_parse_json_x",
+      "sql": "CREATE TEMP TABLE t (i INT) AS SELECT PARSE_JSON('\"x\"')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C50 failed on column I with error: Failed to cast variant value \"x\" to FIXED",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "s_varchar_as_select_parse_json_a_1",
+      "sql": "SELECT s, TYPEOF(s) FROM t",
+      "setup": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "S",
+            "TEXT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(S)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\"a\":1}"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b_boolean_as_select_parse_json_1",
+      "sql": "CREATE TEMP TABLE t (b BOOLEAN) AS SELECT PARSE_JSON('1')",
+      "setup": null,
+      "expect": {
+        "error": "100071 (22000): DML operation to table TEST_DB.PUBLIC.FAKESNOW_C57 failed on column B with error: Failed to cast variant value 1 to BOOLEAN",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

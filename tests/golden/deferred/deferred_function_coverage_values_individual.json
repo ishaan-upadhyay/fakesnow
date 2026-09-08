@@ -1,0 +1,795 @@
+{
+  "name": "deferred_function_coverage_values_individual",
+  "cases": [
+    {
+      "id": "array_unique_agg_x",
+      "sql": "SELECT ARRAY_UNIQUE_AGG(x) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_x",
+      "sql": "SELECT ARRAY_AGG(x) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_distinct_x",
+      "sql": "SELECT ARRAY_AGG(DISTINCT x) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  2,\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_x_within_group_order_by_x_desc",
+      "sql": "SELECT ARRAY_AGG(x) WITHIN GROUP (ORDER BY x DESC) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  2,\n  1,\n  1\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_to_variant_x",
+      "sql": "SELECT ARRAY_AGG(TO_VARIANT(x)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_array_construct_x",
+      "sql": "SELECT ARRAY_AGG(ARRAY_CONSTRUCT(x)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  [\n    1\n  ],\n  [\n    1\n  ],\n  [\n    undefined\n  ],\n  [\n    2\n  ]\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_object_construct_k_x",
+      "sql": "SELECT ARRAY_AGG(OBJECT_CONSTRUCT('k', x)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"k\": 1\n  },\n  {\n    \"k\": 1\n  },\n  {},\n  {\n    \"k\": 2\n  }\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_1_5_double",
+      "sql": "SELECT ARRAY_AGG(1.5::DOUBLE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1.500000000000000e+00,\n  1.500000000000000e+00,\n  1.500000000000000e+00,\n  1.500000000000000e+00\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_current_date",
+      "sql": "SELECT ARRAY_AGG(CURRENT_DATE) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"2026-09-03\",\n  \"2026-09-03\",\n  \"2026-09-03\",\n  \"2026-09-03\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_agg_x_varchar",
+      "sql": "SELECT ARRAY_AGG(x::VARCHAR) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"1\",\n  \"1\",\n  \"2\"\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "object_agg_k_v",
+      "sql": "SELECT OBJECT_AGG(k, v) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "OBJECT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": \"x\",\n  \"b\": 1,\n  \"d\": null\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_number_parse_json_1_5_10_1",
+      "sql": "SELECT AS_NUMBER(PARSE_JSON('1.5'), 10, 1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            10,
+            1,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "Decimal",
+              "value": "1.5"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "as_timestamp_ntz_to_variant_2024_01_02_01_02_03_timestamp_nt",
+      "sql": "SELECT AS_TIMESTAMP_NTZ(TO_VARIANT('2024-01-02 01:02:03'::TIMESTAMP_NTZ)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TIMESTAMP_NTZ",
+            18,
+            9,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "datetime",
+              "value": "2024-01-02T01:02:03"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_decimal_parse_json_1",
+      "sql": "SELECT IS_DECIMAL(PARSE_JSON('1')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_double_parse_json_1_5",
+      "sql": "SELECT IS_DOUBLE(PARSE_JSON('1.5')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_double_parse_json_1",
+      "sql": "SELECT IS_DOUBLE(PARSE_JSON('1')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_char_parse_json_x",
+      "sql": "SELECT IS_CHAR(PARSE_JSON('\"x\"')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "is_date_value_to_variant_current_date",
+      "sql": "SELECT IS_DATE_VALUE(TO_VARIANT(CURRENT_DATE)) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "check_json",
+      "sql": "SELECT CHECK_JSON('{') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "incomplete object value, pos 2"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "check_json_a_1_a_2",
+      "sql": "SELECT CHECK_JSON('{\"a\":1,\"a\":2}') AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "duplicate object attribute \"a\", pos 10"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1",
+      "sql": "SELECT PARSE_JSON(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "strip_null_value_null",
+      "sql": "SELECT STRIP_NULL_VALUE(NULL) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_json_x",
+      "sql": "SELECT TO_JSON('x') AS a",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "to_json_current_date",
+      "sql": "SELECT TO_JSON(CURRENT_DATE) AS a",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "to_variant_1e300_double_varchar",
+      "sql": "SELECT TO_VARIANT(1e300::DOUBLE)::VARCHAR AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.0E300"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_varchar_parse_json_1e2",
+      "sql": "SELECT TO_VARCHAR(PARSE_JSON('1e2')) AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "100"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1e2_varchar",
+      "sql": "SELECT PARSE_JSON('1e2')::VARCHAR AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "100"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "to_variant_to_binary_ab_hex_varchar",
+      "sql": "SELECT TO_VARIANT(TO_BINARY('ab','hex'))::VARCHAR AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TEXT",
+            null,
+            null,
+            134217728
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "AB"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "current_date_variant",
+      "sql": "SELECT CURRENT_DATE::VARIANT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "VARIANT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "\"2026-09-03\""
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "array_construct_1_object",
+      "sql": "SELECT ARRAY_CONSTRUCT(1)::OBJECT AS a",
+      "setup": null,
+      "expect": {
+        "error": "001007 (22023): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "object_construct_a_1_array",
+      "sql": "SELECT OBJECT_CONSTRUCT('a',1)::ARRAY AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1\n  }\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1704067200_timestamp_ntz_2",
+      "sql": "SELECT PARSE_JSON('\"1704067200\"')::TIMESTAMP_NTZ AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "TIMESTAMP_NTZ",
+            0,
+            9,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "datetime",
+              "value": "2024-01-01T00:00:00"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_12345678901234567890123_int",
+      "sql": "SELECT PARSE_JSON('12345678901234567890123')::INT AS a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 12345678901234567890123
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "parse_json_1_5_varchar_1",
+      "sql": "SELECT PARSE_JSON('1.5')::VARCHAR(1) AS a",
+      "setup": null,
+      "expect": {
+        "error": "100078 (22000): String '1.5' is too long and would be truncated",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

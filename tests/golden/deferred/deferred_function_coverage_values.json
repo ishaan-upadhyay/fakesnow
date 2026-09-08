@@ -1,0 +1,133 @@
+{
+  "name": "deferred_function_coverage_values",
+  "cases": [
+    {
+      "id": "select_to_array_1_t1_to_array_null_t2_to_array_parse_json_1",
+      "sql": "SELECT TO_ARRAY(1) t1, TO_ARRAY(NULL) t2, TO_ARRAY(PARSE_JSON('[1]')) t3, TO_ARRAY(PARSE_JSON('{\"a\":1}')) t4, TO_ARRAY(PARSE_JSON('null')) t5, TO_ARRAY('x') t5b, TO_OBJECT(PARSE_JSON('{\"a\":1}')) t6, TO_OBJECT(NULL) t7, TO_OBJECT(PARSE_JSON('null')) t8, AS_VARCHAR(PARSE_JSON('\"x\"')) t9, AS_VARCHAR(PARSE_JSON('1')) t10, AS_INTEGER(PARSE_JSON('1')) t11, AS_INTEGER(PARSE_JSON('\"1\"')) t12, AS_INTEGER(PARSE_JSON('1.5')) t13, AS_DOUBLE(PARSE_JSON('1')) t14, AS_DOUBLE(PARSE_JSON('1.5')) t14b, AS_ARRAY(PARSE_JSON('[1]')) t15, AS_ARRAY(PARSE_JSON('1')) t16, AS_OBJECT(PARSE_JSON('{}')) t17, AS_OBJECT(PARSE_JSON('[]')) t17b, AS_BOOLEAN(PARSE_JSON('true')) t18, AS_BOOLEAN(PARSE_JSON('1')) t18b, AS_DECIMAL(PARSE_JSON('1.5'), 10, 2) t19, AS_DECIMAL(PARSE_JSON('1.5')) t19b, AS_NUMBER(PARSE_JSON('1.5'), 10, 1) t19c, IS_ARRAY(PARSE_JSON('[1]')) t20, IS_ARRAY(NULL) t20b, IS_OBJECT(PARSE_JSON('{}')) t21, IS_INTEGER(PARSE_JSON('1')) t22, IS_INTEGER(PARSE_JSON('1.0')) t22b, IS_DECIMAL(PARSE_JSON('1.5')) t23, IS_DECIMAL(PARSE_JSON('1')) t23b, IS_DOUBLE(PARSE_JSON('1.5')) t24, IS_DOUBLE(PARSE_JSON('1')) t24b, IS_VARCHAR(PARSE_JSON('\"x\"')) t25, IS_CHAR(PARSE_JSON('\"x\"')) t25b, IS_BOOLEAN(PARSE_JSON('true')) t26, IS_NULL_VALUE(PARSE_JSON('null')) t27, IS_DATE(TO_VARIANT(CURRENT_DATE)) t28, IS_DATE_VALUE(TO_VARIANT(CURRENT_DATE)) t28b, IS_TIME(TO_VARIANT('01:02:03'::TIME)) t29, IS_TIMESTAMP_NTZ(TO_VARIANT(CURRENT_TIMESTAMP::TIMESTAMP_NTZ)) t30, IS_BINARY(TO_VARIANT(TO_BINARY('ab','hex'))) t31, CHECK_JSON('{') t32, CHECK_JSON('{}') t33, CHECK_JSON(NULL) t34, CHECK_JSON('') t34b, CHECK_JSON('{\"a\":1,\"a\":2}') t34c, TRY_PARSE_JSON('{') t35, TRY_PARSE_JSON('{\"a\":1}') t36, TRY_PARSE_JSON(NULL) t37, TRY_PARSE_JSON('') t38, PARSE_JSON('') t39, PARSE_JSON(NULL) t40, PARSE_JSON('  ') t41, STRIP_NULL_VALUE(PARSE_JSON('1')) t42, STRIP_NULL_VALUE(NULL) t43, TO_JSON(OBJECT_CONSTRUCT('b',1,'a',ARRAY_CONSTRUCT(1.5::DOUBLE, NULL, '2024-01-02'::DATE))) t44, TO_JSON(NULL) t45, TO_JSON('x') t46, TO_JSON(1.5::DOUBLE) t47, TO_JSON(CURRENT_DATE) t48, TO_JSON(ARRAY_CONSTRUCT(NULL)) t49, TO_VARCHAR(ARRAY_CONSTRUCT(1, NULL, 'a', 1.5::DOUBLE, '2024-01-02'::DATE)) t50, ARRAY_CONSTRUCT(1, NULL, 'a', 1.5::DOUBLE)::VARCHAR t51, OBJECT_CONSTRUCT('a', 1.5::DOUBLE)::VARCHAR t52, TO_VARIANT(1.5::DOUBLE)::VARCHAR t53, TO_VARIANT(1.5::DOUBLE)::VARIANT t54, ARRAY_CONSTRUCT(1.5::DOUBLE)::VARIANT t55, TO_CHAR(PARSE_JSON('{\"a\":1.5e0}')) t56",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 1,965",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json",
+      "sql": "SELECT PARSE_JSON('{')",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: incomplete object value, pos 2",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1",
+      "sql": "SELECT PARSE_JSON('[1,]')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,]')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  undefined\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_nan_parse_json_infinity_parse_json_infinit",
+      "sql": "SELECT PARSE_JSON('NaN'), PARSE_JSON('Infinity'), PARSE_JSON('-Infinity'), PARSE_JSON('undefined')",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('NAN')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('INFINITY')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('-INFINITY')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "PARSE_JSON('UNDEFINED')",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "NaN"
+            },
+            {
+              "type": "str",
+              "value": "Infinity"
+            },
+            {
+              "type": "str",
+              "value": "-Infinity"
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2",
+      "sql": "SELECT PARSE_JSON('1 2')",
+      "setup": null,
+      "expect": {
+        "error": "100069 (22P02): Error parsing JSON: garbage after valid input document",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_ud83d",
+      "sql": "SELECT PARSE_JSON('\"\\ud83d\"')",
+      "setup": null,
+      "expect": {
+        "error": "001834 (42601): SQL compilation error: error line 1 at position 18",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

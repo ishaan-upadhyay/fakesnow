@@ -1,0 +1,30 @@
+{
+  "name": "deferred_description_type_codes_individual",
+  "cases": [
+    {
+      "id": "hash_v2",
+      "sql": "SELECT HASH(v2) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            19,
+            0,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 5192026222958118100
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}
