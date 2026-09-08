@@ -16,7 +16,7 @@ GOLDEN_DIR = Path(__file__).parent / "golden"
 
 def load_fixtures() -> list[dict[str, Any]]:
     fixtures: list[dict[str, Any]] = []
-    for path in sorted(GOLDEN_DIR.glob("variant_batch*.json")):
+    for path in sorted(GOLDEN_DIR.glob("pr*/pr*.json")):
         payload = json.loads(path.read_text(encoding="utf-8"))
         payload["_path"] = str(path)
         fixtures.append(payload)
