@@ -48,6 +48,9 @@ def test_variant_numeric_equality() -> None:
 
 
 def test_variant_ordering_key() -> None:
+    assert variant_key(parse_json("-10.1")) < variant_key(parse_json("-10"))
+    assert variant_key(parse_json("-1")) < variant_key(parse_json("0"))
+    assert variant_key(parse_json("1")) == variant_key(parse_json("1.0"))
     assert variant_key(parse_json("1")) < variant_key(parse_json('"a"'))
 
 
