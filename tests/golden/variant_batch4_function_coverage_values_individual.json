@@ -23,24 +23,6 @@
               "type": "bool",
               "value": true
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
           ]
         ]
       }
@@ -61,24 +43,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
           [
             {
               "type": "bool",
@@ -109,24 +73,6 @@
               "type": "bool",
               "value": true
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
           ]
         ]
       }
@@ -147,24 +93,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -195,24 +123,6 @@
               "type": "bool",
               "value": true
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
           ]
         ]
       }
@@ -233,24 +143,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
           [
             {
               "type": "bool",
@@ -281,24 +173,6 @@
               "type": "bool",
               "value": false
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
           ]
         ]
       }
@@ -319,24 +193,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -367,24 +223,6 @@
               "type": "bool",
               "value": false
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
           ]
         ]
       }
@@ -405,24 +243,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
-          ],
           [
             {
               "type": "int",
@@ -453,24 +273,6 @@
               "type": "int",
               "value": 1
             }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            }
           ]
         ]
       }
@@ -491,24 +293,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -539,24 +323,6 @@
               "type": "int",
               "value": 0
             }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
           ]
         ]
       }
@@ -577,24 +343,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -625,24 +373,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -663,24 +393,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  {},\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  {},\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  {},\n  2\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -711,24 +423,6 @@
               "type": "str",
               "value": "[\n  1,\n  2\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
           ]
         ]
       }
@@ -749,24 +443,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -797,24 +473,6 @@
               "type": "str",
               "value": "[\n  2,\n  3\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  3\n]"
-            }
           ]
         ]
       }
@@ -835,24 +493,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -883,24 +523,6 @@
               "type": "str",
               "value": "[]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
           ]
         ]
       }
@@ -926,24 +548,6 @@
               "type": "str",
               "value": "[\n  1,\n  2\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
           ]
         ]
       }
@@ -964,24 +568,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -1022,24 +608,6 @@
               "type": "str",
               "value": "[1]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[1]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[1]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[1]"
-            }
           ]
         ]
       }
@@ -1060,24 +628,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\"x\":1}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\"x\":1}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\"x\":1}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1108,24 +658,6 @@
               "type": "str",
               "value": "1.5,2024-01-02"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1.5,2024-01-02"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1.5,2024-01-02"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1.5,2024-01-02"
-            }
           ]
         ]
       }
@@ -1146,24 +678,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": ""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": ""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": ""
-            }
-          ],
           [
             {
               "type": "str",
@@ -1194,24 +708,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -1232,24 +728,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -1280,24 +758,6 @@
               "type": "str",
               "value": "[\n  1,\n  \"1\",\n  null,\n  undefined\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"1\",\n  null,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"1\",\n  null,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"1\",\n  null,\n  undefined\n]"
-            }
           ]
         ]
       }
@@ -1318,24 +778,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -1366,24 +808,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -1404,24 +828,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -1452,24 +858,6 @@
               "type": "int",
               "value": 0
             }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 0
-            }
           ]
         ]
       }
@@ -1495,24 +883,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -1533,24 +903,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  [\n    3\n  ]\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  [\n    3\n  ]\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  [\n    3\n  ]\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1591,24 +943,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -1629,24 +963,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  true,\n  1,\n  2.5,\n  3,\n  \"b\",\n  {\n    \"a\": 1\n  },\n  [\n    1\n  ],\n  null,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  true,\n  1,\n  2.5,\n  3,\n  \"b\",\n  {\n    \"a\": 1\n  },\n  [\n    1\n  ],\n  null,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  true,\n  1,\n  2.5,\n  3,\n  \"b\",\n  {\n    \"a\": 1\n  },\n  [\n    1\n  ],\n  null,\n  undefined\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1677,24 +993,6 @@
               "type": "str",
               "value": "[\n  undefined,\n  3,\n  2,\n  1\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  undefined,\n  3,\n  2,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  undefined,\n  3,\n  2,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  undefined,\n  3,\n  2,\n  1\n]"
-            }
           ]
         ]
       }
@@ -1715,24 +1013,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  3,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  3,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  3,\n  undefined\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1763,24 +1043,6 @@
               "type": "str",
               "value": "\"a\""
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "\"a\""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "\"a\""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "\"a\""
-            }
           ]
         ]
       }
@@ -1801,24 +1063,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1849,24 +1093,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -1887,24 +1113,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
           [
             {
               "type": "str",
@@ -1935,24 +1143,6 @@
               "type": "str",
               "value": "[\n  2,\n  \"1\"\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  \"1\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  \"1\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  \"1\"\n]"
-            }
           ]
         ]
       }
@@ -1973,24 +1163,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
           [
             {
               "type": "NoneType",
@@ -2021,24 +1193,6 @@
               "type": "str",
               "value": "[\n  1\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
           ]
         ]
       }
@@ -2059,24 +1213,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"x\",\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"x\",\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"x\",\n  1,\n  2\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2107,24 +1243,6 @@
               "type": "str",
               "value": "[\n  1,\n  2,\n  undefined,\n  undefined,\n  undefined,\n  \"x\"\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined,\n  undefined,\n  undefined,\n  \"x\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined,\n  undefined,\n  undefined,\n  \"x\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined,\n  undefined,\n  undefined,\n  \"x\"\n]"
-            }
           ]
         ]
       }
@@ -2145,24 +1263,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"x\",\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"x\",\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  \"x\",\n  2\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2193,24 +1293,6 @@
               "type": "str",
               "value": "[\n  1,\n  undefined,\n  2\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined,\n  2\n]"
-            }
           ]
         ]
       }
@@ -2231,24 +1313,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2279,24 +1343,6 @@
               "type": "str",
               "value": "[\n  1,\n  2,\n  undefined\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2,\n  undefined\n]"
-            }
           ]
         ]
       }
@@ -2317,24 +1363,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  1,\n  undefined\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2365,24 +1393,6 @@
               "type": "str",
               "value": "[\n  2,\n  2\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2,\n  2\n]"
-            }
           ]
         ]
       }
@@ -2403,24 +1413,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  2\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2451,24 +1443,6 @@
               "type": "bool",
               "value": true
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
           ]
         ]
       }
@@ -2489,24 +1463,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
           [
             {
               "type": "bool",
@@ -2537,24 +1493,6 @@
               "type": "str",
               "value": "[\n  0,\n  1,\n  2\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1,\n  2\n]"
-            }
           ]
         ]
       }
@@ -2575,24 +1513,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  5,\n  3,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  5,\n  3,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  5,\n  3,\n  1\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2623,24 +1543,6 @@
               "type": "str",
               "value": "[\n  {\n    \"$1\": 1,\n    \"$2\": \"a\"\n  },\n  {\n    \"$1\": 2,\n    \"$2\": null\n  }\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  {\n    \"$1\": 1,\n    \"$2\": \"a\"\n  },\n  {\n    \"$1\": 2,\n    \"$2\": null\n  }\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  {\n    \"$1\": 1,\n    \"$2\": \"a\"\n  },\n  {\n    \"$1\": 2,\n    \"$2\": null\n  }\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  {\n    \"$1\": 1,\n    \"$2\": \"a\"\n  },\n  {\n    \"$1\": 2,\n    \"$2\": null\n  }\n]"
-            }
           ]
         ]
       }
@@ -2661,24 +1563,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  0,\n  1\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2709,24 +1593,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -2747,24 +1613,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  1,\n  \"b\",\n  \"2\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  1,\n  \"b\",\n  \"2\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  1,\n  \"b\",\n  \"2\"\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2805,24 +1653,6 @@
               "type": "str",
               "value": "[\n  \"a\",\n  \"b\",\n  \"\",\n  \"c\"\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"\",\n  \"c\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"\",\n  \"c\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"\",\n  \"c\"\n]"
-            }
           ]
         ]
       }
@@ -2843,24 +1673,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"\"\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2891,24 +1703,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -2929,24 +1723,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"abc\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"abc\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"abc\"\n]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -2977,24 +1753,6 @@
               "type": "str",
               "value": "[\n  \"a\",\n  \"b\",\n  \"c\"\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"c\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"c\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\",\n  \"c\"\n]"
-            }
           ]
         ]
       }
@@ -3015,24 +1773,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[]"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3313,30 +2053,6 @@
               "type": "str",
               "value": "[\n  \"a\",\n  \"b\"\n]"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\"\n]"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "[\n  \"a\",\n  \"b\"\n]"
-            }
           ]
         ]
       }
@@ -3372,30 +2088,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -3416,30 +2108,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": 2\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3470,30 +2138,6 @@
               "type": "str",
               "value": "{\n  \"a\": 2\n}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 2\n}"
-            }
           ]
         ]
       }
@@ -3514,30 +2158,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3568,30 +2188,6 @@
               "type": "str",
               "value": "{\n  \"a\": 1,\n  \"b\": null\n}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"b\": null\n}"
-            }
           ]
         ]
       }
@@ -3612,30 +2208,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3666,30 +2238,6 @@
               "type": "NoneType",
               "value": null
             }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
           ]
         ]
       }
@@ -3710,30 +2258,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"zz\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"zz\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"zz\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1,\n  \"zz\": 1\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3764,30 +2288,6 @@
               "type": "str",
               "value": "{\n  \"b\": 2\n}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
           ]
         ]
       }
@@ -3808,30 +2308,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3862,30 +2338,6 @@
               "type": "str",
               "value": "{\n  \"a\": 1\n}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": 1\n}"
-            }
           ]
         ]
       }
@@ -3906,30 +2358,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"b\": 2\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -3985,30 +2413,6 @@
               "type": "str",
               "value": "{\n  \"a\": [\n    undefined\n  ],\n  \"b\": {}\n}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": [\n    undefined\n  ],\n  \"b\": {}\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": [\n    undefined\n  ],\n  \"b\": {}\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": [\n    undefined\n  ],\n  \"b\": {}\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"a\": [\n    undefined\n  ],\n  \"b\": {}\n}"
-            }
           ]
         ]
       }
@@ -4034,30 +2438,6 @@
               "type": "str",
               "value": "{}"
             }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{}"
-            }
           ]
         ]
       }
@@ -4078,30 +2458,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"k\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"k\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"k\": null\n}"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "{\n  \"k\": null\n}"
-            }
-          ],
           [
             {
               "type": "str",
@@ -4162,30 +2518,6 @@
               "type": "bool",
               "value": false
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
           ]
         ]
       }
@@ -4206,30 +2538,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": false
-            }
-          ],
           [
             {
               "type": "bool",
@@ -4260,30 +2568,6 @@
               "type": "bool",
               "value": true
             }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
-          ],
-          [
-            {
-              "type": "bool",
-              "value": true
-            }
           ]
         ]
       }
@@ -4304,30 +2588,6 @@
           ]
         ],
         "rows": [
-          [
-            {
-              "type": "str",
-              "value": "NULL_VALUE"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "NULL_VALUE"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "NULL_VALUE"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "NULL_VALUE"
-            }
-          ],
           [
             {
               "type": "str",
