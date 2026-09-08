@@ -538,9 +538,13 @@ def _to_variant_value(value: Expr) -> Expr:
         exp.DataType.Type.TIMESTAMPTZ: "TZ",
     }
     if isinstance(value, exp.Cast) and (kind := timestamp_kinds.get(value.to.this)):
-        source = value.this.copy() if isinstance(value.this, exp.Literal) and value.this.is_string else exp.Cast(
-            this=value.copy(),
-            to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+        source = (
+            value.this.copy()
+            if isinstance(value.this, exp.Literal) and value.this.is_string
+            else exp.Cast(
+                this=value.copy(),
+                to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+            )
         )
         return exp.Anonymous(
             this="_fs_to_variant_timestamp",
