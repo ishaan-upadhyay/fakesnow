@@ -47,7 +47,9 @@ def capture_source_output_names(expression: Expr, sql: str) -> None:
     if len(projections) != len(expression.expressions):
         return
     for item, output_name in zip(expression.expressions, projections, strict=True):
-        item.args["_fs_source_output_name"] = output_name.upper()
+        # store on .meta, not .args: args holding a plain string would leak into
+        # SQL generation for functions rendered via the all-args fallback (eg VAR_POP)
+        item.meta["_fs_source_output_name"] = output_name.upper()
 
 
 def _path_cast_output_name(expression: Expr) -> str | None:
@@ -103,7 +105,7 @@ def preserve_output_names(expression: Expr) -> Expr:
             continue
         try:
             output_name = (
-                item.args.get("_fs_source_output_name") or _path_cast_output_name(item) or item.sql(dialect="snowflake")
+                item.meta.get("_fs_source_output_name") or _path_cast_output_name(item) or item.sql(dialect="snowflake")
             )
         except (NotImplementedError, ValueError, errors.UnsupportedError):
             continue

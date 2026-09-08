@@ -1321,11 +1321,17 @@ def regex_replace(expression: Expr) -> Expr:
     """Transform regex_replace expressions from snowflake to duckdb."""
 
     if isinstance(expression, exp.RegexpReplace) and isinstance(expression.expression, exp.Literal):
-        if len(expression.args) > 3:
+        if expression.args.get("position") or expression.args.get("occurrence"):
             # see https://docs.snowflake.com/en/sql-reference/functions/regexp_replace
             raise NotImplementedError(
                 "REGEXP_REPLACE with additional parameters (eg: <position>, <occurrence>, <parameters>)"
             )
+
+        # this transform is not idempotent (it unescapes the pattern and forces global modifiers),
+        # and the pipeline may re-run it on an already-transformed expression, so guard against that
+        if expression.meta.get("_fs_regex_replace"):
+            return expression
+        expression.meta["_fs_regex_replace"] = True
 
         # pattern: snowflake requires escaping backslashes in single-quoted string constants, but duckdb doesn't
         # see https://docs.snowflake.com/en/sql-reference/functions-regexp#label-regexp-escape-character-caveats
