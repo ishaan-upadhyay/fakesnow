@@ -147,7 +147,9 @@ def variant_eq_sql(left: Any, right: Any) -> bool | None:
 
 
 def variant_key(value: Any) -> str:
-    if value is None:
+    # undefined sorts with SQL NULL, matching _kind, which would otherwise classify it as
+    # SQL_NULL and then fall past every branch below to the TypeError
+    if value is None or is_undefined(value):
         return f"{_KIND_ORDER['SQL_NULL']:02d}"
     if is_json_null(value):
         return f"{_KIND_ORDER['JSON_NULL']:02d}"
