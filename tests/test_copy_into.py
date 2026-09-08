@@ -125,7 +125,7 @@ cases = [
             FILE_FORMAT = (TYPE = 'PARQUET')
             """,
             expected_inserts=[
-                "INSERT INTO TABLE1 SELECT CAST((B) AS BIGINT), CAST((A) AS BIGINT) FROM READ_PARQUET('s3://{bucket}/foo.parquet')"
+                "INSERT INTO TABLE1 SELECT CAST(B AS BIGINT), CAST(A AS BIGINT) FROM READ_PARQUET('s3://{bucket}/foo.parquet')"
             ],
             data=pd.DataFrame({"A": [1, 2], "B": [11, 12]}).to_parquet(),
             expected_rows_loaded=2,

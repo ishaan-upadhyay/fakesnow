@@ -4,6 +4,8 @@ from __future__ import annotations
 import contextlib
 import re
 from collections.abc import Callable
+from datetime import datetime
+from decimal import Decimal
 from typing import Any
 
 import duckdb
@@ -25,13 +27,23 @@ from fakesnow.variant.compare import variant_eq, variant_eq_sql, variant_key
 from fakesnow.variant.errors import VariantRuntimeError
 from fakesnow.variant.parser import parse_json
 from fakesnow.variant.render import _map_items, sf_json, sf_json_compact
-from fakesnow.variant.sentinels import BIGINT_PREFIX, JSON_NULL, is_json_null
+from fakesnow.variant.sentinels import (
+    BIGINT_PREFIX,
+    DECIMAL_PREFIX,
+    JSON_NULL,
+    TIMESTAMP_LTZ_PREFIX,
+    TIMESTAMP_NTZ_PREFIX,
+    TIMESTAMP_TZ_PREFIX,
+    is_json_null,
+)
 from fakesnow.variant.typeof import typeof
 
 
 def _variant_output(value: Any) -> Any:
     if isinstance(value, int) and not isinstance(value, bool) and len(str(abs(value))) > 38:
         return f"{BIGINT_PREFIX}{value}"
+    if isinstance(value, Decimal) and len(value.as_tuple().digits) > 38:
+        return f"{DECIMAL_PREFIX}{value:f}"
     if isinstance(value, dict) and not value:
         return duckdb.Value("{}", duckdb.sqltype("JSON"))
     if (items := _map_items(value)) is not None:
@@ -60,6 +72,24 @@ def _parse_json(value: str | None) -> Any:
     if parsed is None:
         return None
     return duckdb.Value(_variant_output(parsed), sqltypes.VARIANT)
+
+
+def _to_variant_timestamp(value: str | None, kind: str) -> Any:
+    if value is None:
+        return None
+    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    rendered = parsed.replace(tzinfo=None).isoformat(sep=" ", timespec="milliseconds")
+    prefixes = {
+        "LTZ": TIMESTAMP_LTZ_PREFIX,
+        "NTZ": TIMESTAMP_NTZ_PREFIX,
+        "TZ": TIMESTAMP_TZ_PREFIX,
+    }
+    if kind == "LTZ":
+        rendered += " Z"
+    elif kind == "TZ":
+        offset = parsed.strftime("%z")
+        rendered += f" {'Z' if offset == '+0000' else offset}"
+    return duckdb.Value(prefixes[kind] + rendered, sqltypes.VARIANT)
 
 
 def _object_keep_null(value: Any) -> Any:
@@ -97,13 +127,7 @@ def _object_drop_null(value: Any) -> Any:
 def _to_array(value: Any) -> Any:
     if value is None or is_json_null(value):
         return None
-    values = (
-        [value]
-        if _map_items(value) is not None
-        else value
-        if isinstance(value, list)
-        else [value]
-    )
+    values = [value] if _map_items(value) is not None else value if isinstance(value, list) else [value]
     return [duckdb.Value(_variant_output(item), sqltypes.VARIANT) for item in values]
 
 
@@ -181,9 +205,13 @@ def _get_ignore_case(value: Any, key: str | None) -> Any:
     if items is None or key is None:
         return None
     values = dict(items)
-    actual_key = key if key in values else next(
-        (candidate for candidate in reversed(values) if candidate.lower() == key.lower()),
-        None,
+    actual_key = (
+        key
+        if key in values
+        else next(
+            (candidate for candidate in reversed(values) if candidate.lower() == key.lower()),
+            None,
+        )
     )
     if actual_key is None:
         return None
@@ -209,6 +237,7 @@ def _flatten_rows(
     outer: bool | None,
     recursive: bool | None,
     mode: str | None,
+    sequence: int | None,
 ) -> Any:
     target = _resolve_path(value, path) if path else value
     flatten_mode = (mode or "BOTH").upper()
@@ -222,6 +251,7 @@ def _flatten_rows(
                     child_path = f"{prefix}.{key}" if prefix else key
                     rows.append(
                         {
+                            "seq": sequence,
                             "key": key,
                             "path": child_path,
                             "index": None,
@@ -237,6 +267,7 @@ def _flatten_rows(
                 child_path = f"{prefix}[{index}]"
                 rows.append(
                     {
+                        "seq": sequence,
                         "key": None,
                         "path": child_path,
                         "index": index,
@@ -252,6 +283,7 @@ def _flatten_rows(
     if not rows and outer:
         rows.append(
             {
+                "seq": sequence,
                 "key": None,
                 "path": "" if isinstance(target, (list, dict)) else None,
                 "index": None,
@@ -264,6 +296,28 @@ def _flatten_rows(
             }
         )
     return rows
+
+
+def _flatten_map_rows(
+    value: dict[str, int] | None,
+    path: str | None,
+    mode: str | None,
+    sequence: int | None,
+) -> Any:
+    if value is None or (mode or "BOTH").upper() not in {"BOTH", "OBJECT"}:
+        return []
+    prefix = f"{path}." if path else ""
+    return [
+        {
+            "seq": sequence,
+            "key": key,
+            "path": f"{prefix}{key}",
+            "index": None,
+            "value": item,
+            "this": value,
+        }
+        for key, item in sorted(value.items())
+    ]
 
 
 def _key(value: Any) -> str:
@@ -304,6 +358,12 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
     decimal = duckdb.decimal_type(38, 18)
     definitions: list[tuple[str, Callable[..., Any], list[DuckDBPyType], DuckDBPyType]] = [
         ("_fs_parse_json", _parse_json, [sqltypes.VARCHAR], variant),
+        (
+            "_fs_to_variant_timestamp",
+            _to_variant_timestamp,
+            [sqltypes.VARCHAR, sqltypes.VARCHAR],
+            variant,
+        ),
         ("_fs_object_drop_null", _object_drop_null, [variant], variant),
         ("_fs_object_keep_null", _object_keep_null, [variant], variant),
         ("_fs_variant_to_array", _to_array, [variant], duckdb.list_type(variant)),
@@ -314,9 +374,7 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
             "_fs_variant_object_entries",
             _object_entries,
             [variant],
-            duckdb.list_type(
-                duckdb.struct_type({"key": sqltypes.VARCHAR, "value": variant})
-            ),
+            duckdb.list_type(duckdb.struct_type({"key": sqltypes.VARCHAR, "value": variant})),
         ),
         (
             "_fs_variant_flatten_rows",
@@ -327,15 +385,39 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
                 sqltypes.BOOLEAN,
                 sqltypes.BOOLEAN,
                 sqltypes.VARCHAR,
+                sqltypes.UBIGINT,
             ],
             duckdb.list_type(
                 duckdb.struct_type(
                     {
+                        "seq": sqltypes.UBIGINT,
                         "key": sqltypes.VARCHAR,
                         "path": sqltypes.VARCHAR,
                         "index": sqltypes.BIGINT,
                         "value": variant,
                         "this": variant,
+                    }
+                )
+            ),
+        ),
+        (
+            "_fs_variant_flatten_map_rows",
+            _flatten_map_rows,
+            [
+                duckdb.map_type(sqltypes.VARCHAR, sqltypes.BIGINT),
+                sqltypes.VARCHAR,
+                sqltypes.VARCHAR,
+                sqltypes.UBIGINT,
+            ],
+            duckdb.list_type(
+                duckdb.struct_type(
+                    {
+                        "seq": sqltypes.UBIGINT,
+                        "key": sqltypes.VARCHAR,
+                        "path": sqltypes.VARCHAR,
+                        "index": sqltypes.BIGINT,
+                        "value": sqltypes.BIGINT,
+                        "this": duckdb.map_type(sqltypes.VARCHAR, sqltypes.BIGINT),
                     }
                 )
             ),

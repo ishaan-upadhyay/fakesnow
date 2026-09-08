@@ -1,0 +1,581 @@
+{
+  "name": "pr07_coercion_via_ctas_with_schema_full_errors",
+  "cases": [
+    {
+      "id": "v_variant_as_select_object_construct_a_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_array_construct_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT ARRAY_CONSTRUCT(1)",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_1",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "INTEGER"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_50",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1.50",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.5"
+            },
+            {
+              "type": "str",
+              "value": "DECIMAL"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_5_double",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT 1.5::DOUBLE",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1.500000000000000e+00"
+            },
+            {
+              "type": "str",
+              "value": "DOUBLE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "v_variant_as_select_true",
+      "sql": "SELECT v, TYPEOF(v) FROM t",
+      "setup": "CREATE TEMP TABLE t (v VARIANT) AS SELECT TRUE",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "V",
+            "VARIANT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(V)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "true"
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_parse_json_1",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('[1]')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_array_construct_1_a",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT ARRAY_CONSTRUCT(1,'a')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_1_a",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT [1,'a']",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_null",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT NULL",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_a_1",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_a_1",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'a':1}",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "OBJECT"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2_array_number_10_2",
+      "sql": "SELECT sa, TYPEOF(sa) FROM t",
+      "setup": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,2]::ARRAY(NUMBER(10,2))",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(SA)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "s_varchar_as_select_parse_json_x",
+      "sql": "SELECT s, TYPEOF(s) FROM t",
+      "setup": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT PARSE_JSON('\"x\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "S",
+            "TEXT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(S)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "x"
+            },
+            {
+              "type": "str",
+              "value": "VARCHAR"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "d_date_as_select_parse_json_2024_01_02",
+      "sql": "SELECT d, TYPEOF(d) FROM t",
+      "setup": "CREATE TEMP TABLE t (d DATE) AS SELECT PARSE_JSON('\"2024-01-02\"')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "D",
+            "DATE",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(D)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "date",
+              "value": "2024-01-02"
+            },
+            {
+              "type": "str",
+              "value": "DATE"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "b_boolean_as_select_parse_json_true",
+      "sql": "SELECT b, TYPEOF(b) FROM t",
+      "setup": "CREATE TEMP TABLE t (b BOOLEAN) AS SELECT PARSE_JSON('true')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "B",
+            "BOOLEAN",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(B)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "bool",
+              "value": true
+            },
+            {
+              "type": "str",
+              "value": "BOOLEAN"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

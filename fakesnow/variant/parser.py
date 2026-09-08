@@ -11,25 +11,25 @@ from fakesnow.variant.sentinels import JSON_NULL, NAN, UNDEFINED
 
 _UNDEFINED_TOKEN = "\x00fakesnow-undefined\x00"
 _IDENTIFIER = re.compile(r"[A-Za-z_$][A-Za-z0-9_$]*")
+_MAX_INT128 = 2**127 - 1
 
 
 def _fixed_number(text: str) -> int | Decimal | float:
     if "e" in text.lower():
         return float(text)
-    if "." not in text:
-        return int(text)
     try:
         value = Decimal(text)
     except InvalidOperation:
         return float(text)
-    digits = len(value.as_tuple().digits)
+    if value == value.to_integral_value():
+        integer = int(value)
+        return integer if abs(integer) <= _MAX_INT128 else float(text)
+
+    digits = value.as_tuple().digits
+    coefficient = int("".join(map(str, digits)))
     exponent = value.as_tuple().exponent
     scale = max(-exponent, 0) if isinstance(exponent, int) else 0
-    if digits > 38 or scale > 37:
-        return float(text)
-    if value == value.to_integral_value():
-        return int(value)
-    return value
+    return value if coefficient <= _MAX_INT128 and scale <= 37 else float(text)
 
 
 def _constant(text: str) -> float | object:

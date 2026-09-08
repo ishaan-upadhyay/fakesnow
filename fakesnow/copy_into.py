@@ -75,7 +75,7 @@ def copy_into(
             else:
                 # Parquet without MATCH_BY_COLUMN_NAME or subquery requires a single VARIANT column
                 columns = _describe_table(table, duck_conn, current_database, schema)
-                is_single_variant = len(columns) == 1 and columns[0][1] == "JSON"
+                is_single_variant = len(columns) == 1 and columns[0][1] == "VARIANT"
                 if not is_single_variant:
                     raise snowflake.connector.errors.ProgrammingError(
                         msg="SQL compilation error:\nPARQUET file format can produce one and only one column of type variant, object, or array. Load data into separate columns using the MATCH_BY_COLUMN_NAME copy option or copy with transformation.",  # noqa: E501
@@ -391,7 +391,15 @@ def _inserts(
                 json_args.append(exp.Literal.string(col))
                 json_args.append(exp.Column(this=exp.Identifier(this=col, quoted=True)))
 
-            select_expr = exp.Anonymous(this="json_object", expressions=json_args)
+            select_expr = exp.Anonymous(
+                this="_fs_parse_json",
+                expressions=[
+                    exp.Cast(
+                        this=exp.Anonymous(this="json_object", expressions=json_args),
+                        to=exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+                    )
+                ],
+            )
 
             inserts.append(
                 exp.Insert(
@@ -502,9 +510,68 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
     Strip $1 prefix from SELECT statement columns.
     """
     dollar1 = exp.Parameter(this=exp.Literal(this="1", is_string=False))
+    expr.set(
+        "expressions",
+        [
+            item.this
+            if isinstance(item, exp.Alias) and item.alias.startswith("__FS_VARIANT_COL_")
+            else item
+            for item in expr.expressions
+        ],
+    )
+
+    for getter in list(expr.find_all(exp.Anonymous)):
+        if getter.name.upper() != "_FS_VARIANT_GET" or len(getter.expressions) != 2:
+            continue
+        source, key_expression = getter.expressions
+        if not source.find(exp.Parameter):
+            continue
+        key = key_expression.find(exp.Literal)
+        if key is None or not key.is_string:
+            continue
+        column = exp.Column(this=exp.Identifier(this=key.name))
+        variant_cast = getter.parent
+        converter = variant_cast.parent if isinstance(variant_cast, exp.Cast) else None
+        if isinstance(converter, exp.Anonymous) and converter.name.upper() == "_FS_VARIANT_TO_BIGINT":
+            converter.replace(
+                exp.Cast(
+                    this=column,
+                    to=exp.DataType(this=exp.DataType.Type.BIGINT, nested=False),
+                )
+            )
+        else:
+            getter.replace(column)
 
     for p in expr.find_all(exp.Parameter):
-        if p == dollar1 and p.parent and (key := p.parent.expression.find(exp.JSONPathKey)):
+        if (
+            p == dollar1
+            and isinstance(p.parent, exp.Bracket)
+            and len(p.parent.expressions) == 1
+            and isinstance(p.parent.expressions[0], exp.Literal)
+        ):
+            bracket = p.parent
+            column = exp.Column(this=exp.Identifier(this=bracket.expressions[0].name))
+            variant_cast = bracket.parent
+            converter = variant_cast.parent if isinstance(variant_cast, exp.Cast) else None
+            if (
+                isinstance(converter, exp.Anonymous)
+                and converter.name.upper() == "_FS_VARIANT_TO_BIGINT"
+            ):
+                converter.replace(
+                    exp.Cast(
+                        this=column,
+                        to=exp.DataType(this=exp.DataType.Type.BIGINT, nested=False),
+                    )
+                )
+            else:
+                bracket.replace(column)
+            continue
+        if (
+            p == dollar1
+            and p.parent
+            and (path := p.parent.args.get("expression"))
+            and (key := path.find(exp.JSONPathKey))
+        ):
             assert p.parent.parent, expr
             p.parent.parent.args["this"] = exp.Identifier(this=key.this)
 
