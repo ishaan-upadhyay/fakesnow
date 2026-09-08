@@ -515,9 +515,7 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
     expr.set(
         "expressions",
         [
-            item.this
-            if isinstance(item, exp.Alias) and item.alias.startswith("__FS_VARIANT_COL_")
-            else item
+            item.this if isinstance(item, exp.Alias) and item.alias.startswith("__FS_VARIANT_COL_") else item
             for item in expr.expressions
         ],
     )
@@ -555,10 +553,7 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
             column = exp.Column(this=exp.Identifier(this=bracket.expressions[0].name))
             variant_cast = bracket.parent
             converter = variant_cast.parent if isinstance(variant_cast, exp.Cast) else None
-            if (
-                isinstance(converter, exp.Anonymous)
-                and converter.name.upper() == "_FS_VARIANT_TO_BIGINT"
-            ):
+            if isinstance(converter, exp.Anonymous) and converter.name.upper() == "_FS_VARIANT_TO_BIGINT":
                 converter.replace(
                     exp.Cast(
                         this=column,
