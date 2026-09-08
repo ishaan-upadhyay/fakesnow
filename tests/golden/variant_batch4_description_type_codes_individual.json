@@ -1253,56 +1253,6 @@
       }
     },
     {
-      "id": "as_date_to_variant_current_date",
-      "sql": "SELECT AS_DATE(TO_VARIANT(CURRENT_DATE)) AS a",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "A",
-            "DATE",
-            null,
-            null,
-            null
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "date",
-              "value": "2026-09-03"
-            }
-          ]
-        ]
-      }
-    },
-    {
-      "id": "as_timestamp_ntz_to_variant_current_timestamp_timestamp_ntz",
-      "sql": "SELECT AS_TIMESTAMP_NTZ(TO_VARIANT(CURRENT_TIMESTAMP::TIMESTAMP_NTZ)) AS a",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "A",
-            "TIMESTAMP_NTZ",
-            18,
-            9,
-            null
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "datetime",
-              "value": "2026-09-03T18:00:05.479000"
-            }
-          ]
-        ]
-      }
-    },
-    {
       "id": "as_binary_to_variant_to_binary_ab_hex",
       "sql": "SELECT AS_BINARY(TO_VARIANT(TO_BINARY('ab','hex'))) AS a",
       "setup": null,
