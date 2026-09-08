@@ -107,6 +107,7 @@ def test_describe_table(dcur: snowflake.connector.cursor.DictCursor):
         "comment": None,
         "policy name": None,
         "privacy domain": None,
+        "write default": None,
     }
     expected = [
         {"name": "XBOOLEAN", "type": "BOOLEAN", **common},
@@ -153,6 +154,7 @@ def test_describe_table(dcur: snowflake.connector.cursor.DictCursor):
         "comment",
         "policy name",
         "privacy domain",
+        "write default",
     ]
 
     assert dcur.execute("describe table db1.schema1.derived").fetchall() == [
@@ -190,6 +192,7 @@ def test_describe_view(dcur: snowflake.connector.cursor.DictCursor):
         "comment": None,
         "policy name": None,
         "privacy domain": None,
+        "write default": None,
     }
     expected = [
         {"name": "XVARCHAR", "type": "VARCHAR(16777216)", **common},
@@ -212,6 +215,7 @@ def test_describe_view(dcur: snowflake.connector.cursor.DictCursor):
         "comment",
         "policy name",
         "privacy domain",
+        "write default",
     ]
 
 

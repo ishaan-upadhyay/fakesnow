@@ -1,0 +1,325 @@
+{
+  "name": "pr11_structured_types_expressions",
+  "cases": [
+    {
+      "id": "select_k_1_map_number_int_mn",
+      "sql": "SELECT {'k': 1}::MAP(NUMBER, INT) mn",
+      "setup": null,
+      "expect": {
+        "error": "100038 (22018): Numeric value 'k' is not recognized",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_1_null_array_int_not_null",
+      "sql": "SELECT [1,NULL]::ARRAY(INT NOT NULL)",
+      "setup": null,
+      "expect": {
+        "error": "100072 (22000): NULL result in a non-nullable column",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_1_2_3_array_int",
+      "sql": "SELECT TYPEOF([1,2,3]::ARRAY(INT))",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_typeof_a_1_object_a_int",
+      "sql": "SELECT TYPEOF({'a':1}::OBJECT(a INT))",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_so_a_from_select_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT so:a FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SO:A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_so_zz_from_select_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT so:zz FROM (SELECT {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so)",
+      "setup": null,
+      "expect": {
+        "error": "093201 (23001): Function GET: expected structured object to contain field zz but it did not.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_sm_zz_from_select_k1_1_map_varchar_int_sm",
+      "sql": "SELECT sm['zz'] FROM (SELECT {'k1':1}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SM['ZZ']",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_array_int_a_parse_json_a_1_object_a_in",
+      "sql": "SELECT PARSE_JSON('[1,2]')::ARRAY(INT) a, PARSE_JSON('{\"a\":1}')::OBJECT(a INT) b, PARSE_JSON('{\"a\":1}')::MAP(VARCHAR, INT) c, ARRAY_CONSTRUCT(1,2)::ARRAY(INT) d, OBJECT_CONSTRUCT('a',1)::OBJECT(a INT) e, OBJECT_CONSTRUCT('a',1)::MAP(VARCHAR,INT) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "B",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "C",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "D",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "E",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "F",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_extra_2_object_a_int",
+      "sql": "SELECT PARSE_JSON('{\"a\":1, \"extra\": 2}')::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_object_a_int_b_varchar",
+      "sql": "SELECT PARSE_JSON('{\"a\":1}')::OBJECT(a INT, b VARCHAR)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_x_array_int",
+      "sql": "SELECT PARSE_JSON('[1,\"x\"]')::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_parse_json_1_2_array_int",
+      "sql": "SELECT PARSE_JSON('[1,\"2\"]')::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('[1,\"2\"]')::ARRAY(INT)",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_parse_json_a_1_object_a_int",
+      "sql": "SELECT PARSE_JSON('{\"a\":\"1\"}')::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "PARSE_JSON('{\"A\":\"1\"}')::OBJECT(A INT)",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_array_int_array_varchar_a_1_2_array_int_array_b_a",
+      "sql": "SELECT [1,2]::ARRAY(INT)::ARRAY(VARCHAR) a, [1,2]::ARRAY(INT)::ARRAY b, ({'a':1}::OBJECT(a INT))::OBJECT(a VARCHAR) c",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "B",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "C",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  \"1\",\n  \"2\"\n]"
+            },
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": \"1\"\n}"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

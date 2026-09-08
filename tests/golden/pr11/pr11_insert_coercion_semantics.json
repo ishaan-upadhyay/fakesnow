@@ -1,0 +1,15 @@
+{
+  "name": "pr11_insert_coercion_semantics",
+  "cases": [
+    {
+      "id": "create_temporary_table_fakesnow_probe_ctas2_o_object_a_array",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe_ctas2 (o OBJECT, a ARRAY, v VARIANT, sa ARRAY(INT)) AS SELECT OBJECT_CONSTRUCT('a',1), ARRAY_CONSTRUCT(1), PARSE_JSON('1'), ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error:",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

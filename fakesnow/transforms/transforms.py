@@ -12,6 +12,7 @@ from sqlglot import Expr, exp
 
 from fakesnow.params import MutableParams, pop_qmark_param
 from fakesnow.variables import Variables
+from fakesnow.variant import ctas_compat
 
 SUCCESS_NOP = sqlglot.parse_one("SELECT 'Statement executed successfully.' as status")
 
@@ -417,13 +418,14 @@ SQL_DESCRIBE_TABLE = Template(
     """
 SELECT
     column_name AS "name",
-    CASE WHEN data_type = 'NUMBER' THEN 'NUMBER(' || numeric_precision || ',' || numeric_scale || ')'
+    COALESCE(ext.ext_describe_type,
+      CASE WHEN data_type = 'NUMBER' THEN 'NUMBER(' || numeric_precision || ',' || numeric_scale || ')'
          WHEN data_type = 'TEXT' THEN 'VARCHAR(' || coalesce(character_maximum_length,16777216)  || ')'
          WHEN data_type = 'TIMESTAMP_NTZ' THEN 'TIMESTAMP_NTZ(9)'
          WHEN data_type = 'TIMESTAMP_TZ' THEN 'TIMESTAMP_TZ(9)'
          WHEN data_type = 'TIME' THEN 'TIME(9)'
          WHEN data_type = 'BINARY' THEN 'BINARY(8388608)'
-        ELSE data_type END AS "type",
+        ELSE data_type END) AS "type",
     'COLUMN' AS "kind",
     CASE WHEN is_nullable = 'YES' THEN 'Y' ELSE 'N' END AS "null?",
     column_default AS "default",
@@ -434,7 +436,13 @@ SELECT
     NULL::VARCHAR AS "comment",
     NULL::VARCHAR AS "policy name",
     NULL::JSON AS "privacy domain",
+    NULL::VARCHAR AS "write default",
 FROM _fs_information_schema._fs_columns
+LEFT JOIN _fs_global._fs_information_schema._fs_columns_ext ext
+  ON ext.ext_table_catalog = table_catalog
+ AND ext.ext_table_schema = table_schema
+ AND ext.ext_table_name = table_name
+ AND ext.ext_column_name = column_name
 WHERE table_catalog = '${catalog}' AND table_schema = '${schema}' AND table_name = '${table}'
 ORDER BY ordinal_position
 """
@@ -455,6 +463,7 @@ SELECT
     NULL::VARCHAR AS "comment",
     NULL::VARCHAR AS "policy name",
     NULL::JSON AS "privacy domain",
+    NULL::VARCHAR AS "write default",
 FROM (DESCRIBE ${view})
 """
 )
@@ -1007,7 +1016,27 @@ def indices_to_json_extract(expression: Expr) -> Expr:
     zero-based. Object keys use the same bracket syntax in both engines.
     """
 
+    def structured_bracket(this: Expr, index: Expr) -> Expr | None:
+        data_type = this.args.get("_fs_structured_type")
+        if not isinstance(data_type, exp.DataType):
+            return None
+        if data_type.this == exp.DataType.Type.ARRAY:
+            if isinstance(index, exp.Literal) and index.is_string:
+                return None
+        elif data_type.this in {exp.DataType.Type.OBJECT, exp.DataType.Type.STRUCT}:
+            if not isinstance(index, exp.Literal) or not index.is_string:
+                return None
+        elif data_type.this != exp.DataType.Type.MAP:
+            return None
+        return exp.Bracket(
+            this=this.copy(),
+            expressions=[index.copy()],
+            _fs_zero_based_adjusted=True,
+        )
+
     def bracket(this: Expr, index: Expr) -> Expr:
+        if result := structured_bracket(this, index):
+            return result
         if isinstance(index, exp.Literal) and not index.is_string:
             try:
                 numeric_index = int(index.this)
@@ -1126,6 +1155,8 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                 errno=1852,
                 sqlstate="22023",
             )
+        if result := structured_bracket(expression.this, index):
+            return result
         return exp.Anonymous(
             this="_fs_variant_get",
             expressions=[
@@ -1148,6 +1179,19 @@ def indices_to_json_extract(expression: Expr) -> Expr:
         return bracket(
             expression.this.copy().transform(indices_to_json_extract),
             exp.Literal.string(expression.expression.name),
+        )
+
+    if (
+        isinstance(expression, exp.Dot)
+        and isinstance(expression.this, exp.Column)
+        and isinstance(expression.expression, exp.Identifier)
+        and isinstance((data_type := expression.this.args.get("_fs_structured_type")), exp.DataType)
+        and data_type.this in {exp.DataType.Type.OBJECT, exp.DataType.Type.STRUCT}
+    ):
+        raise snowflake.connector.errors.ProgrammingError(
+            msg=f"SQL compilation error: error line 1 at position 7\ninvalid identifier '{expression.sql()}'",
+            errno=904,
+            sqlstate="42000",
         )
 
     if (
@@ -2162,6 +2206,47 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
     return expression
 
 
+def _ctas_source_type(projection: Expr, duckdb_type: str) -> str:
+    inner = projection.this if isinstance(projection, exp.Alias) else projection
+    # Snowflake types an integer literal by its digit count, eg 1 is NUMBER(1,0), where
+    # duckdb reports a machine width. Everything else comes from duckdb's own inference.
+    if isinstance(inner, exp.Literal) and not inner.is_string and inner.name.lstrip("-").isdigit():
+        return f"NUMBER({len(inner.name.lstrip('-'))},0)"
+    return ctas_compat.duckdb_to_snowflake(duckdb_type)
+
+
+def _check_ctas_column_types(
+    select_query: Expr, create_col_defs: list[exp.ColumnDef], duck_conn: DuckDBPyConnection
+) -> None:
+    """Reject a CTAS whose projection can't be implicitly coerced to the declared schema."""
+    try:
+        described = duck_conn.sql(f"DESCRIBE {select_query.sql(dialect='duckdb')}").fetchall()
+    except Exception:
+        # if duckdb can't describe the projection there's nothing to compare against, and
+        # the statement will fail on its own terms when it runs
+        return
+    if len(described) != len(create_col_defs):
+        return
+
+    for index, (col_def, (_name, duckdb_type, *_rest)) in enumerate(zip(create_col_defs, described, strict=True)):
+        declared = col_def.kind
+        if declared is None:
+            continue
+        projection = select_query.expressions[index]
+        inner = projection.this if isinstance(projection, exp.Alias) else projection
+        if isinstance(inner, exp.Null):
+            # NULL is assignable to every column type
+            continue
+        source = _ctas_source_type(projection, duckdb_type)
+        target = ctas_compat.declared_to_snowflake(declared)
+        if ctas_compat.incompatible(source, target):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg=f"SQL compilation error: | incompatible types: [{source}] and [{target}]",
+                errno=1010,
+                sqlstate="42846",
+            )
+
+
 def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
     if (
         isinstance(expression, exp.Create)
@@ -2191,6 +2276,8 @@ def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
             raise snowflake.connector.errors.ProgrammingError(
                 msg="SQL compilation error:\nInvalid column definition list", errno=2026, sqlstate="42601"
             )
+
+        _check_ctas_column_types(select_query, create_col_defs, duck_conn)
 
         # Transform the SELECT to add casting and aliasing based on the schema
         new_expressions = []

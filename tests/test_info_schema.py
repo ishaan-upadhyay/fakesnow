@@ -54,6 +54,7 @@ def test_describe_view_columns(dcur: snowflake.connector.cursor.DictCursor):
         "comment",
         "policy name",
         "privacy domain",
+        "write default",
     ]
     dcur.execute("describe view information_schema.columns")
     result: list[dict] = dcur.fetchall()
@@ -62,7 +63,8 @@ def test_describe_view_columns(dcur: snowflake.connector.cursor.DictCursor):
     # should contain snowflake-specific columns
     assert "COMMENT" in names
     # fmt: off
-    assert dcur.description[:-1] == [
+    # trailing 'privacy domain' and 'write default' are excluded
+    assert dcur.description[:-2] == [
         ResultMetadata(name='name', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='type', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='kind', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),

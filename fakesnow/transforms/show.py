@@ -26,7 +26,7 @@ SELECT
     table_name as "table_name",
     table_schema as "schema_name",
     column_name as "column_name",
-    CASE
+    COALESCE(ext.ext_show_data_type, CASE
         WHEN data_type = 'NUMBER' THEN
             '{"type":"FIXED","precision":' || numeric_precision || ',"scale":' || numeric_scale || ',"nullable":true}'
         WHEN data_type = 'TEXT' THEN
@@ -41,16 +41,22 @@ SELECT
         WHEN data_type = 'BINARY' THEN
             '{"type":"BINARY","length":8388608,"byteLength":8388608,"nullable":true,"fixed":true}'
         ELSE '{"type":"' || data_type || '","nullable":true}'
-    END as "data_type",
-    CASE WHEN is_nullable = 'YES' THEN 'true' ELSE 'false' END as "null?",
+    END) as "data_type",
+    CASE WHEN is_nullable = 'YES' THEN 'true' ELSE 'NOT_NULL' END as "null?",
     COALESCE(column_default, '') as "default",
     'COLUMN' as "kind",
     '' as "expression",
     COALESCE(comment, '') as "comment",
     table_catalog as "database_name",
     '' as "autoincrement",
-    NULL as "schema_evolution_record"
-FROM _fs_global._fs_information_schema._fs_columns
+    NULL as "schema_evolution_record",
+    NULL as "write_default"
+FROM _fs_global._fs_information_schema._fs_columns columns
+LEFT JOIN _fs_global._fs_information_schema._fs_columns_ext ext
+  ON ext.ext_table_catalog = columns.table_catalog
+ AND ext.ext_table_schema = columns.table_schema
+ AND ext.ext_table_name = columns.table_name
+ AND ext.ext_column_name = columns.column_name
 ORDER BY table_catalog, table_schema, table_name, ordinal_position
 """
 
