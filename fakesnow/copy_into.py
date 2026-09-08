@@ -17,6 +17,7 @@ from sqlglot import Expr, exp
 import fakesnow.transforms.stage as stage
 from fakesnow import logger
 from fakesnow.params import MutableParams, pop_qmark_param
+from fakesnow.transforms.transforms import coerce_semi_structured_targets
 
 Params = Sequence[Any] | dict[Any, Any]
 
@@ -102,6 +103,7 @@ def copy_into(
                 error_count = 1
                 first_error_message = "File was loaded before."
             else:
+                i = coerce_semi_structured_targets(i, duck_conn)
                 sql = i.sql(dialect="duckdb")
                 logger.log_sql(sql, params)
                 duck_conn.execute(sql, params)
@@ -513,9 +515,7 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
     expr.set(
         "expressions",
         [
-            item.this
-            if isinstance(item, exp.Alias) and item.alias.startswith("__FS_VARIANT_COL_")
-            else item
+            item.this if isinstance(item, exp.Alias) and item.alias.startswith("__FS_VARIANT_COL_") else item
             for item in expr.expressions
         ],
     )
@@ -553,10 +553,7 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
             column = exp.Column(this=exp.Identifier(this=bracket.expressions[0].name))
             variant_cast = bracket.parent
             converter = variant_cast.parent if isinstance(variant_cast, exp.Cast) else None
-            if (
-                isinstance(converter, exp.Anonymous)
-                and converter.name.upper() == "_FS_VARIANT_TO_BIGINT"
-            ):
+            if isinstance(converter, exp.Anonymous) and converter.name.upper() == "_FS_VARIANT_TO_BIGINT":
                 converter.replace(
                     exp.Cast(
                         this=column,

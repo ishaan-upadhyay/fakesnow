@@ -128,6 +128,62 @@ def test_object_construct(conn: snowflake.connector.SnowflakeConnection):
         assert json.loads(result[1]) == json.loads('{\n  "k1": "v1",\n  "k2": "v2",\n  "k3": "v3"\n}')
 
 
+def test_object_catalogue(cur: snowflake.connector.cursor.SnowflakeCursor):
+    cur.execute(
+        """
+        select
+            object_insert(object_construct('a', 1), 'b', 2),
+            object_delete(object_construct('a', 1, 'b', 2), 'a'),
+            object_pick(object_construct('a', 1, 'b', 2), array_construct('b')),
+            object_keys(object_construct('b', 1, 'a', 2)),
+            map_cat({'a':1}::map(varchar, int), {'b':2}::map(varchar, int))
+        """
+    )
+    assert indent(cur.fetchall()) == [
+        (
+            '{\n  "a": 1,\n  "b": 2\n}',
+            '{\n  "b": 2\n}',
+            '{\n  "b": 2\n}',
+            '[\n  "a",\n  "b"\n]',
+            '{\n  "a": 1,\n  "b": 2\n}',
+        )
+    ]
+
+    cur.execute(
+        """
+        select object_agg(k, v)
+        from (
+            select 'b' k, to_variant(1) v
+            union all select 'a', to_variant('x')
+            union all select null, to_variant(1)
+            union all select 'c', null
+            union all select 'd', parse_json('null')
+        )
+        """
+    )
+    assert indent(cur.fetchall()) == [('{\n  "a": "x",\n  "b": 1,\n  "d": null\n}',)]
+
+
+@pytest.mark.parametrize(
+    ("sql", "errno", "sqlstate"),
+    [
+        ("select object_construct('a', 1, 'a', 2)", 100103, "22000"),
+        ("select object_insert(object_construct('a', 1), 'a', 2)", 100103, "22000"),
+        ("select object_construct('a', 1, 'b')", 909, "22023"),
+        ("select object_construct(1, 2)", 2270, "22000"),
+    ],
+)
+def test_object_errors(
+    cur: snowflake.connector.cursor.SnowflakeCursor,
+    sql: str,
+    errno: int,
+    sqlstate: str,
+):
+    with pytest.raises(snowflake.connector.errors.ProgrammingError) as exc:
+        cur.execute(sql)
+    assert (exc.value.errno, exc.value.sqlstate) == (errno, sqlstate)
+
+
 def test_object_construct_star(cur: snowflake.connector.cursor.SnowflakeCursor):
     cur.execute("create or replace table tbl (a int, b varchar)")
     cur.execute("insert into tbl values (1, 'x'), (2, null)")

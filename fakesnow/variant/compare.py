@@ -74,6 +74,8 @@ def _numeric_key(value: Any) -> Decimal | float:
 def variant_eq(left: Any, right: Any) -> bool | None:
     if left is None or right is None:
         return None if left is not right else True
+    if is_undefined(left) or is_undefined(right):
+        return is_undefined(left) and is_undefined(right)
     if is_json_null(left) or is_json_null(right):
         return left == right if is_json_null(left) and is_json_null(right) else False
     lk, rk = _kind(left), _kind(right)
