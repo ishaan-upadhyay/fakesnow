@@ -12,6 +12,7 @@ from sqlglot import Expr, exp
 
 from fakesnow.params import MutableParams, pop_qmark_param
 from fakesnow.variables import Variables
+from fakesnow.variant import ctas_compat
 
 SUCCESS_NOP = sqlglot.parse_one("SELECT 'Statement executed successfully.' as status")
 
@@ -2205,6 +2206,47 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
     return expression
 
 
+def _ctas_source_type(projection: Expr, duckdb_type: str) -> str:
+    inner = projection.this if isinstance(projection, exp.Alias) else projection
+    # Snowflake types an integer literal by its digit count, eg 1 is NUMBER(1,0), where
+    # duckdb reports a machine width. Everything else comes from duckdb's own inference.
+    if isinstance(inner, exp.Literal) and not inner.is_string and inner.name.lstrip("-").isdigit():
+        return f"NUMBER({len(inner.name.lstrip('-'))},0)"
+    return ctas_compat.duckdb_to_snowflake(duckdb_type)
+
+
+def _check_ctas_column_types(
+    select_query: exp.Select, create_col_defs: list[exp.ColumnDef], duck_conn: DuckDBPyConnection
+) -> None:
+    """Reject a CTAS whose projection can't be implicitly coerced to the declared schema."""
+    try:
+        described = duck_conn.sql(f"DESCRIBE {select_query.sql(dialect='duckdb')}").fetchall()
+    except Exception:
+        # if duckdb can't describe the projection there's nothing to compare against, and
+        # the statement will fail on its own terms when it runs
+        return
+    if len(described) != len(create_col_defs):
+        return
+
+    for index, (col_def, (_name, duckdb_type, *_rest)) in enumerate(zip(create_col_defs, described, strict=True)):
+        declared = col_def.kind
+        if declared is None:
+            continue
+        projection = select_query.expressions[index]
+        inner = projection.this if isinstance(projection, exp.Alias) else projection
+        if isinstance(inner, exp.Null):
+            # NULL is assignable to every column type
+            continue
+        source = _ctas_source_type(projection, duckdb_type)
+        target = ctas_compat.declared_to_snowflake(declared)
+        if ctas_compat.incompatible(source, target):
+            raise snowflake.connector.errors.ProgrammingError(
+                msg=f"SQL compilation error: | incompatible types: [{source}] and [{target}]",
+                errno=1010,
+                sqlstate="42846",
+            )
+
+
 def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
     if (
         isinstance(expression, exp.Create)
@@ -2234,6 +2276,8 @@ def create_table_as(expression: Expr, duck_conn: DuckDBPyConnection) -> Expr:
             raise snowflake.connector.errors.ProgrammingError(
                 msg="SQL compilation error:\nInvalid column definition list", errno=2026, sqlstate="42601"
             )
+
+        _check_ctas_column_types(select_query, create_col_defs, duck_conn)
 
         # Transform the SELECT to add casting and aliasing based on the schema
         new_expressions = []
