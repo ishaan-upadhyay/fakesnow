@@ -14,7 +14,7 @@ from __future__ import annotations
 
 import re
 
-from sqlglot import exp
+from sqlglot import Expr, exp
 
 # default declared VARCHAR size, as reported for a column in a table schema
 DECLARED_VARCHAR = 16777216
@@ -94,7 +94,7 @@ def duckdb_to_snowflake(duckdb_type: str, varchar_size: int = VALUE_VARCHAR) -> 
     return _DUCKDB_SCALARS.get(upper, upper)
 
 
-def _is_variant(dt: exp.Expression) -> bool:
+def _is_variant(dt: Expr) -> bool:
     return isinstance(dt, exp.DataType) and dt.this in (exp.DataType.Type.VARIANT, exp.DataType.Type.JSON)
 
 

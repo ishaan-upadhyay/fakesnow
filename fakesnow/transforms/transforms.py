@@ -2216,7 +2216,7 @@ def _ctas_source_type(projection: Expr, duckdb_type: str) -> str:
 
 
 def _check_ctas_column_types(
-    select_query: exp.Select, create_col_defs: list[exp.ColumnDef], duck_conn: DuckDBPyConnection
+    select_query: Expr, create_col_defs: list[exp.ColumnDef], duck_conn: DuckDBPyConnection
 ) -> None:
     """Reject a CTAS whose projection can't be implicitly coerced to the declared schema."""
     try:
