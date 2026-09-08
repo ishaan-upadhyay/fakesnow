@@ -213,37 +213,37 @@ def array_agg(expression: Expr) -> Expr:
     if isinstance(expression, exp.ArrayAgg):
         result = expression.copy()
         value = result.this
+
+        def cast_variant(node: Expr) -> Expr:
+            # Preserve a DISTINCT modifier by casting its inner expressions, otherwise
+            # cast the value directly. Casting the Distinct node itself would emit the
+            # invalid `CAST(DISTINCT x AS VARIANT)`.
+            if isinstance(node, exp.Distinct):
+                distinct = node.copy()
+                distinct.set(
+                    "expressions",
+                    [
+                        exp.Cast(
+                            this=item.copy(),
+                            to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                        )
+                        for item in node.expressions
+                    ],
+                )
+                return distinct
+            return exp.Cast(
+                this=node.copy(),
+                to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+            )
+
         if isinstance(value, exp.Order):
+            # ARRAY_AGG(DISTINCT x ORDER BY ...) parses as Order(this=Distinct(...)),
+            # so cast the ordered value (which may itself carry the DISTINCT).
             ordered = value.copy()
-            ordered.set(
-                "this",
-                exp.Cast(
-                    this=value.this.copy(),
-                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                ),
-            )
+            ordered.set("this", cast_variant(value.this))
             result.set("this", ordered)
-        elif isinstance(value, exp.Distinct):
-            distinct = value.copy()
-            distinct.set(
-                "expressions",
-                [
-                    exp.Cast(
-                        this=item.copy(),
-                        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                    )
-                    for item in value.expressions
-                ],
-            )
-            result.set("this", distinct)
         else:
-            result.set(
-                "this",
-                exp.Cast(
-                    this=value.copy(),
-                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                ),
-            )
+            result.set("this", cast_variant(value))
         select = expression.find_ancestor(exp.Select)
         from_ = select.args.get("from") if select is not None else None
         source = from_.this if isinstance(from_, exp.From) else None
@@ -2047,6 +2047,25 @@ def values_columns(expression: Expr) -> Expr:
     return expression
 
 
+def _is_semi_structured_target(target: exp.DataType) -> bool:
+    """True when the target column is VARIANT, or an ARRAY/MAP whose values are VARIANT."""
+    if target.this == exp.DataType.Type.VARIANT:
+        return True
+    if (
+        target.this == exp.DataType.Type.MAP
+        and len(target.expressions) == 2
+        and isinstance(target.expressions[1], exp.DataType)
+        and target.expressions[1].this == exp.DataType.Type.VARIANT
+    ):
+        return True
+    return (
+        target.this == exp.DataType.Type.ARRAY
+        and bool(target.expressions)
+        and isinstance(target.expressions[0], exp.DataType)
+        and target.expressions[0].this == exp.DataType.Type.VARIANT
+    )
+
+
 def _coerce_semi_structured_value(value: Expr, target: exp.DataType) -> Expr:
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
     as_variant = exp.Cast(this=value.copy(), to=variant_type)
@@ -2095,7 +2114,8 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
         for assignment in expression.expressions:
             if not isinstance(assignment, exp.EQ) or not isinstance(assignment.this, exp.Column):
                 continue
-            if target := target_types.get(assignment.this.name.upper()):
+            target = target_types.get(assignment.this.name.upper())
+            if target is not None and _is_semi_structured_target(target):
                 assignment.set(
                     "expression",
                     _coerce_semi_structured_value(assignment.expression, target),
@@ -2109,11 +2129,15 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
     )
     source = expression.expression
     if isinstance(source, exp.Select):
+        # a star projection can't be positionally aligned to target columns, and
+        # CAST(* AS ...) is invalid; leave the INSERT ... SELECT * untouched
+        if any(isinstance(item, exp.Star) or item.is_star for item in source.expressions):
+            return expression
         projections: list[Expr] = []
         for index, item in enumerate(source.expressions):
             column = item.alias_or_name if expression.args.get("by_name") else columns[index]
             target = target_types.get(column.upper())
-            if target is None:
+            if target is None or not _is_semi_structured_target(target):
                 projections.append(item)
                 continue
             value = item.this if isinstance(item, exp.Alias) else item
@@ -2131,7 +2155,10 @@ def coerce_semi_structured_targets(expression: Expr, duck_conn: DuckDBPyConnecti
             row.set(
                 "expressions",
                 [
-                    _coerce_semi_structured_value(value, target_types[columns[index].upper()])
+                    _coerce_semi_structured_value(value, target)
+                    if (target := target_types.get(columns[index].upper())) is not None
+                    and _is_semi_structured_target(target)
+                    else value
                     for index, value in enumerate(row.expressions)
                 ],
             )
