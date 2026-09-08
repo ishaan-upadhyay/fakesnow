@@ -1,3 +1,4 @@
 [files]
-# ignore CHANGELOG because it contains commit SHAs
-extend-exclude = ["CHANGELOG.md", "notebooks/*"]
+# ignore CHANGELOG because it contains commit SHAs, and the golden fixtures because they
+# are captured verbatim from Snowflake and their case ids are truncated SQL
+extend-exclude = ["CHANGELOG.md", "notebooks/*", "tests/golden/**"]
