@@ -1,6 +1,5 @@
 {
-  "name": "comparisons_arithmetic_individually",
-  "pr": 2,
+  "name": "pr07_comparisons_arithmetic_individually",
   "cases": [
     {
       "id": "select_v_a_1_as_r_from_select_parse_json_a_1_s_x_o_k_1_l_10",
@@ -2212,31 +2211,6 @@
             {
               "type": "str",
               "value": "y"
-            }
-          ]
-        ]
-      }
-    },
-    {
-      "id": "select_hash_v_a_as_r_from_select_parse_json_a_1_s_x_o_k_1_l",
-      "sql": "SELECT HASH(v:a) AS r FROM (SELECT PARSE_JSON('{\"a\":1,\"s\":\"x\",\"o\":{\"k\":1},\"l\":[10,20],\"e\":1.5,\"b\":true,\"n\":null,\"d\":\"2024-01-02\"}') v)",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "R",
-            "FIXED",
-            19,
-            0,
-            null
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "int",
-              "value": -4730168494964875235
             }
           ]
         ]

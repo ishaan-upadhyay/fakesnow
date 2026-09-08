@@ -1,0 +1,191 @@
+{
+  "name": "pr07_structured_types_expressions",
+  "cases": [
+    {
+      "id": "select_1_2_3_array_int_sa_a_1_b_x_object_a_int_b_varchar_so",
+      "sql": "SELECT [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "SA",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SO",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "SM",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2,\n  3\n]"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1,\n  \"b\": \"x\"\n}"
+            },
+            {
+              "type": "str",
+              "value": "{\n  \"k1\": 1,\n  \"k2\": 2\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_1_2_array_variant_av",
+      "sql": "SELECT [1,2]::ARRAY(VARIANT) av",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "AV",
+            "ARRAY",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  2\n]"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_a_parse_json_1_object_a_variant_ov",
+      "sql": "SELECT {'a': PARSE_JSON('1')}::OBJECT(a VARIANT) ov",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "OV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"a\": 1\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_k_parse_json_1_map_varchar_variant_mv",
+      "sql": "SELECT {'k': PARSE_JSON('[1]')}::MAP(VARCHAR, VARIANT) mv",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "MV",
+            "OBJECT",
+            null,
+            null,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "{\n  \"k\": [\n    1\n  ]\n}"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "select_sa_1_from_select_1_2_3_array_int_sa",
+      "sql": "SELECT sa[-1] FROM (SELECT [1,2,3]::ARRAY(INT) sa)",
+      "setup": null,
+      "expect": {
+        "error": "001852 (22023): Invalid extraction path '-1': array index -1 is off limits; must be between 0 and 2,147,483,647.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_f_value_f_key_from_table_flatten_input_a_1_b_x_object",
+      "sql": "SELECT f.value, f.key FROM TABLE(FLATTEN(input => {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR))) f",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "VALUE",
+            "VARIANT",
+            null,
+            null,
+            null,
+            true
+          ],
+          [
+            "KEY",
+            "TEXT",
+            null,
+            null,
+            134217728,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "1"
+            },
+            {
+              "type": "str",
+              "value": "a"
+            }
+          ],
+          [
+            {
+              "type": "str",
+              "value": "\"x\""
+            },
+            {
+              "type": "str",
+              "value": "b"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

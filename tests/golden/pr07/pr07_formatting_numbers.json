@@ -1,6 +1,5 @@
 {
-  "name": "formatting_numbers",
-  "pr": 2,
+  "name": "pr07_formatting_numbers",
   "cases": [
     {
       "id": "select_parse_json_b_1_a_1_2_c_null_d_x_e_1_50_f_true_g_null",

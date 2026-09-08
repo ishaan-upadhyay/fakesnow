@@ -1,0 +1,113 @@
+{
+  "name": "pr09_coercion_via_ctas_with_schema_full_errors",
+  "cases": [
+    {
+      "id": "a_array_as_select_parse_json_a_1",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('{\"a\":1}')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  {\n    \"a\": 1\n  }\n]"
+            },
+            {
+              "type": "str",
+              "value": "ARRAY"
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "a_array_as_select_parse_json_null",
+      "sql": "SELECT a, TYPEOF(a) FROM t",
+      "setup": "CREATE TEMP TABLE t (a ARRAY) AS SELECT PARSE_JSON('null')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(A)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "o_object_as_select_parse_json_null",
+      "sql": "SELECT o, TYPEOF(o) FROM t",
+      "setup": "CREATE TEMP TABLE t (o OBJECT) AS SELECT PARSE_JSON('null')",
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "O",
+            "OBJECT",
+            null,
+            null,
+            null
+          ],
+          [
+            "TYPEOF(O)",
+            "TEXT",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            },
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

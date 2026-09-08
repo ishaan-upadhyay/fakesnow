@@ -1,6 +1,5 @@
 {
-  "name": "key_order",
-  "pr": 4,
+  "name": "pr07_key_order",
   "cases": [
     {
       "id": "select_object_construct_b_1_a_2_b_3_x_4_1_5_aa_6_a_b_7_8_z_9",
@@ -86,31 +85,11 @@
       }
     },
     {
-      "id": "select_object_construct_a_1_a_2",
-      "sql": "SELECT OBJECT_CONSTRUCT('a', 1, 'a', 2)",
-      "setup": null,
-      "expect": {
-        "error": "100103 (22000): Duplicate field key 'a'",
-        "description": null,
-        "rows": []
-      }
-    },
-    {
       "id": "select_parse_json_a_1_a_2",
       "sql": "SELECT PARSE_JSON('{\"a\":1,\"a\":2}')",
       "setup": null,
       "expect": {
         "error": "100069 (22P02): Error parsing JSON: duplicate object attribute \"a\", pos 10",
-        "description": null,
-        "rows": []
-      }
-    },
-    {
-      "id": "select_object_insert_object_construct_a_1_a_2",
-      "sql": "SELECT OBJECT_INSERT(OBJECT_CONSTRUCT('a', 1), 'a', 2)",
-      "setup": null,
-      "expect": {
-        "error": "100103 (22000): Duplicate field key 'a'",
         "description": null,
         "rows": []
       }

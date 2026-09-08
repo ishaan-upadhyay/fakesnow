@@ -1,6 +1,5 @@
 {
-  "name": "string_escaping_dollar_quoted",
-  "pr": 2,
+  "name": "pr07_string_escaping_dollar_quoted",
   "cases": [
     {
       "id": "select_parse_json_o_unicode_u00e9_u4e2d_nl_n_tab_t_quote_sla",

@@ -1,6 +1,5 @@
 {
-  "name": "typeof_to_variant_renderings",
-  "pr": 2,
+  "name": "pr07_typeof_to_variant_renderings",
   "cases": [
     {
       "id": "select_typeof_parse_json_1_a_typeof_parse_json_1_5_b_typeof",
