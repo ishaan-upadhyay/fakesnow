@@ -146,8 +146,7 @@ def _insert_df(duck_conn: DuckDBPyConnection, df: pd.DataFrame, table_name: str)
     columns = df.columns.to_list()
     escaped_cols = ",".join(f'"{col}"' for col in columns)
     target_types = {
-        name.upper(): column_type
-        for name, column_type, *_ in duck_conn.sql(f"DESCRIBE {table_name}").fetchall()
+        name.upper(): column_type for name, column_type, *_ in duck_conn.sql(f"DESCRIBE {table_name}").fetchall()
     }
     projections = []
     for col in columns:
@@ -160,8 +159,6 @@ def _insert_df(duck_conn: DuckDBPyConnection, df: pd.DataFrame, table_name: str)
             projections.append(f'TRY_CAST(_fs_parse_json("{col}") AS {target_type})')
         else:
             projections.append(f'"{col}"')
-    duck_conn.execute(
-        f"INSERT INTO {table_name}({escaped_cols}) SELECT {', '.join(projections)} FROM df"
-    )
+    duck_conn.execute(f"INSERT INTO {table_name}({escaped_cols}) SELECT {', '.join(projections)} FROM df")
 
     return duck_conn.fetchall()[0][0]

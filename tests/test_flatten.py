@@ -16,8 +16,7 @@ def test_transform_lateral_flatten() -> None:
     # for lineage tracking see https://github.com/tobymao/sqlglot/pull/2417
     # standalone LATERAL FLATTEN (no cross join) uses default order (no reverse_order)
     expected = strip(
-        "SELECT * FROM _FS_FLATTEN([1, 2], '', FALSE, FALSE, 'BOTH') "
-        "AS F(SEQ, KEY, PATH, INDEX, VALUE, THIS)"
+        "SELECT * FROM _FS_FLATTEN([1, 2], '', FALSE, FALSE, 'BOTH') AS F(SEQ, KEY, PATH, INDEX, VALUE, THIS)"
     )
 
     assert (
@@ -63,9 +62,7 @@ def test_flatten_alias_none(cur: snowflake.connector.cursor.SnowflakeCursor) -> 
     assert sqlglot.parse_one(
         sql,
         read="snowflake",
-    ).transform(flatten).sql(dialect="duckdb") == strip(
-        "SELECT * FROM _FS_FLATTEN([1, 2], '', FALSE, FALSE, 'BOTH')"
-    )
+    ).transform(flatten).sql(dialect="duckdb") == strip("SELECT * FROM _FS_FLATTEN([1, 2], '', FALSE, FALSE, 'BOTH')")
     cur.execute(sql)
     # check order, names and types of cols
     assert cur.description == [

@@ -119,18 +119,11 @@ def _object_drop_null(value: Any) -> Any:
     items = _map_items(value)
     if items is None:
         return value
-    return {
-        key: duckdb.Value(_variant_output(item), sqltypes.VARIANT)
-        for key, item in items
-        if item is not None
-    }
+    return {key: duckdb.Value(_variant_output(item), sqltypes.VARIANT) for key, item in items if item is not None}
 
 
 def _object_result(items: list[tuple[str, Any]]) -> dict[str, Any]:
-    return {
-        key: duckdb.Value(_variant_output(value), sqltypes.VARIANT)
-        for key, value in items
-    }
+    return {key: duckdb.Value(_variant_output(value), sqltypes.VARIANT) for key, value in items}
 
 
 def _object_construct(keys: list[Any] | None, values: list[Any] | None, keep_nulls: bool | None) -> Any:

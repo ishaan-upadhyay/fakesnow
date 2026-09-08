@@ -313,8 +313,7 @@ def variant_operators(expression: Expr) -> Expr:
         or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
     ):
         both_variant = (
-            _contains_variant_expression(expression.this)
-            and _contains_variant_expression(expression.expression)
+            _contains_variant_expression(expression.this) and _contains_variant_expression(expression.expression)
         ) or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
         equals = exp.Anonymous(
             this="_fs_variant_eq" if both_variant else "_fs_variant_eq_sql",
