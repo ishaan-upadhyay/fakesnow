@@ -302,12 +302,13 @@ def _array_to_string(array: Any, delimiter: str | None) -> str | None:
         return None
 
     def render(value: Any) -> str:
-        if value is None or is_undefined(value) or is_json_null(value):
+        # a SQL NULL element renders as empty, but a JSON null is not castable to text
+        if value is None or is_undefined(value):
             return ""
+        if is_json_null(value):
+            raise VariantRuntimeError("Failed to cast variant value from array to string", 100071)
         if isinstance(value, (list, tuple)) or _map_items(value) is not None:
             return sf_json_compact(value) or ""
-        if isinstance(value, Decimal):
-            raise VariantRuntimeError("Failed to cast variant value from array to string", 100071)
         rendered = to_varchar(value)
         if rendered is None:
             raise VariantRuntimeError("Failed to cast variant value from array to string", 100071)
