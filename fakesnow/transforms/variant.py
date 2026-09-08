@@ -421,7 +421,7 @@ def variant_relational_keys(expression: Expr) -> Expr:
             source = item.this if isinstance(item, exp.Alias) else item
             representative = representatives.get(source.sql())
             if representative is None:
-                output_name = item.args.get("_fs_source_output_name")
+                output_name = item.meta.get("_fs_source_output_name")
                 rewritten.append(
                     exp.Alias(this=item.copy(), alias=exp.to_identifier(output_name, quoted=True))
                     if output_name and not isinstance(item, exp.Alias)
