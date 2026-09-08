@@ -1,0 +1,267 @@
+{
+  "name": "pr11_structured_expressions_individual",
+  "cases": [
+    {
+      "id": "a_null_object_a_int",
+      "sql": "SELECT {'a':NULL}::OBJECT(a INT) AS a",
+      "setup": null,
+      "expect": {
+        "error": "220000 (22000): Typed object schema mismatch in conversion",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_0",
+      "sql": "SELECT sa[0] AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sa_5",
+      "sql": "SELECT sa[5] AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "NoneType",
+              "value": null
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "so_a",
+      "sql": "SELECT so['a'] AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "sm_k1",
+      "sql": "SELECT sm['k1'] AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_sm_k1",
+      "sql": "SELECT GET(sm, 'k1') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_sa_0",
+      "sql": "SELECT GET(sa, 0) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_so_a",
+      "sql": "SELECT GET(so, 'a') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "FIXED",
+            38,
+            0,
+            null,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "int",
+              "value": 1
+            }
+          ]
+        ]
+      }
+    },
+    {
+      "id": "get_so_zz",
+      "sql": "SELECT GET(so, 'zz') AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "093201 (23001): Function GET: expected structured object to contain field zz but it did not.",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_varchar",
+      "sql": "SELECT sa::VARCHAR AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001007 (22023): SQL compilation error: | invalid type [CAST(\"values\".SA AS VARCHAR(134217728))] for parameter 'TO_VARCHAR'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_varchar",
+      "sql": "SELECT so::VARCHAR AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001007 (22023): SQL compilation error: | invalid type [CAST(\"values\".SO AS VARCHAR(134217728))] for parameter 'TO_VARCHAR'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_varchar",
+      "sql": "SELECT sm::VARCHAR AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001007 (22023): SQL compilation error: | invalid type [CAST(\"values\".SM AS VARCHAR(134217728))] for parameter 'TO_VARCHAR'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "to_json_sa",
+      "sql": "SELECT TO_JSON(sa) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7 | Invalid argument types for function 'TO_JSON': (ARRAY(NUMBER(38,0)))",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "to_json_so",
+      "sql": "SELECT TO_JSON(so) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7 | Invalid argument types for function 'TO_JSON': (OBJECT(a NUMBER(38,0), b VARCHAR(134217728)))",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "to_json_sm",
+      "sql": "SELECT TO_JSON(sm) AS a FROM (SELECT PARSE_JSON('{\"a\":1}') v2, [1,2,3]::ARRAY(INT) sa, {'a':1,'b':'x'}::OBJECT(a INT, b VARCHAR) so, {'k1':1,'k2':2}::MAP(VARCHAR, INT) sm)",
+      "setup": null,
+      "expect": {
+        "error": "001044 (42P13): SQL compilation error: error line 1 at position 7 | Invalid argument types for function 'TO_JSON': (MAP(VARCHAR(134217728), NUMBER(38,0)))",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}
