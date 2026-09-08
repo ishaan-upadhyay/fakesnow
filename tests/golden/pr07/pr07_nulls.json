@@ -1,6 +1,5 @@
 {
-  "name": "nulls",
-  "pr": 2,
+  "name": "pr07_nulls",
   "cases": [
     {
       "id": "select_parse_json_null_jn_null_variant_sn_to_variant_null_tv",

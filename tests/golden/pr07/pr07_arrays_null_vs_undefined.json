@@ -1,0 +1,30 @@
+{
+  "name": "pr07_arrays_null_vs_undefined",
+  "cases": [
+    {
+      "id": "select_array_construct_1_a_null_parse_json_null_1_50_true_1",
+      "sql": "SELECT ARRAY_CONSTRUCT(1, 'a', NULL, PARSE_JSON('null'), 1.50, TRUE, [1,2], {'x':1}, '2024-01-02'::DATE, '2024-01-01 01:02:03'::TIMESTAMP_NTZ, TO_BINARY('ab','hex'), 1.5::DOUBLE) a",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "A",
+            "ARRAY",
+            null,
+            null,
+            null
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "[\n  1,\n  \"a\",\n  undefined,\n  null,\n  1.5,\n  true,\n  [\n    1,\n    2\n  ],\n  {\n    \"x\": 1\n  },\n  \"2024-01-02\",\n  \"2024-01-01 01:02:03.000\",\n  \"AB\",\n  1.500000000000000e+00\n]"
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

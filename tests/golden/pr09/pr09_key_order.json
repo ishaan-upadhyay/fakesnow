@@ -1,0 +1,25 @@
+{
+  "name": "pr09_key_order",
+  "cases": [
+    {
+      "id": "select_object_construct_a_1_a_2",
+      "sql": "SELECT OBJECT_CONSTRUCT('a', 1, 'a', 2)",
+      "setup": null,
+      "expect": {
+        "error": "100103 (22000): Duplicate field key 'a'",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "select_object_insert_object_construct_a_1_a_2",
+      "sql": "SELECT OBJECT_INSERT(OBJECT_CONSTRUCT('a', 1), 'a', 2)",
+      "setup": null,
+      "expect": {
+        "error": "100103 (22000): Duplicate field key 'a'",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}

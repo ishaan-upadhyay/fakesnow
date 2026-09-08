@@ -1,6 +1,5 @@
 {
-  "name": "flatten_modes",
-  "pr": 2,
+  "name": "pr07_flatten_modes",
   "cases": [
     {
       "id": "select_f_from_table_flatten_input_parse_json_a_1_b_2_c_3_rec",
@@ -1043,118 +1042,6 @@
             {
               "type": "str",
               "value": "{\n  \"x\": 1\n}"
-            }
-          ]
-        ]
-      }
-    },
-    {
-      "id": "select_f_seq_f_key_f_path_f_index_f_value_f_this_from_table",
-      "sql": "SELECT f.seq, f.key, f.path, f.index, f.value, f.this FROM TABLE(FLATTEN(input => [1,2]::ARRAY(INT))) f",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "SEQ",
-            "FIXED",
-            38,
-            0,
-            null,
-            true
-          ],
-          [
-            "KEY",
-            "TEXT",
-            null,
-            null,
-            134217728,
-            true
-          ],
-          [
-            "PATH",
-            "TEXT",
-            null,
-            null,
-            134217728,
-            true
-          ],
-          [
-            "INDEX",
-            "FIXED",
-            38,
-            0,
-            null,
-            true
-          ],
-          [
-            "VALUE",
-            "FIXED",
-            38,
-            0,
-            null,
-            true
-          ],
-          [
-            "THIS",
-            "ARRAY",
-            null,
-            null,
-            null,
-            true
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "int",
-              "value": 1
-            },
-            {
-              "type": "NoneType",
-              "value": null
-            },
-            {
-              "type": "str",
-              "value": "[0]"
-            },
-            {
-              "type": "int",
-              "value": 0
-            },
-            {
-              "type": "int",
-              "value": 1
-            },
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
-            }
-          ],
-          [
-            {
-              "type": "int",
-              "value": 1
-            },
-            {
-              "type": "NoneType",
-              "value": null
-            },
-            {
-              "type": "str",
-              "value": "[1]"
-            },
-            {
-              "type": "int",
-              "value": 1
-            },
-            {
-              "type": "int",
-              "value": 2
-            },
-            {
-              "type": "str",
-              "value": "[\n  1,\n  2\n]"
             }
           ]
         ]

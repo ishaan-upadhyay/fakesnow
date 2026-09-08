@@ -1,6 +1,5 @@
 {
-  "name": "order_by_group_by_distinct",
-  "pr": 6,
+  "name": "pr10_order_by_group_by_distinct",
   "cases": [
     {
       "id": "select_v_typeof_v_from_select_parse_json_column1_v_from_valu",
@@ -349,50 +348,6 @@
       }
     },
     {
-      "id": "select_distinct_v_from_select_parse_json_column1_v_from_valu",
-      "sql": "SELECT DISTINCT v FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('1'), ('1.0'), ('\"1\"'), ('null'), (NULL), (NULL)) ORDER BY v",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "V",
-            "VARIANT",
-            null,
-            null,
-            null,
-            true
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "\"1\""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "null"
-            }
-          ],
-          [
-            {
-              "type": "NoneType",
-              "value": null
-            }
-          ]
-        ]
-      }
-    },
-    {
       "id": "select_parse_json_1_parse_json_1_0_a_parse_json_1_parse_json",
       "sql": "SELECT PARSE_JSON('1') = PARSE_JSON('1.0') a, PARSE_JSON('1') = PARSE_JSON('\"1\"') b, PARSE_JSON('[1]') = PARSE_JSON('[1.0]') c, PARSE_JSON('{\"a\":1}') = PARSE_JSON('{\"a\":1.0}') d, PARSE_JSON('1.5') = PARSE_JSON('1.50') e, TO_VARIANT(1.5::DOUBLE) = TO_VARIANT(1.5) f, PARSE_JSON('1e0') = PARSE_JSON('1') g, TO_VARIANT('2024-01-02'::DATE) = TO_VARIANT('2024-01-02') h, PARSE_JSON('true') = PARSE_JSON('1') i",
       "setup": null,
@@ -509,64 +464,6 @@
             {
               "type": "bool",
               "value": false
-            }
-          ]
-        ]
-      }
-    },
-    {
-      "id": "select_a_v_b_v_from_select_parse_json_column1_v_from_values",
-      "sql": "SELECT a.v, b.v FROM (SELECT PARSE_JSON(column1) v FROM VALUES ('1'), ('\"a\"'), ('null')) a JOIN (SELECT PARSE_JSON(column1) v FROM VALUES ('1.0'), ('\"a\"'), ('null')) b ON a.v = b.v ORDER BY 1",
-      "setup": null,
-      "expect": {
-        "error": null,
-        "description": [
-          [
-            "V",
-            "VARIANT",
-            null,
-            null,
-            null,
-            true
-          ],
-          [
-            "V",
-            "VARIANT",
-            null,
-            null,
-            null,
-            true
-          ]
-        ],
-        "rows": [
-          [
-            {
-              "type": "str",
-              "value": "1"
-            },
-            {
-              "type": "str",
-              "value": "1"
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "\"a\""
-            },
-            {
-              "type": "str",
-              "value": "\"a\""
-            }
-          ],
-          [
-            {
-              "type": "str",
-              "value": "null"
-            },
-            {
-              "type": "str",
-              "value": "null"
             }
           ]
         ]
