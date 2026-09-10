@@ -8,6 +8,8 @@ import duckdb
 import fakesnow.fakes as fakes
 from fakesnow import info_schema
 from fakesnow.transforms import show
+from fakesnow.variant.flatten import register_flatten_udf
+from fakesnow.variant.register import register_variant_macros
 
 GLOBAL_DATABASE_NAME = "_fs_global"
 
@@ -28,11 +30,16 @@ class FakeSnow:
         self.results_cache: dict[str, tuple] = {}
         self.duck_conn = duckdb.connect(database=":memory:")
 
+        # macros use the -> lambda syntax deprecated in duckdb 2.0
+        self.duck_conn.execute("SET GLOBAL lambda_syntax = 'ENABLE_SINGLE_ARROW'")
+
         # create a "global" database for storing objects which span databases.
         self.duck_conn.execute(f"ATTACH IF NOT EXISTS ':memory:' AS {GLOBAL_DATABASE_NAME}")
         # create the info schema extensions and show views
         self.duck_conn.execute(info_schema.fs_global_creation_sql())
         self.duck_conn.execute(show.fs_global_creation_sql())
+        register_variant_macros(self.duck_conn)
+        register_flatten_udf(self.duck_conn)
 
         # use UTC instead of local time zone for consistent testing
         self.duck_conn.execute("SET GLOBAL TimeZone = 'UTC'")

@@ -6,13 +6,24 @@ readme = "README.md"
 license = { file = "LICENSE" }
 classifiers = ["License :: OSI Approved :: MIT License"]
 keywords = ["snowflake", "snowflakedb", "fake", "local", "mock", "testing"]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
-    "duckdb~=1.5.5",
+    # Vendored duckdb-python builds the Arrow VARIANT support not yet available on PyPI.
+    "duckdb",
     "pyarrow",
     "snowflake-connector-python",
     "sqlglot~=30.17.0",
 ]
+
+[tool.uv.sources]
+duckdb = { path = "vendor/duckdb-python", editable = false }
+
+# duckdb-python's Darwin editable override sets DISABLE_UNITY=1, which currently
+# fails to compile partitioned_sort.cpp. A non-editable path still hits that unless
+# unity is forced back on.
+[tool.uv.config-settings-package.duckdb]
+"cmake.define.DISABLE_UNITY" = "0"
+"cmake.define.BUILD_EXTENSIONS" = "core_functions;json;parquet;icu;httpfs"
 
 [project.urls]
 Source = "https://github.com/tekumara/fakesnow"
@@ -55,12 +66,12 @@ build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
 where = ["."]
-exclude = ["tests*", "build*"]
+exclude = ["tests*", "build*", "vendor*"]
 
 [tool.pyright]
 venvPath = "."
 venv = ".venv"
-exclude = ["**/__pycache__", "**/.*", "build"]
+exclude = ["**/__pycache__", "**/.*", "build", "vendor"]
 strictListInference = true
 strictDictionaryInference = true
 strictParameterNoneValue = true
@@ -85,7 +96,7 @@ line-length = 120
 src = ["."]
 fix = true
 show-fixes = true
-exclude = ["notebooks"]
+exclude = ["notebooks", "vendor"]
 
 [tool.ruff.lint]
 # rules to enable/ignore

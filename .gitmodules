@@ -1,0 +1,4 @@
+[submodule "vendor/duckdb-python"]
+	path = vendor/duckdb-python
+	url = https://github.com/ishaan-upadhyay/duckdb-python.git
+	branch = ishaan/pin-arrow-variant-core

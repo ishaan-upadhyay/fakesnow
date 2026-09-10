@@ -1,0 +1,31 @@
+{
+  "name": "pr11_structured_types_ddl_metadata_temp_table",
+  "cases": [
+    {
+      "id": "create_temporary_table_fakesnow_probe_a_array_o_object_v_var",
+      "sql": "CREATE TEMPORARY TABLE fakesnow_probe (a ARRAY, o OBJECT, v VARIANT, sa ARRAY(INT), so OBJECT(x INT, y VARCHAR), sm MAP(VARCHAR, INT), sn ARRAY(NUMBER(10,2)), nested ARRAY(OBJECT(k INT)), mvv MAP(VARCHAR, VARIANT), nn OBJECT(x INT NOT NULL) NOT NULL, av ARRAY(VARIANT), mn MAP(NUMBER(10,0), VARCHAR), sv ARRAY(VARCHAR(10)), so2 OBJECT(x INT, y OBJECT(z INT), w ARRAY(VARCHAR)), st ARRAY(TIMESTAMP_NTZ(3)))",
+      "setup": null,
+      "expect": {
+        "error": null,
+        "description": [
+          [
+            "status",
+            "TEXT",
+            null,
+            null,
+            16777216,
+            true
+          ]
+        ],
+        "rows": [
+          [
+            {
+              "type": "str",
+              "value": "Table FAKESNOW_PROBE successfully created."
+            }
+          ]
+        ]
+      }
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 MAKEFLAGS += --warn-undefined-variables
 SHELL = /bin/bash -o pipefail
 .DEFAULT_GOAL := help
-.PHONY: help .uv .sync clean install check format pyright test dist hooks install-hooks
+.PHONY: help .uv .submodules .sync clean install check format pyright test dist hooks install-hooks
 
 ## display help message
 help:
@@ -11,8 +11,11 @@ help:
 .uv:
 	@uv --version || { echo 'Please install uv: https://docs.astral.sh/uv/getting-started/installation/' && exit 13 ;}
 
-.sync:
-	uv sync $(if $(value CI),,--group notebook)
+.submodules:
+	git submodule update --init --recursive
+
+.sync: .submodules
+	uv sync $(if $(value CI),,--group notebook) --config-settings-package duckdb:cmake.define.DISABLE_UNITY=0
 
 # delete the venv
 clean:

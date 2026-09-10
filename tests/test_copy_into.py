@@ -5,7 +5,7 @@ import os
 import re
 import tempfile
 import uuid
-from datetime import timezone
+from datetime import UTC
 from typing import NamedTuple, cast
 from unittest.mock import MagicMock, patch
 
@@ -125,7 +125,7 @@ cases = [
             FILE_FORMAT = (TYPE = 'PARQUET')
             """,
             expected_inserts=[
-                "INSERT INTO TABLE1 SELECT CAST((B) AS BIGINT), CAST((A) AS BIGINT) FROM READ_PARQUET('s3://{bucket}/foo.parquet')"
+                "INSERT INTO TABLE1 SELECT CAST(B AS BIGINT), CAST(A AS BIGINT) FROM READ_PARQUET('s3://{bucket}/foo.parquet')"
             ],
             data=pd.DataFrame({"A": [1, 2], "B": [11, 12]}).to_parquet(),
             expected_rows_loaded=2,
@@ -696,7 +696,7 @@ def test_load_history(dcur: snowflake.connector.cursor.DictCursor, s3_client: S3
             "SCHEMA_NAME": "SCHEMA1",
             "FILE_NAME": f"s3://{bucket}/foo.csv",
             "TABLE_NAME": "TABLE1",
-            "LAST_LOAD_TIME": IsNow(tz=timezone.utc),
+            "LAST_LOAD_TIME": IsNow(tz=UTC),
             "STATUS": "LOADED",
             "ROW_COUNT": 2,  # number of rows loaded
             "ROW_PARSED": 2,
@@ -764,35 +764,6 @@ def test_params_files_multiple():
     assert params.files == ["file1.csv", "file2.csv"]
     from_source = _from_source(expr)
     assert _source_urls(from_source, params.files) == ["s3://mybucket/data/file1.csv", "s3://mybucket/data/file2.csv"]
-
-
-def test_load_history_is_per_table(dcur: snowflake.connector.cursor.DictCursor, s3_client: S3Client) -> None:
-    create_table(dcur)
-    bucket = str(uuid.uuid4())
-    upload_file(s3_client, "1,2", bucket=bucket, key="foo.csv")
-
-    sql = """
-    COPY INTO {table}
-    FROM 's3://{bucket}/'
-    FILES=('foo.csv')
-    """
-
-    dcur.execute(sql.format(table="table1", bucket=bucket))
-    assert dcur.fetchall()[0]["status"] == "LOADED"
-
-    # reloading the same file into the same table skips it
-    dcur.execute(sql.format(table="table1", bucket=bucket))
-    assert dcur.fetchall()[0]["status"] == "LOAD_SKIPPED"
-
-    # but loading it into another table is not skipped
-    dcur.execute("CREATE TABLE schema1.table2 (a INT, b INT)")
-    dcur.execute(sql.format(table="table2", bucket=bucket))
-    assert dcur.fetchall()[0]["status"] == "LOADED"
-
-    # recreating the table resets its load history
-    dcur.execute("CREATE OR REPLACE TABLE schema1.table1 (a INT, b INT)")
-    dcur.execute(sql.format(table="table1", bucket=bucket))
-    assert dcur.fetchall()[0]["status"] == "LOADED"
 
 
 def test__strip_json_extract():

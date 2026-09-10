@@ -3,11 +3,12 @@
 import datetime
 from base64 import b64decode
 
+import duckdb
 import pandas as pd
 import pyarrow as pa
 import pytz
 
-from fakesnow.arrow import timestamp_to_sf_struct, to_ipc, to_sf_schema
+from fakesnow.arrow import parquet_variant_to_json, timestamp_to_sf_struct, to_ipc, to_sf_schema
 from fakesnow.rowtype import ColumnInfo, describe_as_rowtype
 
 
@@ -328,3 +329,12 @@ def test_read_base64_from_actual_snowflake_result() -> None:
         b"byteLength": b"4",
         b"finalType": b"T",
     }
+
+
+def test_parquet_variant_to_json() -> None:
+    con = duckdb.connect()
+    con.execute("select ['a', 1::VARIANT]::VARIANT[] as v, 42 as n")
+    table = con.to_arrow_table()
+    converted = parquet_variant_to_json(con, table)
+    assert pa.types.is_string(converted.schema.field("v").type)
+    assert converted.to_pylist() == [{"v": '["a",1]', "n": 42}]

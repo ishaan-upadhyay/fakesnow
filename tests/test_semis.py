@@ -16,12 +16,12 @@ def test_array_cat(cur: snowflake.connector.cursor.SnowflakeCursor):
     assert indent(cur.fetchall()) == [('[\n  "a",\n  "b",\n  "c",\n  "d"\n]',)]
 
     # TODO: with mixed types
-    # cur.execute("select array_cat(['a', 1], ['b', '2'])")
-    # assert indent(cur.fetchall()) == [('[\n  "a",\n     1,\n  "b",\n  "2"\n]',)]
+    cur.execute("select array_cat(['a', 1], ['b', '2'])")
+    assert indent(cur.fetchall()) == [('[\n  "a",\n  1,\n  "b",\n  "2"\n]',)]
 
     # TODO: with null values
-    # cur.execute("select array_cat(['a', 'b'], null)")
-    # assert cur.fetchall() == [(None,)]
+    cur.execute("select array_cat(['a', 'b'], null)")
+    assert cur.fetchall() == [(None,)]
 
 
 def test_array_construct(cur: snowflake.connector.cursor.SnowflakeCursor):
@@ -126,6 +126,62 @@ def test_object_construct(conn: snowflake.connector.SnowflakeConnection):
         result = cur.fetchone()
         assert isinstance(result, tuple)
         assert json.loads(result[1]) == json.loads('{\n  "k1": "v1",\n  "k2": "v2",\n  "k3": "v3"\n}')
+
+
+def test_object_catalogue(cur: snowflake.connector.cursor.SnowflakeCursor):
+    cur.execute(
+        """
+        select
+            object_insert(object_construct('a', 1), 'b', 2),
+            object_delete(object_construct('a', 1, 'b', 2), 'a'),
+            object_pick(object_construct('a', 1, 'b', 2), array_construct('b')),
+            object_keys(object_construct('b', 1, 'a', 2)),
+            map_cat({'a':1}::map(varchar, int), {'b':2}::map(varchar, int))
+        """
+    )
+    assert indent(cur.fetchall()) == [
+        (
+            '{\n  "a": 1,\n  "b": 2\n}',
+            '{\n  "b": 2\n}',
+            '{\n  "b": 2\n}',
+            '[\n  "a",\n  "b"\n]',
+            '{\n  "a": 1,\n  "b": 2\n}',
+        )
+    ]
+
+    cur.execute(
+        """
+        select object_agg(k, v)
+        from (
+            select 'b' k, to_variant(1) v
+            union all select 'a', to_variant('x')
+            union all select null, to_variant(1)
+            union all select 'c', null
+            union all select 'd', parse_json('null')
+        )
+        """
+    )
+    assert indent(cur.fetchall()) == [('{\n  "a": "x",\n  "b": 1,\n  "d": null\n}',)]
+
+
+@pytest.mark.parametrize(
+    ("sql", "errno", "sqlstate"),
+    [
+        ("select object_construct('a', 1, 'a', 2)", 100103, "22000"),
+        ("select object_insert(object_construct('a', 1), 'a', 2)", 100103, "22000"),
+        ("select object_construct('a', 1, 'b')", 909, "22023"),
+        ("select object_construct(1, 2)", 2270, "22000"),
+    ],
+)
+def test_object_errors(
+    cur: snowflake.connector.cursor.SnowflakeCursor,
+    sql: str,
+    errno: int,
+    sqlstate: str,
+):
+    with pytest.raises(snowflake.connector.errors.ProgrammingError) as exc:
+        cur.execute(sql)
+    assert (exc.value.errno, exc.value.sqlstate) == (errno, sqlstate)
 
 
 def test_object_construct_star(cur: snowflake.connector.cursor.SnowflakeCursor):
@@ -286,3 +342,12 @@ def test_try_parse_json(dcur: snowflake.connector.cursor.DictCursor):
 
     dcur.execute("""SELECT TRY_PARSE_JSON('{invalid: ,]') AS j""")
     assert dcur.fetchall() == [{"J": None}]
+
+
+@pytest.mark.xfail(reason="DuckDB collapses nested undefined when VARIANT[] is cast to VARIANT for nesting")
+def test_nested_undefined_collapses(cur: snowflake.connector.cursor.SnowflakeCursor):
+    """Document the known nested-undefined representation gap from the native type plan."""
+    cur.execute("SELECT ARRAY_CONSTRUCT(ARRAY_CONSTRUCT(NULL)) AS nested")
+    result = indent(cur.fetchall())[0][0]
+    assert "undefined" in result
+    assert "[[undefined]]" in result.replace("\n", "").replace(" ", "")

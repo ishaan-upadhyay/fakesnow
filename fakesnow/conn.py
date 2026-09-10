@@ -4,19 +4,20 @@ import os
 from collections.abc import Iterable
 from pathlib import Path
 from types import TracebackType
-from typing import Any
+from typing import Any, Self
 
 import snowflake.connector
 import sqlglot
 from duckdb import DuckDBPyConnection
 from snowflake.connector.cursor import DictCursor, SnowflakeCursor
 from sqlglot import exp
-from typing_extensions import Self
 
 import fakesnow.info_schema as info_schema
 import fakesnow.macros as macros
 from fakesnow.cursor import FakeSnowflakeCursor
+from fakesnow.instance import GLOBAL_DATABASE_NAME
 from fakesnow.variables import Variables
+from fakesnow.variant.register import register_variant_macros
 
 
 class FakeSnowflakeConnection:
@@ -77,6 +78,7 @@ class FakeSnowflakeConnection:
             # creates db file if it doesn't exist
             duck_conn.execute(f"ATTACH DATABASE '{db_file}' AS {self.database}")
             duck_conn.execute(info_schema.per_db_creation_sql(self.database))
+            register_variant_macros(duck_conn, self.database)
             duck_conn.execute(macros.creation_sql(self.database))
 
         # create schema if needed
@@ -101,6 +103,9 @@ class FakeSnowflakeConnection:
             ).fetchone()
         ):
             duck_conn.execute(f"SET schema='{self.database}.{self._schema}'")
+            duck_conn.execute(
+                f"SET search_path='{self.database}.{self._schema},{self.database}.main,{GLOBAL_DATABASE_NAME}.main'"
+            )
             self.database_set = True
             self.schema_set = True
         # set database if only that exists
@@ -112,6 +117,7 @@ class FakeSnowflakeConnection:
             ).fetchone()
         ):
             duck_conn.execute(f"SET schema='{self.database}.main'")
+            duck_conn.execute(f"SET search_path='{self.database}.main,{GLOBAL_DATABASE_NAME}.main'")
             self.database_set = True
 
     def __enter__(self) -> Self:

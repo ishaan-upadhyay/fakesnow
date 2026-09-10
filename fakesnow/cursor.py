@@ -9,7 +9,7 @@ import uuid
 from collections.abc import Callable, Iterator, Sequence
 from string import Template
 from types import TracebackType
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, Self, cast
 
 import duckdb
 import pyarrow  # needed by to_arrow_table()
@@ -21,7 +21,6 @@ from duckdb import DuckDBPyConnection
 from snowflake.connector.cursor import ResultMetadata
 from snowflake.connector.result_batch import ResultBatch
 from sqlglot import Expr, exp, parse_one
-from typing_extensions import Self
 
 import fakesnow.checks as checks
 import fakesnow.expr as expr
@@ -29,11 +28,14 @@ import fakesnow.info_schema as info_schema
 import fakesnow.macros as macros
 import fakesnow.transforms as transforms
 from fakesnow import logger
+from fakesnow.arrow import render_fetch_table
 from fakesnow.copy_into import copy_into
 from fakesnow.params import MutableParams
 from fakesnow.rowtype import describe_as_result_metadata
 from fakesnow.transforms import stage
 from fakesnow.transforms.merge import operations as merge_operations
+from fakesnow.variant.errors import programming_error as variant_programming_error
+from fakesnow.variant.register import register_variant_macros
 
 if TYPE_CHECKING:
     # don't require pandas at import time
@@ -189,7 +191,84 @@ class FakeSnowflakeCursor:
             # TODO: can we replace with self._duck_conn.description?
             expression = sqlglot.parse_one(f"DESCRIBE {self._last_sql}", read="duckdb")
             cur._execute(expression, self._last_params)
-            return cur.fetchall()
+            rows: list[Any] = list(cur.fetchall())
+            select = self._last_transformed.find(exp.Select) if self._last_transformed is not None else None
+            if select:
+                output_names = select.args.get("_fs_output_names") or {}
+                has_flatten = any(
+                    function.name.upper() == "_FS_FLATTEN" for function in select.find_all(exp.Anonymous)
+                ) or (
+                    self._last_transformed is not None
+                    and "_FS_FLATTEN" in self._last_transformed.sql(dialect="duckdb").upper()
+                )
+                for index, item in enumerate(select.expressions):
+                    source = item.this if isinstance(item, exp.Alias) else item
+                    variant_text = any(
+                        function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
+                    )
+                    hash_result = any(function.name.upper() == "HASH" for function in source.find_all(exp.Anonymous))
+                    wide_text = isinstance(source, (exp.ArrayToString, exp.CheckJson))
+                    fixed_nine = bool(
+                        source.args.get("_fs_array_size") or source.args.get("_fs_array_position")
+                    ) or isinstance(source, exp.ArrayPosition)
+                    fixed_width_text = isinstance(source, exp.MD5)
+                    if (
+                        index < len(rows)
+                        and rows[index][1] == "VARCHAR"
+                        and not fixed_width_text
+                        and (variant_text or wide_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
+                    ):
+                        row = list(rows[index])
+                        row[1] = "VARCHAR(134217728)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and hash_result:
+                        row = list(rows[index])
+                        row[1] = "DECIMAL(19,0)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and fixed_nine:
+                        row = list(rows[index])
+                        row[1] = "DECIMAL(9,0)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and (sequence_metadata := source.args.get("_fs_flatten_sequence_source")):
+                        precision, nullable = sequence_metadata
+                        row = list(rows[index])
+                        row[1] = f"DECIMAL({precision},0)"
+                        row[2] = "YES" if nullable else "NO"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and isinstance(
+                        source,
+                        (exp.Count, exp.Length),
+                    ):
+                        row = list(rows[index])
+                        row[1] = "DECIMAL(18,0)"
+                        rows[index] = tuple(row)
+                    elif index < len(rows) and fixed_width_text:
+                        row = list(rows[index])
+                        row[1] = "VARCHAR(32)"
+                        rows[index] = tuple(row)
+                    elif (
+                        index < len(rows)
+                        and rows[index][1] == "BLOB"
+                        and any(
+                            function.name.upper() in {"_FS_TYPEOF", "_FS_VARIANT_TO_BINARY"}
+                            for function in source.find_all(exp.Anonymous)
+                        )
+                    ):
+                        row = list(rows[index])
+                        row[1] = "BLOB(67108864)"
+                        rows[index] = tuple(row)
+                if has_flatten:
+                    for index, row_value in enumerate(rows):
+                        if str(row_value[0]).upper() in {"KEY", "PATH"}:
+                            row = list(row_value)
+                            row[1] = "VARCHAR(134217728)"
+                            rows[index] = tuple(row)
+                for index, row_value in enumerate(rows):
+                    if row_value[0] in output_names:
+                        row = list(row_value)
+                        row[0] = output_names[row_value[0]]
+                        rows[index] = tuple(row)
+            return rows
 
     def execute(
         self,
@@ -212,6 +291,20 @@ class FakeSnowflakeCursor:
             else:
                 command, params = self._rewrite_with_params(command, params)
 
+            if re.search(r"\bARRAY\s*\([^)]*\bNOT\s+NULL\b", command, re.IGNORECASE):
+                if re.search(r"\[[^\]]*\bNULL\b", command, re.IGNORECASE):
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg="NULL result in a non-nullable column",
+                        errno=100072,
+                        sqlstate="22000",
+                    )
+                command = re.sub(
+                    r"(\bARRAY\s*\([^)]*?)\s+NOT\s+NULL(\s*\))",
+                    r"\1\2",
+                    command,
+                    flags=re.IGNORECASE,
+                )
+
             # convert tuple to mutable list
             if not isinstance(params, (list, dict)) and params is not None:
                 params = list(params)
@@ -221,7 +314,17 @@ class FakeSnowflakeCursor:
                 self._execute(transformed, params)
                 return self
 
-            expression = parse_one(command, read="snowflake")
+            try:
+                expression = parse_one(command, read="snowflake")
+            except IndexError:
+                if re.search(r"\bOBJECT_CONSTRUCT(?:_KEEP_NULL)?\s*\(", command, re.IGNORECASE):
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg="SQL compilation error:",
+                        errno=909,
+                        sqlstate="22023",
+                    ) from None
+                raise
+            transforms.capture_source_output_names(expression, command)
             self.check_db_and_schema(expression)
 
             for statement in self._transform_explode(expression):
@@ -300,6 +403,7 @@ class FakeSnowflakeCursor:
         return (
             expression.transform(lambda e: transforms.identifier(e, params))
             .transform(transforms.upper_case_unquoted_identifiers)
+            .transform(transforms.preserve_output_names)
             .transform(transforms.alter_session)
             .transform(transforms.update_variables, variables=self._conn.variables)
             .transform(transforms.current_version)
@@ -307,44 +411,58 @@ class FakeSnowflakeCursor:
             .transform(transforms.create_database, db_path=self._conn.db_path)
             .transform(transforms.extract_comment_on_table)
             .transform(transforms.extract_comment_on_columns)
+            .transform(transforms.capture_structured_types)
             .transform(transforms.information_schema_fs)
             .transform(transforms.information_schema_databases, current_schema=self._conn.schema)
             .transform(transforms.drop_schema_cascade)
             .transform(transforms.tag)
             .transform(transforms.semi_structured_types)
-            .transform(transforms.try_parse_json)
+            .transform(transforms.parse_json)
+            .transform(transforms.try_parse_json_variant)
+            .transform(transforms.typeof_fn)
+            .transform(transforms.variant_functions)
             .transform(transforms.split)
             # NOTE: trim_cast_varchar must be before json_extract_cast_as_varchar
             .transform(transforms.trim_cast_varchar)
             # indices_to_json_extract must be before regex_substr
             .transform(transforms.indices_to_json_extract)
+            .transform(transforms.variant_cast)
+            .transform(transforms.variant_operators)
+            .transform(transforms.variant_relational_keys)
             .transform(transforms.json_extract_cast_as_varchar)
             .transform(transforms.json_extract_cased_as_varchar)
             .transform(transforms.json_extract_precedence)
             .transform(transforms.flatten_value_cast_as_varchar)
-            .transform(transforms.flatten)
             .transform(transforms.regex_replace)
             .transform(transforms.regex_substr)
             .transform(transforms.result_scan)
             .transform(transforms.sequence_nextval)
             .transform(transforms.values_columns)
+            .transform(transforms.flatten)
             .transform(transforms.to_date)
             .transform(transforms.timestamp_offsets)
             .transform(transforms.to_decimal)
+            .transform(transforms.decimal_arithmetic_precision)
             .transform(transforms.to_timestamp)
             .transform(transforms.to_variant)
             .transform(transforms.object_construct)
+            .transform(transforms.object_functions)
+            .transform(transforms.structured_cast)
             .transform(transforms.timestamp_ntz)
             .transform(transforms.float_to_double)
             .transform(transforms.integer_precision)
+            .transform(transforms.hash_fn)
             .transform(transforms.extract_text_length)
             .transform(transforms.sample)
+            .transform(transforms.array_functions)
             .transform(transforms.array_size)
             .transform(transforms.random)
             .transform(transforms.array_agg_within_group)
             .transform(transforms.array_agg)
             .transform(transforms.object_agg)
             .transform(transforms.array_construct_etc)
+            .transform(transforms.to_variant)
+            .transform(transforms.variant_cast)
             .transform(transforms.dateadd_date_cast)
             .transform(transforms.dateadd_string_literal_timestamp_cast)
             .transform(transforms.datediff_string_literal_timestamp_cast)
@@ -374,6 +492,7 @@ class FakeSnowflakeCursor:
             .transform(lambda e: transforms.list_stage(e, self._conn.database, self._conn.schema))
             .transform(lambda e: transforms.put_stage(e, self._conn.database, self._conn.schema, params))
             .transform(lambda e: transforms.create_table_as(e, self._duck_conn))
+            .transform(lambda e: transforms.coerce_semi_structured_targets(e, self._duck_conn))
         )
 
     def _transform_explode(self, expression: Expr) -> list[Expr]:
@@ -437,6 +556,7 @@ class FakeSnowflakeCursor:
             sql = f"SELECT setseed({seed}); {sql}"
 
         result_sql = None
+        select_arrow: pyarrow.Table | None = None
 
         if not self._conn._autocommit:
             # Snowflake implicitly commits the active transaction before executing DDL statements
@@ -470,13 +590,48 @@ class FakeSnowflakeCursor:
         try:
             if isinstance(transformed, exp.Copy):
                 sql = copy_into(self._duck_conn, self._conn.database, self._conn.schema, transformed, params)
+            elif cmd == "SELECT":
+                logger.log_sql(sql, params)
+                relation = self._duck_conn.sql(sql, params=params)
+                select = transformed.find(exp.Select)
+                pretty_json_columns = (
+                    [
+                        any(
+                            function.name.upper() == "_FS_VARIANT_TO_VARCHAR"
+                            for function in (item.this if isinstance(item, exp.Alias) else item).find_all(exp.Anonymous)
+                        )
+                        for item in select.expressions
+                    ]
+                    if select
+                    else None
+                )
+                select_arrow = render_fetch_table(
+                    self._duck_conn,
+                    relation.to_arrow_table(),
+                    [str(column_type) for column_type in relation.types],
+                    pretty_json_columns,
+                )
             else:
                 logger.log_sql(sql, params)
                 self._duck_conn.execute(sql, params)
         except duckdb.BinderException as e:
             msg = e.args[0]
-            errno, sqlstate = (100103, "22000") if "Duplicate struct entry name" in msg else (2043, "02000")
+            if "Function 'flatten' has a template parameter type" in msg:
+                msg, errno, sqlstate = "SQL compilation error:", 979, "42601"
+            elif "Duplicate struct entry name" in msg:
+                errno, sqlstate = 100103, "22000"
+            elif "Could not find key" in msg:
+                match = re.search(r'key "([^"]+)"', msg)
+                field = match[1] if match else "UNKNOWN"
+                msg = f"Function GET: expected structured object to contain field {field} but it did not."
+                errno, sqlstate = 93201, "23001"
+            else:
+                errno, sqlstate = 2043, "02000"
             raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=errno, sqlstate=sqlstate) from e
+        except duckdb.InvalidInputException as e:
+            if sf_error := variant_programming_error(e):
+                raise sf_error from e
+            raise
         except duckdb.CatalogException as e:
             # minimal processing to make it look like a snowflake exception, message content may differ
             msg = cast(str, e.args[0]).split("\n")[0]
@@ -497,7 +652,42 @@ class FakeSnowflakeCursor:
             # a value that can't be cast, eg: a time zone name snowflake wouldn't accept either.
             # snowflake reports this as an error rather than failing, message content may differ.
             msg = cast(str, e.args[0]).split("\n")[0]
+            structured_targets = [
+                data_type for data_type in transformed.find_all(exp.DataType) if data_type.args.get("_fs_structured")
+            ]
+            if structured_targets:
+                numeric_map_key = any(
+                    data_type.this == exp.DataType.Type.MAP
+                    and data_type.expressions
+                    and isinstance(data_type.expressions[0], exp.DataType)
+                    and data_type.expressions[0].this
+                    in {
+                        exp.DataType.Type.BIGINT,
+                        exp.DataType.Type.DECIMAL,
+                        exp.DataType.Type.INT,
+                    }
+                    for data_type in transformed.find_all(exp.DataType)
+                )
+                if numeric_map_key:
+                    match = re.search(r"""['"]([^'"]+)['"]""", msg)
+                    value = match[1] if match else "k"
+                    raise snowflake.connector.errors.ProgrammingError(
+                        msg=f"Numeric value '{value}' is not recognized",
+                        errno=100038,
+                        sqlstate="22018",
+                    ) from e
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg="Typed object schema mismatch in conversion",
+                    errno=220000,
+                    sqlstate="22000",
+                ) from e
             raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=100035, sqlstate="22007") from e
+        except duckdb.Error as e:
+            # duckdb raises the base error, rather than a BinderException, for an attach conflict
+            msg = cast(str, e.args[0]).split("\n")[0]
+            if "is already attached" not in msg:
+                raise
+            raise snowflake.connector.errors.ProgrammingError(msg=msg, errno=2002, sqlstate="42710") from e
 
         affected_count = None
 
@@ -518,6 +708,7 @@ class FakeSnowflakeCursor:
         elif create_db_name := transformed.args.get("create_db_name"):
             # we created a new database, so create the info schema extensions
             self._duck_conn.execute(info_schema.per_db_creation_sql(create_db_name))
+            register_variant_macros(self._duck_conn, create_db_name)
             self._duck_conn.execute(macros.creation_sql(create_db_name))
             result_sql = SQL_CREATED_DATABASE.substitute(name=create_db_name)
 
@@ -535,7 +726,8 @@ class FakeSnowflakeCursor:
                 )
 
         elif stage_name := transformed.args.get("list_stage_name") or transformed.args.get("put_stage_name"):
-            if self._duck_conn.to_arrow_table().num_rows != 1:
+            stage_result = select_arrow if select_arrow is not None else self._duck_conn.to_arrow_table()
+            if stage_result.num_rows != 1:
                 raise snowflake.connector.errors.ProgrammingError(
                     msg=f"SQL compilation error:\nStage '{stage_name}' does not exist or not authorized.",
                     errno=2003,
@@ -643,11 +835,40 @@ class FakeSnowflakeCursor:
             assert catalog and schema
             self._duck_conn.execute(info_schema.insert_text_lengths_sql(catalog, schema, table.name, text_lengths))
 
+        if (
+            structured_types := cast(
+                list[tuple[str, str, str, str]],
+                transformed.args.get("_fs_structured_types"),
+            )
+        ) and (table := transformed.find(exp.Table)):
+            catalog = table.catalog or self._conn.database
+            schema = table.db or self._conn.schema
+            assert catalog and schema
+            temporary = transformed.find(exp.TemporaryProperty) is not None
+            self._duck_conn.execute(
+                info_schema.insert_structured_types_sql(
+                    catalog,
+                    schema,
+                    table.name,
+                    "temp" if temporary else catalog,
+                    "main" if temporary else schema,
+                    structured_types,
+                )
+            )
+
         if result_sql:
             logger.log_sql(result_sql)
             self._duck_conn.execute(result_sql)
 
-        self._arrow_table = self._duck_conn.to_arrow_table()
+        self._arrow_table = (
+            select_arrow if select_arrow is not None and not result_sql else self._duck_conn.to_arrow_table()
+        )
+        if self._arrow_table is not None and (select := transformed.find(exp.Select)):
+            output_names = select.args.get("_fs_output_names") or {}
+            if output_names:
+                self._arrow_table = self._arrow_table.rename_columns(
+                    [output_names.get(name, name) for name in self._arrow_table.column_names]
+                )
         if transformed.args.get("merge_counts"):
             # a merge returns a count per operation, but snowflake reports their total as the
             # rows affected, not the single row those counts are in
@@ -715,14 +936,16 @@ class FakeSnowflakeCursor:
         if self._arrow_table is None:
             # mimic snowflake python connector error type
             raise TypeError("No open result set")
-        tslice = self._arrow_table.slice(offset=self._arrow_table_fetch_index or 0, length=size).to_pylist()
+        tslice = self._arrow_table.slice(offset=self._arrow_table_fetch_index or 0, length=size)
 
         if self._arrow_table_fetch_index is None:
             self._arrow_table_fetch_index = size
         else:
             self._arrow_table_fetch_index += size
 
-        return tslice if self._use_dict_result else [tuple(d.values()) for d in tslice]
+        if self._use_dict_result:
+            return tslice.to_pylist()
+        return list(zip(*(column.to_pylist() for column in tslice.columns), strict=True))
 
     def get_result_batches(self) -> list[ResultBatch] | None:
         if self._arrow_table is None:

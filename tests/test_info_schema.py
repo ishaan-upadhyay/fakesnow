@@ -54,6 +54,7 @@ def test_describe_view_columns(dcur: snowflake.connector.cursor.DictCursor):
         "comment",
         "policy name",
         "privacy domain",
+        "write default",
     ]
     dcur.execute("describe view information_schema.columns")
     result: list[dict] = dcur.fetchall()
@@ -62,7 +63,8 @@ def test_describe_view_columns(dcur: snowflake.connector.cursor.DictCursor):
     # should contain snowflake-specific columns
     assert "COMMENT" in names
     # fmt: off
-    assert dcur.description[:-1] == [
+    # trailing 'privacy domain' and 'write default' are excluded
+    assert dcur.description[:-2] == [
         ResultMetadata(name='name', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='type', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='kind', type_code=2, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
@@ -143,7 +145,7 @@ def test_info_schema_columns_other(cur: snowflake.connector.cursor.SnowflakeCurs
         """
         create or replace table example (
             XTIMESTAMP TIMESTAMP, XTIMESTAMP_NTZ TIMESTAMP_NTZ, XTIMESTAMP_NTZ9 TIMESTAMP_NTZ(9), XTIMESTAMP_TZ TIMESTAMP_TZ, XDATE DATE, XTIME TIME,
-            XBINARY BINARY, /* XARRAY ARRAY, XOBJECT OBJECT */ XVARIANT VARIANT
+            XBINARY BINARY, XARRAY ARRAY, XOBJECT OBJECT, XVARIANT VARIANT
         )
         """
     )
@@ -163,9 +165,8 @@ def test_info_schema_columns_other(cur: snowflake.connector.cursor.SnowflakeCurs
         ("XDATE", "DATE"),
         ("XTIME", "TIME"),
         ("XBINARY", "BINARY"),
-        # TODO: support these types https://github.com/tekumara/fakesnow/issues/27
-        # ("XARRAY", "ARRAY"),
-        # ("XOBJECT", "OBJECT"),
+        ("XARRAY", "ARRAY"),
+        ("XOBJECT", "OBJECT"),
         ("XVARIANT", "VARIANT"),
     ]
 

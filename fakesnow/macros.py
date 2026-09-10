@@ -4,69 +4,104 @@ from string import Template
 # see https://docs.snowflake.com/en/sql-reference/functions/flatten.html
 FS_FLATTEN = Template(
     """
-CREATE OR REPLACE MACRO ${catalog}._fs_flatten(input) AS TABLE
+CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten(
+    input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1
+) AS TABLE
     SELECT
-        -- SEQ: hash of input gives same value for all rows from same input, close enough to Snowflake's SEQ
-        hash(TO_JSON(input))::UBIGINT AS SEQ,
-        e.k AS KEY,
-        COALESCE(e.k, '[' || (row_number() OVER () - 1) || ']') AS PATH,
-        CASE WHEN e.k IS NOT NULL THEN NULL ELSE (row_number() OVER () - 1)::BIGINT END AS INDEX,
-        e.v AS VALUE,
-        TO_JSON(input) AS THIS
+        e.seq AS SEQ,
+        e.key AS KEY,
+        e.path AS PATH,
+        e.index AS INDEX,
+        CASE
+            WHEN e.json_null THEN ${catalog}.main._fs_variant_null()
+            ELSE e.value
+        END AS VALUE,
+        e.this AS THIS
     FROM (
         SELECT UNNEST(
-            CASE WHEN json_type(TO_JSON(input)) = 'OBJECT'
-                 THEN list_transform(
-                    json_keys(TO_JSON(input)),
-                    x -> struct_pack(k := x, v := CAST(TO_JSON(input) -> x AS JSON))
-                 )
-                 ELSE list_transform(
-                    CAST(TO_JSON(input) AS JSON[]),
-                    x -> struct_pack(k := NULL::VARCHAR, v := x)
-                 )
-            END, recursive := true
+            _fs_variant_flatten_rows(
+                CAST(input AS VARIANT),
+                path_arg,
+                is_outer,
+                is_recursive,
+                mode_arg,
+                seq_arg::UBIGINT
+            ),
+            recursive := true
         )
-    ) AS e(k, v)
+    ) AS e(seq, key, path, index, value, this, json_null)
     """
 )
 
-# use json_group_object instead of json_object because it allows filtering pairs before construction
-# see https://github.com/duckdb/duckdb/issues/19357
+FS_FLATTEN_ARRAY = Template(
+    """
+CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_array(
+    input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1
+) AS TABLE
+    SELECT
+        seq_arg::UBIGINT AS SEQ,
+        NULL::VARCHAR AS KEY,
+        (CASE WHEN path_arg = '' THEN '' ELSE path_arg END) || '[' || (e.index - 1) || ']' AS PATH,
+        (e.index - 1)::BIGINT AS INDEX,
+        e.value AS VALUE,
+        CAST(input AS VARIANT) AS THIS
+    FROM UNNEST(input) WITH ORDINALITY AS e(value, index)
+    WHERE UPPER(mode_arg) IN ('ARRAY', 'BOTH')
+      AND ${catalog}.main._fs_typeof(CAST(e.value AS VARIANT)) IS NOT NULL
+    """
+)
+
+FS_FLATTEN_MAP = Template(
+    """
+CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_map(
+    input, path_arg, is_outer, is_recursive, mode_arg, seq_arg := 1
+) AS TABLE
+    SELECT
+        e.seq AS SEQ,
+        e.key AS KEY,
+        e.path AS PATH,
+        e.index AS INDEX,
+        e.value AS VALUE,
+        e.this AS THIS
+    FROM (
+        SELECT UNNEST(
+            ${catalog}.main._fs_variant_flatten_map_rows(
+                input,
+                path_arg,
+                mode_arg,
+                seq_arg::UBIGINT
+            ),
+            recursive := true
+        )
+    ) AS e(seq, key, path, index, value, this)
+    """
+)
+
 FS_OBJECT_CONSTRUCT = Template(
     """
-CREATE OR REPLACE MACRO ${catalog}._fs_object_construct(keys, vals, keep_nulls) AS (
+CREATE OR REPLACE MACRO ${catalog}.main._fs_object_construct(keys, vals, keep_nulls) AS (
     WITH kv AS (
-        SELECT
-            key,
-            list_extract(vals, idx) AS value
-        FROM UNNEST(keys) WITH ORDINALITY AS u(key, idx)
+        SELECT key, list_extract(vals, idx) AS value
+        FROM UNNEST(${catalog}.main._fs_object_validate_keys(keys)) WITH ORDINALITY AS u(key, idx)
         ORDER BY idx
     )
-    SELECT COALESCE(json_group_object(key, value), '{}'::JSON) AS obj
+    SELECT CASE
+        WHEN count(*) FILTER (
+            WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
+        ) = 0 THEN map()
+        ELSE map_from_entries(
+            list(struct_pack(key := key, value := value::VARIANT) ORDER BY key)
+            FILTER (WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL))
+        )
+    END
     FROM kv
-    WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
-);
-"""
-)
-
-FS_OBJECT_CONSTRUCT_STAR = Template(
-    """
-CREATE OR REPLACE MACRO ${catalog}._fs_object_construct_star(row_value) AS (
-    SELECT COALESCE(json_group_object(key, value::JSON), '{}'::JSON)
-    FROM (
-        UNPIVOT (
-            SELECT TO_JSON(COLUMNS(*))
-            FROM (SELECT UNNEST(row_value))
-        ) ON COLUMNS(*)::VARCHAR
-        INTO NAME key VALUE value
-    )
 );
 """
 )
 
 FS_TO_TIMESTAMP = Template(
     """
-CREATE OR REPLACE MACRO ${catalog}._fs_to_timestamp(val, scale) AS (
+CREATE OR REPLACE MACRO ${catalog}.main._fs_to_timestamp(val, scale) AS (
     CASE
         WHEN try_cast(val AS BIGINT) IS NOT NULL
             THEN
@@ -86,7 +121,7 @@ CREATE OR REPLACE MACRO ${catalog}._fs_to_timestamp(val, scale) AS (
 
 FS_HAVERSINE = Template(
     """
-CREATE OR REPLACE MACRO ${catalog}._fs_haversine(lat1, lon1, lat2, lon2) AS (
+CREATE OR REPLACE MACRO ${catalog}.main._fs_haversine(lat1, lon1, lat2, lon2) AS (
     2 * 6371 * ASIN(SQRT(
         POWER(SIN(RADIANS(lat2 - lat1) / 2), 2) +
         COS(RADIANS(lat1)) * COS(RADIANS(lat2)) * POWER(SIN(RADIANS(lon2 - lon1) / 2), 2)
@@ -99,8 +134,9 @@ CREATE OR REPLACE MACRO ${catalog}._fs_haversine(lat1, lon1, lat2, lon2) AS (
 def creation_sql(catalog: str) -> str:
     return f"""
         {FS_FLATTEN.substitute(catalog=catalog)};
+        {FS_FLATTEN_ARRAY.substitute(catalog=catalog)};
+        {FS_FLATTEN_MAP.substitute(catalog=catalog)};
         {FS_HAVERSINE.substitute(catalog=catalog)};
         {FS_OBJECT_CONSTRUCT.substitute(catalog=catalog)};
-        {FS_OBJECT_CONSTRUCT_STAR.substitute(catalog=catalog)};
         {FS_TO_TIMESTAMP.substitute(catalog=catalog)};
     """

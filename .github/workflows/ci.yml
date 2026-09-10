@@ -2,24 +2,43 @@ name: ci
 
 on:
   push:
-    branches: [main]
+    branches: [main, "ishaan/variant-*"]
   pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
     steps:
     - uses: actions/checkout@v7
+      with:
+        submodules: recursive
+    - name: Resolve vendored DuckDB revision
+      id: duckdb-revision
+      run: echo "sha=$(git -C vendor/duckdb-python/external/duckdb rev-parse HEAD)" >> "$GITHUB_OUTPUT"
     - name: Set up Python
       id: setup-python
       uses: actions/setup-python@v7
     - name: Install uv
       uses: astral-sh/setup-uv@v7
+    - name: Install ccache
+      run: sudo apt-get update && sudo apt-get install -y ccache
+    - name: Cache DuckDB compilation
+      uses: actions/cache@v6
+      with:
+        path: ~/.cache/ccache
+        key: ${{ runner.os }}-duckdb-${{ steps.duckdb-revision.outputs.sha }}
+        restore-keys: ${{ runner.os }}-duckdb-
     - name: Cache virtualenv
       id: cache-venv
       uses: actions/cache@v6
       with:
         path: .venv
-        key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{ hashFiles('pyproject.toml') }}
+        key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-venv-${{ hashFiles('pyproject.toml', '.gitmodules') }}-${{ steps.duckdb-revision.outputs.sha }}
     - name: Cache pre-commit
       id: cache-pre-commit
       uses: actions/cache@v6
@@ -28,6 +47,14 @@ jobs:
         key: ${{ runner.os }}-py${{ steps.setup-python.outputs.python-version }}-pre-commit-${{ hashFiles('.pre-commit-config.yaml') }}
     - name: make install
       if: steps.cache-venv.outputs.cache-hit != 'true'
+      env:
+        CMAKE_C_COMPILER_LAUNCHER: ccache
+        CMAKE_CXX_COMPILER_LAUNCHER: ccache
       run: make install
-    - name: make hooks
-      run: make hooks
+    - name: Lint and type check
+      run: make check
+    - name: Test
+      run: uv run pytest --ignore=tests/test_snowflake_parity.py
+    - name: Snowflake parity progress
+      continue-on-error: true
+      run: uv run pytest tests/test_snowflake_parity.py -m "not live_snowflake" --tb=line

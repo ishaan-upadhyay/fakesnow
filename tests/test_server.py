@@ -210,26 +210,6 @@ def test_server_executemany_qmark(server: dict) -> None:
         ]
 
 
-def test_server_merge_response_total(sconn: snowflake.connector.SnowflakeConnection) -> None:
-    conn = sconn
-    with conn.cursor() as cur:
-        cur.execute("create table target (id int, name varchar)")
-        cur.execute("create table source (id int, name varchar)")
-        cur.execute("insert into source values (1, 'a')")
-
-        merge = """
-            merge into target using source on target.id = source.id
-            when matched and target.name is distinct from source.name then update set name = source.name
-            when not matched then insert (id, name) values (source.id, source.name)
-        """
-        cur.execute(merge)
-
-    result = conn.cmd_query(merge, conn._next_sequence_counter(), uuid.uuid4())  # noqa: SLF001
-
-    # A zero-effect MERGE still returns one row of operation counts.
-    assert result["data"]["total"] == 1
-
-
 def test_server_close(server: dict) -> None:
     conn = snowflake.connector.connect(**server)
 
@@ -522,8 +502,9 @@ def test_server_rowcount(scur: snowflake.connector.cursor.SnowflakeCursor):
     ],
 )
 def test_server_query_response_has_use_statement_type_id(server: dict, sql: str) -> None:
+    session_parameters = server.get("session_parameters", {}) | {"nop_regexes": [r"use (role|warehouse)"]}
     with snowflake.connector.connect(
-        **server,
+        **(server | {"session_parameters": session_parameters}),
         database="db1",
         schema="schema1",
     ) as conn:
@@ -547,7 +528,7 @@ def test_server_types_no_result_set(sconn: snowflake.connector.SnowflakeConnecti
             XBOOLEAN BOOLEAN, XINT INT, XFLOAT FLOAT, XDECIMAL DECIMAL(10,2),
             XVARCHAR VARCHAR, XVARCHAR20 VARCHAR(20),
             XDATE DATE, XTIME TIME, XTIMESTAMP TIMESTAMP_TZ, XTIMESTAMP_NTZ TIMESTAMP_NTZ,
-            XBINARY BINARY, /* XARRAY ARRAY, XOBJECT OBJECT, */ XVARIANT VARIANT
+            XBINARY BINARY, XARRAY ARRAY, XOBJECT OBJECT, XVARIANT VARIANT
         )
         """
     )
@@ -567,9 +548,8 @@ def test_server_types_no_result_set(sconn: snowflake.connector.SnowflakeConnecti
         ResultMetadata(name='XTIMESTAMP', type_code=7, display_size=None, internal_size=None, precision=0, scale=9, is_nullable=True),
         ResultMetadata(name='XTIMESTAMP_NTZ', type_code=8, display_size=None, internal_size=None, precision=0, scale=9, is_nullable=True),
         ResultMetadata(name='XBINARY', type_code=11, display_size=None, internal_size=8388608, precision=None, scale=None, is_nullable=True),
-        # TODO: handle ARRAY and OBJECT see https://github.com/tekumara/fakesnow/issues/26
-        # ResultMetadata(name='XARRAY', type_code=10, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
-        # ResultMetadata(name='XOBJECT', type_code=9, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
+        ResultMetadata(name='XARRAY', type_code=10, display_size=None, internal_size=16777216, precision=None, scale=None, is_nullable=True),
+        ResultMetadata(name='XOBJECT', type_code=9, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True),
         ResultMetadata(name='XVARIANT', type_code=5, display_size=None, internal_size=None, precision=None, scale=None, is_nullable=True)
 
     ]

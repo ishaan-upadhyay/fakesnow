@@ -1,0 +1,285 @@
+{
+  "name": "pr11_coercion_via_ctas_with_schema_full_errors",
+  "cases": [
+    {
+      "id": "v_variant_as_select_current_date",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT CURRENT_DATE",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [DATE] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "v_variant_as_select_1_2_array_int",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT [1,2]::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY(NUMBER(38,0))] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "v_variant_as_select_k_1_map_varchar_int",
+      "sql": "CREATE TEMP TABLE t (v VARIANT) AS SELECT {'k':1}::MAP(VARCHAR,INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [MAP(VARCHAR(134217728), NUMBER(38,0))] and [VARIANT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_1",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT 1",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [NUMBER(1,0)] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_object_construct_a_1",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "a_array_as_select_1_2_array_int",
+      "sql": "CREATE TEMP TABLE t (a ARRAY) AS SELECT [1,2]::ARRAY(INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY(NUMBER(38,0))] and [ARRAY]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_array_construct_1",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT ARRAY_CONSTRUCT(1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_k_1_map_varchar_int",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'k':1}::MAP(VARCHAR,INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [MAP(VARCHAR(134217728), NUMBER(38,0))] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "o_object_as_select_a_1_object_a_int",
+      "sql": "CREATE TEMP TABLE t (o OBJECT) AS SELECT {'a':1}::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT(a NUMBER(38,0))] and [OBJECT]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_parse_json_1_x",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT PARSE_JSON('[1,\"x\"]')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_parse_json_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT PARSE_JSON('[1,2]')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_array_construct_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT ARRAY_CONSTRUCT(1,2)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,2]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_null",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1,NULL]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_2_2",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT ['1','2']",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sa_array_int_as_select_1_5",
+      "sql": "CREATE TEMP TABLE t (sa ARRAY(INT)) AS SELECT [1.5]",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [ARRAY(NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1_y_z",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_object_construct_x_1_y_z_2",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT OBJECT_CONSTRUCT('x', 1, 'y', 'z', 'extra', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_x_1_y_z",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT {'x':1,'y':'z'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_y_z_x_1",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT {'y':'z','x':1}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "so_object_x_int_y_varchar_as_select_parse_json_x_1_y_2",
+      "sql": "CREATE TEMP TABLE t (so OBJECT(x INT, y VARCHAR)) AS SELECT PARSE_JSON('{\"x\":\"1\",\"y\":2}')",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [VARIANT] and [OBJECT(x NUMBER(38,0), y VARCHAR(16777216))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_object_construct_k_1",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT OBJECT_CONSTRUCT('k', 1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_k_x",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'k': 'x'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_k_1",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'k': '1'}",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "sm_map_varchar_int_as_select_a_1_object_a_int",
+      "sql": "CREATE TEMP TABLE t (sm MAP(VARCHAR, INT)) AS SELECT {'a':1}::OBJECT(a INT)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT(a NUMBER(38,0))] and [MAP(VARCHAR(16777216), NUMBER(38,0))]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "s_varchar_as_select_object_construct_a_1",
+      "sql": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT OBJECT_CONSTRUCT('a',1)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [OBJECT] and [VARCHAR(16777216)]",
+        "description": null,
+        "rows": []
+      }
+    },
+    {
+      "id": "s_varchar_as_select_array_construct_1_null",
+      "sql": "CREATE TEMP TABLE t (s VARCHAR) AS SELECT ARRAY_CONSTRUCT(1,NULL)",
+      "setup": null,
+      "expect": {
+        "error": "001010 (42846): SQL compilation error: | incompatible types: [ARRAY] and [VARCHAR(16777216)]",
+        "description": null,
+        "rows": []
+      }
+    }
+  ]
+}
