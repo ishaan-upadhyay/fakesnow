@@ -46,6 +46,7 @@ dev = [
     "pyarrow-stubs==20.0.0.20260819",
     "pyright==1.1.411",
     "pytest~=9.1",
+    "pytest-xdist",
     "ruff~=0.16.5",
     # include compatible version of pandas, and secure-local-storage for token caching
     "snowflake-connector-python[pandas, secure-local-storage]",
@@ -83,6 +84,7 @@ reportUnnecessaryTypeIgnoreComment = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = ["-n", "auto"]
 # error on unhandled exceptions in background threads
 # useful for catching errors in server or snowflake connector threads
 filterwarnings = [
