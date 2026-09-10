@@ -18,11 +18,7 @@ dependencies = [
 [tool.uv.sources]
 duckdb = { path = "vendor/duckdb-python", editable = false }
 
-# duckdb-python's Darwin editable override sets DISABLE_UNITY=1, which currently
-# fails to compile partitioned_sort.cpp. A non-editable path still hits that unless
-# unity is forced back on.
 [tool.uv.config-settings-package.duckdb]
-"cmake.define.DISABLE_UNITY" = "0"
 "cmake.define.BUILD_EXTENSIONS" = "core_functions;json;parquet;icu;httpfs"
 
 [project.urls]

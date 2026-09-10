@@ -15,7 +15,7 @@ help:
 	git submodule update --init --recursive
 
 .sync: .submodules
-	uv sync $(if $(value CI),,--group notebook) --config-settings-package duckdb:cmake.define.DISABLE_UNITY=0
+	uv sync $(if $(value CI),,--group notebook)
 
 # delete the venv
 clean:
