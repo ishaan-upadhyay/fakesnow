@@ -918,6 +918,9 @@ class FakeSnowflakeCursor:
         if result_sql:
             logger.log_sql(result_sql)
             self._duck_conn.execute(result_sql)
+            self._last_description_rows = [
+                (column[0], str(column[1]), "YES", None, None, None) for column in self._duck_conn.description
+            ]
 
         self._arrow_table = (
             select_arrow if select_arrow is not None and not result_sql else self._duck_conn.to_arrow_table()

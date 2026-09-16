@@ -5,7 +5,7 @@ import re
 
 import pyarrow as pa
 import pyarrow.compute as pc
-from duckdb import DuckDBPyConnection, DuckDBPyRelation, InvalidInputException
+from duckdb import CatalogException, DuckDBPyConnection, DuckDBPyRelation, InvalidInputException
 
 from fakesnow.rowtype import ColumnInfo
 
@@ -189,7 +189,22 @@ def parquet_variant_to_json(
 
     conn.register(_VARIANT_JSON_RELATION, table)
     try:
-        json_table = conn.execute(f"SELECT {', '.join(projections)} FROM {_VARIANT_JSON_RELATION}").to_arrow_table()
+        try:
+            json_table = conn.execute(
+                f"SELECT {', '.join(projections)} FROM {_VARIANT_JSON_RELATION}"
+            ).to_arrow_table()
+        except CatalogException as exc:
+            if "_fs_to_json" not in str(exc):
+                raise
+            fallback = [
+                f"CAST({_quoted_ident(field.name)} AS JSON) AS {_quoted_ident(field.name)}"
+                if should_render[index]
+                else _quoted_ident(field.name)
+                for index, field in enumerate(table.schema)
+            ]
+            json_table = conn.execute(
+                f"SELECT {', '.join(fallback)} FROM {_VARIANT_JSON_RELATION}"
+            ).to_arrow_table()
     finally:
         conn.unregister(_VARIANT_JSON_RELATION)
 
