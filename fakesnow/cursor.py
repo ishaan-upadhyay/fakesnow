@@ -613,6 +613,7 @@ class FakeSnowflakeCursor:
                 logger.log_sql(sql, params)
                 relation = self._duck_conn.sql(sql, params=params)
                 select = transformed.find(exp.Select)
+
                 def _json_source(item: Expr) -> Expr:
                     return item.this if isinstance(item, exp.Alias) else item
 
