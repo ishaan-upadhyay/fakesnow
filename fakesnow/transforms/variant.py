@@ -538,6 +538,9 @@ def _zeroifnull_argument(expression: Expr) -> Expr | None:
 
 
 def variant_operators(expression: Expr) -> Expr:
+    if expression.meta.get("_fs_native_comparison"):
+        return expression
+
     def numeric_value(value: Expr) -> Expr:
         if not _contains_variant_expression(value):
             return value.copy()
@@ -1501,7 +1504,9 @@ def variant_functions(expression: Expr) -> Expr:
         }
         if len(expression.expressions) == 1 and (expected := anonymous_predicates.get(name)):
             actual = exp.Anonymous(this="_fs_typeof", expressions=[_as_variant(argument)])
-            return exp.EQ(this=actual, expression=exp.Literal.string(expected))
+            result = exp.EQ(this=actual, expression=exp.Literal.string(expected))
+            result.meta["_fs_native_comparison"] = True
+            return result
 
         as_types = {
             "AS_VARCHAR": (exp.DataType.Type.VARCHAR, "VARCHAR"),
@@ -1520,16 +1525,18 @@ def variant_functions(expression: Expr) -> Expr:
             target = exp.DataType(this=target_type, nested=False)
             converted = exp.Cast(this=argument.copy(), to=target).transform(variant_cast)
             expected_types = ["DOUBLE", "INTEGER", "DECIMAL"] if name in {"AS_DOUBLE", "AS_REAL"} else [expected]
+            type_check = exp.In(
+                this=exp.Anonymous(
+                    this="_fs_typeof",
+                    expressions=[_as_variant(argument)],
+                ),
+                expressions=[exp.Literal.string(kind) for kind in expected_types],
+            )
+            type_check.meta["_fs_native_comparison"] = True
             return exp.Case(
                 ifs=[
                     exp.If(
-                        this=exp.In(
-                            this=exp.Anonymous(
-                                this="_fs_typeof",
-                                expressions=[_as_variant(argument)],
-                            ),
-                            expressions=[exp.Literal.string(kind) for kind in expected_types],
-                        ),
+                        this=type_check,
                         true=converted,
                     )
                 ],
