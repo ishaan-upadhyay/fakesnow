@@ -48,6 +48,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_as_map(v) AS (
     CASE
         WHEN v IS NULL THEN NULL
         WHEN typeof(v) LIKE 'MAP(%' THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN typeof(v) LIKE 'STRUCT(%' THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
         WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'OBJECT%'
             THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
         WHEN typeof(v) = 'JSON' AND json_type(v) = 'OBJECT'
