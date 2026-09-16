@@ -175,19 +175,23 @@ def parquet_variant_to_json(
 
     projections = []
     for index in range(table.num_columns):
-        ident = _quoted_ident(table.schema.field(index).name)
+        field = table.schema.field(index)
+        ident = _quoted_ident(f"__fs_arrow_col_{index}")
+        alias = _quoted_ident(field.name)
         if should_render[index]:
-            field = table.schema.field(index)
             if _is_parquet_variant(field):
-                projections.append(f"_fs_to_json_py({ident}) AS {ident}")
+                projections.append(f"_fs_to_json_py({ident}) AS {alias}")
             elif contains_parquet_variant(field):
-                projections.append(f"_fs_to_json({ident}) AS {ident}")
+                projections.append(f"_fs_to_json({ident}) AS {alias}")
             else:
-                projections.append(f"CAST({ident} AS JSON) AS {ident}")
+                projections.append(f"CAST({ident} AS JSON) AS {alias}")
         else:
-            projections.append(ident)
+            projections.append(f"{ident} AS {alias}")
 
-    conn.register(_VARIANT_JSON_RELATION, table)
+    conn.register(
+        _VARIANT_JSON_RELATION,
+        table.rename_columns([f"__fs_arrow_col_{index}" for index in range(table.num_columns)]),
+    )
     try:
         try:
             json_table = conn.execute(f"SELECT {', '.join(projections)} FROM {_VARIANT_JSON_RELATION}").to_arrow_table()
@@ -195,9 +199,9 @@ def parquet_variant_to_json(
             if "_fs_to_json" not in str(exc):
                 raise
             fallback = [
-                f"CAST({_quoted_ident(field.name)} AS JSON) AS {_quoted_ident(field.name)}"
+                f"CAST({_quoted_ident(f'__fs_arrow_col_{index}')} AS JSON) AS {_quoted_ident(field.name)}"
                 if should_render[index]
-                else _quoted_ident(field.name)
+                else f"{_quoted_ident(f'__fs_arrow_col_{index}')} AS {_quoted_ident(field.name)}"
                 for index, field in enumerate(table.schema)
             ]
             json_table = conn.execute(f"SELECT {', '.join(fallback)} FROM {_VARIANT_JSON_RELATION}").to_arrow_table()
