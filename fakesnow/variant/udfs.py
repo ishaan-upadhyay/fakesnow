@@ -56,7 +56,7 @@ def _typeof_tag(value: object, variant_typeof: str | None) -> str | None:
     if t.startswith(("DOUBLE", "FLOAT")):
         return "DOUBLE"
     if t.startswith("DECIMAL"):
-        return "DECIMAL"
+        return "INTEGER" if t.replace(" ", "").endswith(",0)") else "DECIMAL"
     if t.startswith(("BLOB", "BINARY")):
         return "BINARY"
     if t.startswith("DATE"):

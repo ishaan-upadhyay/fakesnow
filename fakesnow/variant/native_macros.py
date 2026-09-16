@@ -13,6 +13,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_as_variant(v) AS (
             WHEN v IS NULL THEN NULL
             WHEN typeof(v) = 'VARIANT' THEN v
             WHEN typeof(v) = 'JSON' THEN CAST(v AS VARIANT)
+            WHEN typeof(v) IN ('HUGEINT', 'UHUGEINT') THEN CAST(v AS DECIMAL(38, 0))::VARIANT
             ELSE TRY_CAST(v AS VARIANT)
         END
     ) AS VARIANT)
@@ -81,6 +82,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_typeof_tag(v, t) AS (
                 ELSE 'VARCHAR'
             END
         WHEN t LIKE 'DOUBLE%' OR t LIKE 'FLOAT%' THEN 'DOUBLE'
+        WHEN regexp_matches(t, '^DECIMAL\\([^,]+,\\s*0\\)$') THEN 'INTEGER'
         WHEN t LIKE 'DECIMAL%' THEN 'DECIMAL'
         WHEN t LIKE 'BLOB%' OR t LIKE 'BINARY%' THEN 'BINARY'
         WHEN t LIKE 'DATE%' THEN 'DATE'
