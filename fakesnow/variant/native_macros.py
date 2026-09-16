@@ -397,6 +397,8 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                                     ' Z',
                                     '.000 Z'
                                 ) || '"'
+                            WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'OBJECT%' THEN
+                                ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(y))
                             ELSE _fs_to_json_py(y)
                         END
                     ),
@@ -847,7 +849,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
             list_reduce(
                 ${catalog}.main._fs_as_list(arr),
                 (acc, x) -> CASE
-                    WHEN x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false) THEN acc
+                    WHEN x IS NULL THEN acc
                     WHEN COALESCE(
                         list_bool_or(list_transform(acc, y -> ${catalog}.main._fs_variant_eq(x, y))),
                         false
@@ -863,7 +865,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
                     list_bool_or(
                         list_transform(
                             ${catalog}.main._fs_as_list(arr),
-                            x -> x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false)
+                            x -> x IS NULL
                         )
                     ),
                     false
@@ -881,7 +883,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_flatten(arr) AS (
             list_bool_or(
                 list_transform(
                     ${catalog}.main._fs_as_list(arr),
-                    x -> x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false)
+                    x -> x IS NULL
                 )
             ),
             false

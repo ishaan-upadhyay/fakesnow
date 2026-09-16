@@ -1078,6 +1078,9 @@ def _json_tree_to_sql_expr(node: object) -> Expr:
 
 def _json_tree_to_variant_expr(node: object) -> Expr:
     value = _json_tree_to_sql_expr(node)
+    if isinstance(node, dict) and isinstance(value, exp.ToMap):
+        value.args["_fs_logical_variant"] = True
+        return value
     if isinstance(node, (dict, list)):
         return exp.Cast(this=value, to=_variant_type())
     if node is None:

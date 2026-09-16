@@ -225,7 +225,11 @@ class FakeSnowflakeCursor:
                         source.args.get("_fs_array_size") or source.args.get("_fs_array_position")
                     ) or isinstance(source, exp.ArrayPosition)
                     fixed_width_text = isinstance(source, exp.MD5)
-                    if object_star and index < len(rows) and rows[index][1] in {"VARIANT", "JSON"}:
+                    if source.args.get("_fs_logical_variant") and index < len(rows):
+                        row = list(rows[index])
+                        row[1] = "VARIANT"
+                        rows[index] = tuple(row)
+                    elif object_star and index < len(rows) and rows[index][1] in {"VARIANT", "JSON"}:
                         row = list(rows[index])
                         row[1] = "MAP(VARCHAR, VARIANT)"
                         rows[index] = tuple(row)
