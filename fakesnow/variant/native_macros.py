@@ -310,10 +310,13 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                 ELSE left(replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', ''), 23)
             END || '"'
         WHEN TRY_CAST(x AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_TZ__%' THEN
-            '"' || replace(
+            '"' || left(
                 replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''),
-                '+',
-                ' +'
+                length(replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', '')) - 6
+            ) || '.000 ' || replace(
+                right(replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''), 6),
+                ':',
+                ''
             ) || '"'
         WHEN TRY_CAST(x AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_LTZ__%' THEN
             '"' || replace(
@@ -336,6 +339,12 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                             WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'DOUBLE%'
                                 AND isfinite(TRY_CAST(y AS DOUBLE))
                                 THEN printf('%.15e', TRY_CAST(y AS DOUBLE))
+                            WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'DECIMAL%'
+                                THEN regexp_replace(
+                                    regexp_replace(CAST(y AS VARCHAR), '0+$', ''),
+                                    '\\.$',
+                                    ''
+                                )
                             WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'TIMESTAMP%'
                                 THEN '"' || left(strftime(TRY_CAST(y AS TIMESTAMP), '%Y-%m-%d %H:%M:%S.%f'), 23) || '"'
                             WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'BLOB%'
@@ -357,10 +366,18 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                                     )
                                 END || '"'
                             WHEN TRY_CAST(y AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_TZ__%' THEN
-                                '"' || replace(
+                                '"' || left(
                                     replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''),
-                                    '+',
-                                    ' +'
+                                    length(
+                                        replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', '')
+                                    ) - 6
+                                ) || '.000 ' || replace(
+                                    right(
+                                        replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''),
+                                        6
+                                    ),
+                                    ':',
+                                    ''
                                 ) || '"'
                             WHEN TRY_CAST(y AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_LTZ__%' THEN
                                 '"' || replace(

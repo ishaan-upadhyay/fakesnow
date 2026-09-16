@@ -430,8 +430,8 @@ def _fs_variant_to_varchar_py(value: Any, sql_typeof: Any, variant_typeof: Any) 
     kind = snowflake_typeof(value, sql_t, var_t)
     if kind is None or kind == "NULL_VALUE":
         return None
-    if isinstance(value, str) and value.startswith("__FAKESNOW_TIMESTAMP_"):
-        return _strip_timestamp_sentinel(value)
+    if kind.startswith("TIMESTAMP"):
+        return _strip_timestamp_sentinel(str(value))
     if kind in {"ARRAY", "OBJECT"} or isinstance(value, (dict, list)):
         payload: Any = value
         if isinstance(value, str):
