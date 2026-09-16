@@ -400,9 +400,7 @@ def _canonical_variant(value: Any) -> str:
     if isinstance(value, list):
         return "a:[" + ",".join(_canonical_variant(item) for item in value) + "]"
     if items := _map_items(value):
-        return "o:{" + ",".join(
-            f"{key}:{_canonical_variant(item)}" for key, item in sorted(items)
-        ) + "}"
+        return "o:{" + ",".join(f"{key}:{_canonical_variant(item)}" for key, item in sorted(items)) + "}"
     return f"u:{value!r}"
 
 
@@ -414,9 +412,7 @@ def _fs_variant_group_key_py(value: Any, sql_typeof: Any, variant_typeof: Any) -
 
 def _fs_variant_order_key_py(value: Any) -> str:
     if items := _map_items(value):
-        return "{" + ",".join(
-            f"{key}:{_canonical_variant(item)}" for key, item in sorted(items, reverse=True)
-        ) + "}"
+        return "{" + ",".join(f"{key}:{_canonical_variant(item)}" for key, item in sorted(items, reverse=True)) + "}"
     return _canonical_variant(value)
 
 
