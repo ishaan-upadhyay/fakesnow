@@ -1650,6 +1650,12 @@ def variant_cast(expression: Expr) -> Expr:
             this="_fs_variant_to_varchar",
             expressions=[_as_variant(expression.this)],
         )
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this in {exp.DataType.Type.VARCHAR, exp.DataType.Type.TEXT}
+        and _is_map_expression(expression.this)
+    ):
+        return _as_json_compact(expression.this)
     if not isinstance(expression, exp.Cast) or not (
         _is_variant_expression(expression.this) or _is_array_expression(expression.this)
     ):

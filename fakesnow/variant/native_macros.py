@@ -276,10 +276,13 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_index(v, key) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_map_get(m, key) AS (
-    CASE _fs_map_get_kind_py(m, key)
-        WHEN 'json_null' THEN ${catalog}.main._fs_variant_null()
-        WHEN 'value' THEN _fs_map_get_py(m, key)
-        ELSE NULL::VARIANT
+    CASE
+        WHEN m IS NULL OR key IS NULL OR ${catalog}.main._fs_as_map(m) IS NULL THEN NULL::VARIANT
+        WHEN NOT map_contains(${catalog}.main._fs_as_map(m), TRY_CAST(key AS VARCHAR)) THEN NULL::VARIANT
+        ELSE list_element(
+            map_extract(${catalog}.main._fs_as_map(m), TRY_CAST(key AS VARCHAR)),
+            1
+        )
     END
 );
 
@@ -839,7 +842,32 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_to_string(arr, delimiter) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
-        ELSE list_distinct(${catalog}.main._fs_as_list(arr))
+        ELSE list_concat(
+            list_reduce(
+                ${catalog}.main._fs_as_list(arr),
+                (acc, x) -> CASE
+                    WHEN x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false) THEN acc
+                    WHEN COALESCE(
+                        list_bool_or(list_transform(acc, y -> ${catalog}.main._fs_variant_eq(x, y))),
+                        false
+                    ) THEN acc
+                    ELSE list_append(acc, x)
+                END,
+                []::VARIANT[]
+            ),
+            CASE
+                WHEN COALESCE(
+                    list_bool_or(
+                        list_transform(
+                            ${catalog}.main._fs_as_list(arr),
+                            x -> x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false)
+                        )
+                    ),
+                    false
+                ) THEN [NULL::VARIANT]
+                ELSE []::VARIANT[]
+            END
+        )
     END
 );
 
@@ -850,7 +878,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_flatten(arr) AS (
             list_bool_or(
                 list_transform(
                     ${catalog}.main._fs_as_list(arr),
-                    x -> x IS NULL AND NOT ${catalog}.main._fs_is_json_null(x)
+                    x -> x IS NULL AND NOT COALESCE(${catalog}.main._fs_is_json_null(x), false)
                 )
             ),
             false
@@ -877,8 +905,26 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_flatten(arr) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_sort(arr, ascending, nulls_first) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
-        WHEN COALESCE(ascending, true) THEN list_sort(${catalog}.main._fs_as_list(arr))
-        ELSE list_reverse(list_sort(${catalog}.main._fs_as_list(arr)))
+        WHEN COALESCE(ascending, true) THEN list_transform(
+            list_sort(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr),
+                    x -> struct_pack(key := ${catalog}.main._fs_variant_sort_key(x), value := x)
+                )
+            ),
+            x -> x.value
+        )
+        ELSE list_transform(
+            list_reverse(
+                list_sort(
+                    list_transform(
+                        ${catalog}.main._fs_as_list(arr),
+                        x -> struct_pack(key := ${catalog}.main._fs_variant_sort_key(x), value := x)
+                    )
+                )
+            ),
+            x -> x.value
+        )
     END
 );
 

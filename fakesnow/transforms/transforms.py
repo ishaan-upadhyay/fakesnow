@@ -910,6 +910,21 @@ def flatten(expression: Expr) -> Expr:
         if not isinstance(sequence, exp.Literal):
             arguments.append(sequence)
         alias = expression.args.get("alias")
+        if isinstance(input_, exp.Cast) and isinstance(alias, exp.TableAlias):
+            logical_type = {
+                exp.DataType.Type.ARRAY: "VARIANT[]",
+                exp.DataType.Type.MAP: input_.to.sql(dialect="duckdb"),
+            }.get(input_.to.this)
+            select = expression.find_ancestor(exp.Select)
+            if logical_type and select:
+                for item in select.expressions:
+                    selected = item.this if isinstance(item, exp.Alias) else item
+                    if (
+                        isinstance(selected, exp.Column)
+                        and selected.table.upper() == alias.name.upper()
+                        and selected.name.upper() == "THIS"
+                    ):
+                        selected.args["_fs_flatten_this_type"] = logical_type
         return exp.Table(
             this=exp.Anonymous(
                 this=function_name,

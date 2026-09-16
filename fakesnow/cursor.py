@@ -257,6 +257,10 @@ class FakeSnowflakeCursor:
                         row[1] = f"DECIMAL({precision},0)"
                         row[2] = "YES" if nullable else "NO"
                         rows[index] = tuple(row)
+                    elif index < len(rows) and (flatten_this_type := source.args.get("_fs_flatten_this_type")):
+                        row = list(rows[index])
+                        row[1] = flatten_this_type
+                        rows[index] = tuple(row)
                     elif index < len(rows) and isinstance(
                         source,
                         (exp.Count, exp.Length),
