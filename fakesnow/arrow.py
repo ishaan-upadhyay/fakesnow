@@ -145,20 +145,8 @@ def parquet_variant_to_json(
         ident = _quoted_ident(table.schema.field(index).name)
         if should_render[index]:
             field = table.schema.field(index)
-            if _is_parquet_variant(field) and not pa.types.is_list(field.type) and not pa.types.is_map(field.type):
-                projections.append(
-                    "CASE "
-                    f"WHEN typeof({ident}) = 'VARIANT' AND variant_typeof({ident}) LIKE 'DOUBLE%' "
-                    f"THEN CASE "
-                    f"WHEN NOT isfinite(TRY_CAST({ident} AS DOUBLE)) THEN "
-                    f"CASE WHEN TRY_CAST({ident} AS DOUBLE) > 0 THEN 'Infinity' "
-                    f"WHEN TRY_CAST({ident} AS DOUBLE) < 0 THEN '-Infinity' ELSE 'NaN' END "
-                    f"ELSE printf('%.15e', TRY_CAST({ident} AS DOUBLE)) END "
-                    f"WHEN typeof({ident}) = 'VARIANT' AND ("
-                    f"variant_typeof({ident}) LIKE 'HUGEINT%' OR variant_typeof({ident}) LIKE 'UHUGEINT%'"
-                    f") THEN CAST({ident} AS VARCHAR) "
-                    f"ELSE CAST({ident} AS JSON) END AS {ident}"
-                )
+            if contains_parquet_variant(field):
+                projections.append(f"_fs_to_json({ident}) AS {ident}")
             else:
                 projections.append(f"CAST({ident} AS JSON) AS {ident}")
         else:
