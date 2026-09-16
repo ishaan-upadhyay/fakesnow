@@ -102,6 +102,7 @@ class FakeSnowflakeCursor:
         self._last_sql = None
         self._last_params = None
         self._last_transformed = None
+        self._last_description_rows: list[tuple[Any, ...]] | None = None
         self._sqlstate = None
         self._arraysize = 1
         self._arrow_table = None
@@ -134,6 +135,7 @@ class FakeSnowflakeCursor:
         self._last_sql = None
         self._last_params = None
         self._last_transformed = None
+        self._last_description_rows = None
         return True
 
     def describe(self, command: str, *args: Any, **kwargs: Any) -> list[ResultMetadata]:
@@ -186,12 +188,15 @@ class FakeSnowflakeCursor:
         return self.fetchall()
 
     def _describe_last_sql(self) -> list:
-        # use a separate cursor to avoid consuming the result set on this cursor
-        with self._conn.cursor() as cur:
-            # TODO: can we replace with self._duck_conn.description?
-            expression = sqlglot.parse_one(f"DESCRIBE {self._last_sql}", read="duckdb")
-            cur._execute(expression, self._last_params)
-            rows: list[Any] = list(cur.fetchall())
+        if self._last_description_rows is not None:
+            rows: list[Any] = list(self._last_description_rows)
+        else:
+            # use a separate cursor to avoid consuming the result set on this cursor
+            with self._conn.cursor() as cur:
+                expression = sqlglot.parse_one(f"DESCRIBE {self._last_sql}", read="duckdb")
+                cur._execute(expression, self._last_params)
+                rows = list(cur.fetchall())
+        with self._conn.cursor():
             select = self._last_transformed.find(exp.Select) if self._last_transformed is not None else None
             if select:
                 output_names = select.args.get("_fs_output_names") or {}
@@ -538,6 +543,7 @@ class FakeSnowflakeCursor:
         self._arrow_table_fetch_index = None
         self._rowcount = None
         self._sfqid = None
+        self._last_description_rows = None
 
         cmd = expr.key_command(transformed)
 
@@ -612,6 +618,10 @@ class FakeSnowflakeCursor:
             elif cmd == "SELECT":
                 logger.log_sql(sql, params)
                 relation = self._duck_conn.sql(sql, params=params)
+                self._last_description_rows = [
+                    (name, str(column_type), "YES", None, None, None)
+                    for name, column_type in zip(relation.columns, relation.types, strict=True)
+                ]
                 select = transformed.find(exp.Select)
 
                 def _json_source(item: Expr) -> Expr:
