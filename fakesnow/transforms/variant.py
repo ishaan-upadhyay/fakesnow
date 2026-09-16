@@ -1742,6 +1742,42 @@ def structured_cast(expression: Expr) -> Expr:
     if (
         isinstance(expression, exp.Cast)
         and expression.to.this == exp.DataType.Type.STRUCT
+        and isinstance(expression.this, exp.Cast)
+        and expression.this.to.this == exp.DataType.Type.VARIANT
+        and isinstance(expression.this.this, exp.Struct)
+        and expression.this.this.args.get("_fs_json_literal")
+    ):
+        values = {
+            prop.this.name: prop.expression.copy()
+            for prop in expression.this.this.expressions
+            if isinstance(prop, exp.PropertyEQ)
+        }
+        fields = [
+            field for field in expression.to.expressions if isinstance(field, exp.ColumnDef) and field.kind is not None
+        ]
+        if set(values) != {field.name for field in fields}:
+            raise snowflake.connector.errors.ProgrammingError(
+                msg="Typed object schema mismatch in conversion",
+                errno=220000,
+                sqlstate="22000",
+            )
+        return exp.Cast(
+            this=exp.Struct(
+                expressions=[
+                    exp.PropertyEQ(
+                        this=exp.Identifier(this=field.name, quoted=False),
+                        expression=exp.Cast(this=values[field.name], to=field.kind.copy()),
+                    )
+                    for field in fields
+                    if field.kind is not None
+                ]
+            ),
+            to=expression.to.copy(),
+        )
+
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.STRUCT
         and isinstance(expression.this, exp.Anonymous)
         and expression.this.name.upper() == "_FS_PARSE_JSON"
         and len(expression.this.expressions) == 1

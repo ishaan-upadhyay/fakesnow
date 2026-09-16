@@ -1590,7 +1590,15 @@ def object_construct(expression: Expr) -> Expr:
 
     elif isinstance(expression, exp.Struct):
         # OBJECT_CONSTRUCT — leave PARSE_JSON literal structs and MAP payloads alone.
-        if expression.args.get("_fs_json_literal") or isinstance(expression.parent, exp.ToMap):
+        if (
+            expression.args.get("_fs_json_literal")
+            or isinstance(expression.parent, exp.ToMap)
+            or (
+                isinstance(expression.parent, exp.Cast)
+                and expression.parent.to.this == exp.DataType.Type.MAP
+                and bool(expression.parent.to.expressions)
+            )
+        ):
             return expression
         keep_nulls = False
 
