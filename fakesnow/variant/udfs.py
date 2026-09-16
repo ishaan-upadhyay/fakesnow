@@ -385,6 +385,41 @@ def _cmp_key(value: Any) -> Any:
     return value
 
 
+def _canonical_variant(value: Any) -> str:
+    if value is None:
+        return "z:null"
+    if isinstance(value, bool):
+        return f"b:{int(value)}"
+    if isinstance(value, (int, float, Decimal)):
+        number = Decimal(str(value))
+        return f"n:{format(number.normalize(), 'f')}"
+    if isinstance(value, bytes):
+        return f"x:{value.hex()}"
+    if isinstance(value, str):
+        return f"s:{value}"
+    if isinstance(value, list):
+        return "a:[" + ",".join(_canonical_variant(item) for item in value) + "]"
+    if items := _map_items(value):
+        return "o:{" + ",".join(
+            f"{key}:{_canonical_variant(item)}" for key, item in sorted(items)
+        ) + "}"
+    return f"u:{value!r}"
+
+
+def _fs_variant_group_key_py(value: Any, sql_typeof: Any, variant_typeof: Any) -> str | None:
+    if _is_sql_null_arg(value, sql_typeof, variant_typeof):
+        return None
+    return _canonical_variant(value)
+
+
+def _fs_variant_order_key_py(value: Any) -> str:
+    if items := _map_items(value):
+        return "{" + ",".join(
+            f"{key}:{_canonical_variant(item)}" for key, item in sorted(items, reverse=True)
+        ) + "}"
+    return _canonical_variant(value)
+
+
 def _fs_variant_lt_py(
     left: Any,
     left_typeof: Any,
@@ -583,6 +618,8 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
         ("_fs_variant_eq_py", _fs_variant_eq_py, sqltypes.BOOLEAN),
         ("_fs_variant_eq_sql_py", _fs_variant_eq_sql_py, sqltypes.BOOLEAN),
         ("_fs_variant_lt_py", _fs_variant_lt_py, sqltypes.BOOLEAN),
+        ("_fs_variant_group_key_py", _fs_variant_group_key_py, sqltypes.VARCHAR),
+        ("_fs_variant_order_key_py", _fs_variant_order_key_py, sqltypes.VARCHAR),
         ("_fs_to_json_py", _fs_to_json_py, sqltypes.VARCHAR),
     ]
     for name, function, return_type in specs:

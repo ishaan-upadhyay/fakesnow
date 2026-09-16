@@ -455,6 +455,10 @@ def _variant_key(expression: Expr) -> Expr:
     return exp.Anonymous(this="_fs_variant_key", expressions=[_as_variant(expression)])
 
 
+def _variant_sort_key(expression: Expr) -> Expr:
+    return exp.Anonymous(this="_fs_variant_sort_key", expressions=[_as_variant(expression)])
+
+
 def _first_variant(expression: Expr) -> Expr:
     return exp.Anonymous(this="FIRST", expressions=[expression.copy()])
 
@@ -680,7 +684,7 @@ def variant_relational_keys(expression: Expr) -> Expr:
                 ordered_expression = item.copy()
                 ordered_expression.set(
                     "this",
-                    _variant_key(item.this) if _contains_variant_expression(item.this) else item.this.copy(),
+                    _variant_sort_key(item.this) if _contains_variant_expression(item.this) else item.this.copy(),
                 )
                 ordered_expressions.append(ordered_expression)
             ordered.set(
@@ -792,7 +796,7 @@ def variant_relational_keys(expression: Expr) -> Expr:
                     use_key = True
             if use_key:
                 ordered_item = item.copy()
-                ordered_item.set("this", _variant_key(target))
+                ordered_item.set("this", _variant_sort_key(target))
                 ordered_items.append(ordered_item)
             else:
                 ordered_items.append(item.copy())

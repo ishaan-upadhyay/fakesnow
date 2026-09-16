@@ -201,7 +201,11 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_cmp_variant(v) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_key(v) AS (
-    variant_comparator(${catalog}.main._fs_cmp_variant(v))
+    _fs_variant_group_key_py(
+        v,
+        typeof(v),
+        CASE WHEN v IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(v AS VARIANT)) END
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_sort_rank(v) AS (
@@ -221,7 +225,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_sort_key(v) AS (
             WHEN ${catalog}.main._fs_is_numeric_variant(v) THEN TRY_CAST(v AS DOUBLE)
             ELSE NULL::DOUBLE
         END,
-        cmp := variant_comparator(${catalog}.main._fs_cmp_variant(v))
+        cmp := _fs_variant_order_key_py(v)
     )
 );
 
