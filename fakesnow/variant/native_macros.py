@@ -341,6 +341,33 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                             WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'BLOB%'
                                 OR ${catalog}.main._fs_variant_typeof(y) LIKE 'BINARY%'
                                 THEN '"' || upper(hex(TRY_CAST(y AS BLOB))) || '"'
+                            WHEN TRY_CAST(y AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_NTZ__%' THEN
+                                '"' || CASE
+                                    WHEN length(
+                                        replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', '')
+                                    ) <= 19
+                                        THEN replace(
+                                            TRY_CAST(y AS VARCHAR),
+                                            '__FAKESNOW_TIMESTAMP_NTZ__',
+                                            ''
+                                        ) || '.000'
+                                    ELSE left(
+                                        replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', ''),
+                                        23
+                                    )
+                                END || '"'
+                            WHEN TRY_CAST(y AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_TZ__%' THEN
+                                '"' || replace(
+                                    replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''),
+                                    '+',
+                                    ' +'
+                                ) || '"'
+                            WHEN TRY_CAST(y AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_LTZ__%' THEN
+                                '"' || replace(
+                                    replace(TRY_CAST(y AS VARCHAR), '__FAKESNOW_TIMESTAMP_LTZ__', ''),
+                                    ' Z',
+                                    '.000 Z'
+                                ) || '"'
                             ELSE CAST(y AS JSON)::VARCHAR
                         END
                     ),
@@ -361,7 +388,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_object(m) AS (
                 k -> to_json(k::VARCHAR) || ':' || COALESCE(
                     CASE
                         WHEN list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1) IS NULL
-                            THEN 'undefined'
+                            THEN 'null'
                         WHEN ${catalog}.main._fs_is_json_null(
                             list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
                         ) THEN 'null'
@@ -391,12 +418,19 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_object(m) AS (
                                 list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
                                 AS BLOB
                             ))) || '"'
+                        WHEN ${catalog}.main._fs_variant_typeof(
+                            list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                        ) LIKE 'TIMESTAMP%'
+                            THEN '"' || left(strftime(TRY_CAST(
+                                list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                                AS TIMESTAMP
+                            ), '%Y-%m-%d %H:%M:%S.%f'), 23) || '"'
                         ELSE CAST(
                             list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
                             AS JSON
                         )::VARCHAR
                     END,
-                    'undefined'
+                    'null'
                 )
             ),
             'string_agg',

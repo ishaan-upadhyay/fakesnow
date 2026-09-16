@@ -93,6 +93,39 @@ def _normalize_json_number(value: str) -> str:
     return value
 
 
+def _pretty_nonstandard_json(value: str) -> str:
+    rendered: list[str] = []
+    depth = 0
+    in_string = False
+    escape = False
+    for char in value:
+        if in_string:
+            rendered.append(char)
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            continue
+        if char == '"':
+            in_string = True
+            rendered.append(char)
+        elif char in "[{":
+            depth += 1
+            rendered.extend((char, "\n", "  " * depth))
+        elif char in "]}":
+            depth -= 1
+            rendered.extend(("\n", "  " * depth, char))
+        elif char == ",":
+            rendered.extend((",\n", "  " * depth))
+        elif char == ":":
+            rendered.extend((": "))
+        elif not char.isspace():
+            rendered.append(char)
+    return "".join(rendered)
+
+
 def _pretty_semistructured(value: str | None, *, compact: bool = False) -> str | None:
     if value is None:
         return None
@@ -101,7 +134,7 @@ def _pretty_semistructured(value: str | None, *, compact: bool = False) -> str |
     if value in {"-inf", "-Inf"}:
         return "-Infinity"
     if _UNDEFINED_TOKEN.search(value):
-        return value
+        return value if compact else _pretty_nonstandard_json(value)
     prepared = value
     scientific: list[str] = []
 

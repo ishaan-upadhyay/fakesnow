@@ -11,7 +11,7 @@ from __future__ import annotations
 import contextlib
 import json
 from datetime import date, datetime
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_HALF_UP, Decimal, InvalidOperation
 from typing import Any
 
 import duckdb
@@ -462,7 +462,7 @@ def _fs_variant_to_bigint_py(value: Any, sql_typeof: Any, variant_typeof: Any) -
             if isinstance(value, (int, float, Decimal, str)):
                 number = value if isinstance(value, Decimal) else Decimal(str(value))
                 return int(number.to_integral_value(rounding=ROUND_HALF_UP))
-        except (TypeError, ValueError, OverflowError):
+        except (TypeError, ValueError, OverflowError, InvalidOperation):
             raise cast_error(value, "FIXED", kind=kind) from None
     raise cast_error(value, "FIXED", kind=kind)
 
