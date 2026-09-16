@@ -207,7 +207,7 @@ def parquet_variant_to_json(
     arrays: list[pa.Array] = []
     for index in range(table.num_columns):
         field = table.schema.field(index)
-        json_column = json_table.column(field.name)
+        json_column = json_table.column(index)
         if pa.types.is_list(table.schema.field(index).type) and (
             contains_parquet_variant(field) or any(_list_has_invalid_slots(table.column(index)))
         ):

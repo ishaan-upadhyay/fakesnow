@@ -252,31 +252,6 @@ def _variant_type_name(sql_typeof: Any, variant_typeof: Any) -> str | None:
     return str(sql_typeof)
 
 
-def _as_bool(value: Any) -> bool | None:
-    if type(value) is bool:
-        return value
-    if isinstance(value, str):
-        lowered = value.lower()
-        if lowered == "true":
-            return True
-        if lowered == "false":
-            return False
-    return None
-
-
-def _as_date(value: Any) -> date | None:
-    if isinstance(value, datetime):
-        return value.date()
-    if isinstance(value, date):
-        return value
-    if isinstance(value, str):
-        try:
-            return date.fromisoformat(value[:10])
-        except ValueError:
-            return None
-    return None
-
-
 def _fs_variant_eq_py(
     left: Any,
     left_typeof: Any,
@@ -314,16 +289,6 @@ def _fs_variant_eq_py(
         if left == right:
             return True
 
-    if left_kind == "VARCHAR" or right_kind == "VARCHAR":
-        if left_bool or right_bool:
-            left_as_bool = _as_bool(left)
-            right_as_bool = _as_bool(right)
-            if left_as_bool is not None and right_as_bool is not None:
-                return left_as_bool == right_as_bool
-        left_as_date = _as_date(left)
-        right_as_date = _as_date(right)
-        if left_as_date is not None and right_as_date is not None:
-            return left_as_date == right_as_date
     return False
 
 
@@ -412,7 +377,13 @@ def _fs_variant_group_key_py(value: Any, sql_typeof: Any, variant_typeof: Any) -
 
 def _fs_variant_order_key_py(value: Any) -> str:
     if items := _map_items(value):
-        return "{" + ",".join(f"{key}:{_canonical_variant(item)}" for key, item in sorted(items, reverse=True)) + "}"
+        entries = []
+        for key, item in sorted(items, reverse=True):
+            descending_key = "".join(chr(0x10FFFF - ord(char)) for char in key)
+            entries.append(f"{descending_key}:{_canonical_variant(item)}")
+        return "{" + "|".join(entries) + "!"
+    if isinstance(value, list):
+        return "[" + "|".join(_canonical_variant(item) for item in value) + "!"
     return _canonical_variant(value)
 
 
