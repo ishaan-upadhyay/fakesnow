@@ -219,19 +219,9 @@ def render_fetch_table(
         return relation.to_arrow_table()
     sql_render = [_is_variant_sql_json(duck_type) for duck_type in duck_types]
     arrow_render = [_is_container_json(duck_type) for duck_type in duck_types]
-    if any(sql_render):
-        projections = [
-            f"_fs_to_json({_quoted_ident(name)}) AS {_quoted_ident(name)}" if should_render else _quoted_ident(name)
-            for name, should_render in zip(names, sql_render, strict=True)
-        ]
-        inner_sql = (sql or relation.sql_query()).rstrip().rstrip(";")
-        table = conn.execute(
-            f"SELECT {', '.join(projections)} FROM ({inner_sql}) AS {_VARIANT_JSON_RELATION}",
-            params,
-        ).to_arrow_table()
-    else:
-        table = relation.to_arrow_table()
-    rendered = parquet_variant_to_json(conn, table, arrow_render) if any(arrow_render) else table
+    table = relation.to_arrow_table()
+    render_columns = [sql or arrow for sql, arrow in zip(sql_render, arrow_render, strict=True)]
+    rendered = parquet_variant_to_json(conn, table, render_columns) if any(render_columns) else table
     pretty_columns = [
         sql_render[index]
         or arrow_render[index]
