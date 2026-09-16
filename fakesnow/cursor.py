@@ -229,11 +229,7 @@ class FakeSnowflakeCursor:
                         and rows[index][1] in {"VARCHAR", "JSON", "VARIANT"}
                         and not fixed_width_text
                         and (wide_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
-                    ):
-                        row = list(rows[index])
-                        row[1] = "VARCHAR(134217728)"
-                        rows[index] = tuple(row)
-                    elif (
+                    ) or (
                         index < len(rows)
                         and rows[index][1] == "VARCHAR"
                         and not fixed_width_text
@@ -662,8 +658,6 @@ class FakeSnowflakeCursor:
                     relation,
                     pretty_json_columns,
                     compact_json_columns,
-                    sql,
-                    params,
                 )
             else:
                 logger.log_sql(sql, params)

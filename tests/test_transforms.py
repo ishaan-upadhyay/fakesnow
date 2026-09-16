@@ -685,14 +685,16 @@ def test_object_construct_star() -> None:
         sqlglot.parse_one("SELECT OBJECT_CONSTRUCT(*) FROM tbl", read="snowflake")
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT CAST(CAST(_FS_OBJECT_DROP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
+        == "SELECT CAST(CAST(_FS_OBJECT_DROP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) "
+        "AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
     )
 
     assert (
         sqlglot.parse_one("SELECT OBJECT_CONSTRUCT_KEEP_NULL(*) FROM tbl", read="snowflake")
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT CAST(CAST(_FS_OBJECT_KEEP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
+        == "SELECT CAST(CAST(_FS_OBJECT_KEEP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) "
+        "AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
     )
 
     assert (

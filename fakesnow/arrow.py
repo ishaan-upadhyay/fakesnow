@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
 
 import pyarrow as pa
 import pyarrow.compute as pc
-from duckdb import DuckDBPyConnection
+from duckdb import DuckDBPyConnection, DuckDBPyRelation
 
 from fakesnow.rowtype import ColumnInfo
 
@@ -207,11 +206,9 @@ def _is_container_json(duck_type: str) -> bool:
 
 def render_fetch_table(
     conn: DuckDBPyConnection,
-    relation: Any,
+    relation: DuckDBPyRelation,
     pretty_json_columns: list[bool] | None = None,
     compact_json_columns: list[bool] | None = None,
-    sql: str | None = None,
-    params: Any = None,
 ) -> pa.Table:
     duck_types = [str(column_type) for column_type in relation.types]
     names = list(relation.columns)

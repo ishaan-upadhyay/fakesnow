@@ -1113,14 +1113,6 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                 this=this,
                 to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
             )
-            native_list = exp.TryCast(
-                this=variant,
-                to=exp.DataType(
-                    this=exp.DataType.Type.ARRAY,
-                    expressions=[exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)],
-                    nested=False,
-                ),
-            )
             return exp.Anonymous(
                 this="_fs_variant_get_index",
                 expressions=[variant, index.copy()],

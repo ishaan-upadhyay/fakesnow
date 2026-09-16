@@ -4,6 +4,7 @@ import json
 import re
 from collections.abc import Sequence
 from decimal import Decimal, InvalidOperation
+from typing import Never
 
 import snowflake.connector
 from sqlglot import Dialect, errors, exp
@@ -405,7 +406,8 @@ def _pairs_to_compact_json(pairs: list[tuple[Expr, Expr]]) -> Expr:
         f"SELECT {key.sql(dialect='duckdb')} AS k, {json_value.sql(dialect='duckdb')} AS j" for key, json_value in pairs
     ]
     sql = (
-        "(SELECT '{' || COALESCE(string_agg(to_json(CAST(k AS VARCHAR)) || ':' || j, ',' ORDER BY CAST(k AS VARCHAR)), '') || '}' "
+        "(SELECT '{' || COALESCE("
+        "string_agg(to_json(CAST(k AS VARCHAR)) || ':' || j, ',' ORDER BY CAST(k AS VARCHAR)), '') || '}' "
         f"FROM ({' UNION ALL '.join(selects)}) AS _fs_object_json(k, j))"
     )
     parsed = exp.maybe_parse(sql, dialect="duckdb")
@@ -804,7 +806,7 @@ class _JsonNumber:
         self.token = token
 
 
-class _DuplicateJsonKey(ValueError):
+class _DuplicateJsonKeyError(ValueError):
     def __init__(self, key: str, pos: int) -> None:
         super().__init__(key)
         self.key = key
@@ -890,7 +892,7 @@ def _load_snowflake_json(text: str) -> object:
         seen: dict[str, object] = {}
         for key, value in pairs:
             if key in seen:
-                raise _DuplicateJsonKey(key, _duplicate_key_pos(text, key))
+                raise _DuplicateJsonKeyError(key, _duplicate_key_pos(text, key))
             seen[key] = value
         return seen
 
@@ -907,7 +909,7 @@ def _load_snowflake_json(text: str) -> object:
                 parse_int=_JsonNumber,
                 parse_float=_JsonNumber,
             )
-        except _DuplicateJsonKey:
+        except _DuplicateJsonKeyError:
             raise
         except json.JSONDecodeError as exc:
             last_error = exc
@@ -915,8 +917,8 @@ def _load_snowflake_json(text: str) -> object:
     raise last_error
 
 
-def _raise_parse_json_error(text: str, exc: BaseException) -> None:
-    if isinstance(exc, _DuplicateJsonKey):
+def _raise_parse_json_error(text: str, exc: BaseException) -> Never:
+    if isinstance(exc, _DuplicateJsonKeyError):
         raise snowflake.connector.errors.ProgrammingError(
             msg=f'Error parsing JSON: duplicate object attribute "{exc.key}", pos {exc.pos}',
             errno=100069,
@@ -1076,7 +1078,7 @@ def parse_json(expression: Expr) -> Expr:
                 )
             try:
                 loaded = _load_snowflake_json(argument.this)
-            except (_DuplicateJsonKey, json.JSONDecodeError) as exc:
+            except (_DuplicateJsonKeyError, json.JSONDecodeError) as exc:
                 if safe:
                     return exp.Cast(
                         this=exp.Null(),

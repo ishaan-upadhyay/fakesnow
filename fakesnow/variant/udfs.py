@@ -370,7 +370,7 @@ def _fs_variant_lt_py(
 
 
 def _whole_index(key: Any) -> int | None:
-    if isinstance(key, bool) or isinstance(key, str):
+    if isinstance(key, (bool, str)):
         return None
     if isinstance(key, int):
         return key
@@ -416,17 +416,11 @@ def _strip_timestamp_sentinel(value: str) -> str:
                 tz = body[index:].replace(":", "")
                 if not tz.startswith(("+", "-")):
                     continue
-                if tz[0] != "-":
-                    tz = " " + tz
-                else:
-                    tz = " " + tz
+                tz = " " + tz
                 body = body[:index]
-                suffix = tz if tz.startswith(" ") else f" {tz}"
+                suffix = tz
                 break
-    if "." in body:
-        body = body[:23]
-    else:
-        body = body[:19] + ".000"
+    body = body[:23] if "." in body else body[:19] + ".000"
     return body + suffix
 
 
