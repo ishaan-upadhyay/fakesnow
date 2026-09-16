@@ -397,7 +397,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                                     ' Z',
                                     '.000 Z'
                                 ) || '"'
-                            ELSE CAST(y AS JSON)::VARCHAR
+                            ELSE _fs_to_json_py(y)
                         END
                     ),
                     'string_agg',
@@ -852,6 +852,8 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
                         list_bool_or(list_transform(acc, y -> ${catalog}.main._fs_variant_eq(x, y))),
                         false
                     ) THEN acc
+                    WHEN ${catalog}.main._fs_is_json_null(x) THEN
+                        list_append(acc, ${catalog}.main._fs_variant_null())
                     ELSE list_append(acc, x)
                 END,
                 []::VARIANT[]
@@ -865,7 +867,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
                         )
                     ),
                     false
-                ) THEN [NULL::VARIANT]
+                ) THEN [NULL]::VARIANT[]
                 ELSE []::VARIANT[]
             END
         )

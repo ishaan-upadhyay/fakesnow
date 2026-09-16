@@ -66,6 +66,8 @@ def array_construct_etc(expression: Expr) -> Expr:
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
 
     def as_variant(item: Expr) -> Expr:
+        if isinstance(item, exp.Null):
+            return item.copy()
         if isinstance(item, exp.Array):
             item = exp.Array(expressions=[as_variant(value) for value in item.expressions])
         inner = item

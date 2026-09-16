@@ -1048,8 +1048,20 @@ def _json_tree_to_sql_expr(node: object) -> Expr:
     if isinstance(node, list):
         return exp.Array(expressions=[_json_tree_to_variant_expr(item) for item in node])
     if isinstance(node, dict):
-        if not node or "" in node or _keys_collide_casefold(list(node.keys())):
+        if not node:
             return _json_object_as_variant(node)
+        if "" in node or _keys_collide_casefold(list(node.keys())):
+            return exp.ToMap(
+                this=exp.Struct(
+                    expressions=[
+                        exp.PropertyEQ(
+                            this=exp.Literal.string(key),
+                            expression=_json_tree_to_variant_expr(value),
+                        )
+                        for key, value in node.items()
+                    ]
+                )
+            )
         struct = exp.Struct(
             expressions=[
                 exp.PropertyEQ(
