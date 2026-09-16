@@ -13,7 +13,9 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_as_variant(v) AS (
             WHEN v IS NULL THEN NULL
             WHEN typeof(v) = 'VARIANT' THEN v
             WHEN typeof(v) = 'JSON' THEN CAST(v AS VARIANT)
-            WHEN typeof(v) IN ('HUGEINT', 'UHUGEINT') THEN CAST(v AS DECIMAL(38, 0))::VARIANT
+            WHEN typeof(v) IN ('HUGEINT', 'UHUGEINT') AND TRY_CAST(v AS DECIMAL(38, 0)) IS NOT NULL
+                THEN CAST(v AS DECIMAL(38, 0))::VARIANT
+            WHEN typeof(v) IN ('HUGEINT', 'UHUGEINT') THEN CAST(v AS DOUBLE)::VARIANT
             ELSE TRY_CAST(v AS VARIANT)
         END
     ) AS VARIANT)
