@@ -445,7 +445,7 @@ def _fs_variant_get_py(container: Any, key: Any) -> Any:
     if container is None or key is None:
         return None
     if _map_items(container) is not None:
-        return _fs_map_get_py(container, key)
+        return _fs_map_get_py(container, key) if isinstance(key, str) else None
     return _fs_variant_get_index_py(container, key)
 
 
