@@ -178,7 +178,9 @@ def parquet_variant_to_json(
         ident = _quoted_ident(table.schema.field(index).name)
         if should_render[index]:
             field = table.schema.field(index)
-            if contains_parquet_variant(field):
+            if _is_parquet_variant(field):
+                projections.append(f"_fs_to_json_py({ident}) AS {ident}")
+            elif contains_parquet_variant(field):
                 projections.append(f"_fs_to_json({ident}) AS {ident}")
             else:
                 projections.append(f"CAST({ident} AS JSON) AS {ident}")

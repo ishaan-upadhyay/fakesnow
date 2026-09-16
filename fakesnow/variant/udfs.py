@@ -152,6 +152,51 @@ def _as_variant_value(value: Any) -> Any:
     return duckdb.Value(_variant_output(value), sqltypes.VARIANT)
 
 
+def _render_variant_json(value: Any) -> str:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if isinstance(value, Decimal):
+        text = format(value, "f")
+        return text.rstrip("0").rstrip(".") if "." in text else text
+    if isinstance(value, float):
+        if value != value:
+            return "NaN"
+        if value == float("inf"):
+            return "Infinity"
+        if value == float("-inf"):
+            return "-Infinity"
+        return f"{value:.15e}"
+    if isinstance(value, int):
+        return str(value)
+    if isinstance(value, bytes):
+        return json.dumps(value.hex().upper())
+    if isinstance(value, datetime):
+        return json.dumps(_strip_timestamp_sentinel(str(value)))
+    if isinstance(value, date):
+        return json.dumps(value.isoformat())
+    if isinstance(value, str):
+        rendered = _strip_timestamp_sentinel(value) if value.startswith("__FAKESNOW_TIMESTAMP_") else value
+        return json.dumps(rendered, ensure_ascii=False)
+    if isinstance(value, list):
+        return "[" + ",".join(_render_variant_json(item) for item in value) + "]"
+    if items := _map_items(value):
+        return (
+            "{"
+            + ",".join(
+                f"{json.dumps(key, ensure_ascii=False)}:{_render_variant_json(item)}"
+                for key, item in sorted(items, key=lambda pair: pair[0])
+            )
+            + "}"
+        )
+    return json.dumps(value, default=str, ensure_ascii=False, separators=(",", ":"))
+
+
+def _fs_to_json_py(value: Any) -> str | None:
+    return None if value is None else _render_variant_json(value)
+
+
 def _map_lookup(container: Any, key: Any) -> tuple[str, Any] | None:
     if container is None or key is None:
         return None
@@ -515,6 +560,7 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
         ("_fs_variant_eq_py", _fs_variant_eq_py, sqltypes.BOOLEAN),
         ("_fs_variant_eq_sql_py", _fs_variant_eq_sql_py, sqltypes.BOOLEAN),
         ("_fs_variant_lt_py", _fs_variant_lt_py, sqltypes.BOOLEAN),
+        ("_fs_to_json_py", _fs_to_json_py, sqltypes.VARCHAR),
     ]
     for name, function, return_type in specs:
         if name.lower() in already:
