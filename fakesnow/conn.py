@@ -35,6 +35,8 @@ class FakeSnowflakeConnection:
         **kwargs: Any,
     ):
         self._duck_conn = duck_conn
+        duck_conn.execute("SET disabled_optimizers = 'join_order'")
+        duck_conn.execute("SET max_expression_depth = 10000")
         self._is_closed = False
         # upper case database and schema like snowflake unquoted identifiers
         # so they appear as upper-cased in information_schema

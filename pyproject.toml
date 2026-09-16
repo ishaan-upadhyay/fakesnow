@@ -42,6 +42,7 @@ dev = [
     "pyarrow-stubs==20.0.0.20260819",
     "pyright==1.1.411",
     "pytest~=9.1",
+    "pytest-html>=4.1",
     "pytest-xdist",
     "ruff~=0.16.5",
     # include compatible version of pandas, and secure-local-storage for token caching
@@ -80,7 +81,12 @@ reportUnnecessaryTypeIgnoreComment = true
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = ["-n", "auto"]
+addopts = [
+    "-n",
+    "auto",
+    "--html=pytest-report.html",
+    "--self-contained-html",
+]
 # error on unhandled exceptions in background threads
 # useful for catching errors in server or snowflake connector threads
 filterwarnings = [

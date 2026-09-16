@@ -522,12 +522,12 @@ def test_identifier() -> None:
 def test_indices_to_object() -> None:
     assert (
         sqlglot.parse_one("SELECT myarray[0] FROM table1").transform(indices_to_json_extract).sql()
-        == "SELECT TRY_CAST(CAST(myarray AS VARIANT) AS ARRAY(VARIANT))[0] FROM table1"
+        == "SELECT _FS_VARIANT_GET_INDEX(CAST(myarray AS VARIANT), 0) FROM table1"
     )
 
     assert (
         sqlglot.parse_one("SELECT name['k'] FROM semi").transform(indices_to_json_extract).sql(dialect="duckdb")
-        == "SELECT TRY_CAST(name AS MAP(TEXT, VARIANT))['k'] FROM semi"
+        == "SELECT _FS_MAP_GET(name, 'k') FROM semi"
     )
 
     # Keys with special characters (e.g. periods) must use direct key lookup instead of
@@ -536,14 +536,14 @@ def test_indices_to_object() -> None:
         sqlglot.parse_one("SELECT meta['key.with.period'] FROM semi")
         .transform(indices_to_json_extract)
         .sql(dialect="duckdb")
-        == "SELECT TRY_CAST(meta AS MAP(TEXT, VARIANT))['key.with.period'] FROM semi"
+        == "SELECT _FS_MAP_GET(meta, 'key.with.period') FROM semi"
     )
 
     assert (
         sqlglot.parse_one("SELECT meta['key.with.period']::varchar FROM semi", read="snowflake")
         .transform(indices_to_json_extract)
         .sql(dialect="duckdb")
-        == "SELECT CAST(TRY_CAST(meta AS MAP(TEXT, VARIANT))['key.with.period'] AS TEXT) FROM semi"
+        == "SELECT CAST(_FS_MAP_GET(meta, 'key.with.period') AS TEXT) FROM semi"
     )
 
 
@@ -676,7 +676,7 @@ def test_object_construct() -> None:
         )
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_CONSTRUCT([CAST('K1' AS VARIANT)], [CAST(_FS_OBJECT_CONSTRUCT([CAST('K2' AS VARIANT)], [CAST(1 AS VARIANT)], FALSE) AS VARIANT)], FALSE)"  # noqa: E501
+        == "SELECT MAP {'K1': CAST(CAST(MAP {'K2': CAST(1 AS VARIANT)} AS JSON) AS VARIANT)}"
     )
 
 
@@ -685,21 +685,21 @@ def test_object_construct_star() -> None:
         sqlglot.parse_one("SELECT OBJECT_CONSTRUCT(*) FROM tbl", read="snowflake")
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_DROP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) FROM tbl"
+        == "SELECT CAST(CAST(_FS_OBJECT_DROP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
     )
 
     assert (
         sqlglot.parse_one("SELECT OBJECT_CONSTRUCT_KEEP_NULL(*) FROM tbl", read="snowflake")
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_KEEP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) FROM tbl"
+        == "SELECT CAST(CAST(_FS_OBJECT_KEEP_NULL(CAST(STRUCT_PACK(*COLUMNS(*)) AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl"
     )
 
     assert (
         sqlglot.parse_one("SELECT OBJECT_CONSTRUCT(t.*) FROM tbl AS t", read="snowflake")
         .transform(object_construct)
         .sql(dialect="duckdb")
-        == "SELECT _FS_OBJECT_DROP_NULL(CAST(t AS MAP(TEXT, VARIANT))) FROM tbl AS t"
+        == "SELECT CAST(CAST(_FS_OBJECT_DROP_NULL(CAST(t AS MAP(TEXT, VARIANT))) AS JSON) AS VARIANT) FROM tbl AS t"
     )
 
     # a filtered star selects a subset of the columns, which isn't supported yet, so it's
@@ -920,15 +920,15 @@ def test_to_timestamp() -> None:
 def test_to_variant() -> None:
     assert (
         sqlglot.parse_one("SELECT TO_VARIANT('hello')", read="snowflake").transform(to_variant).sql(dialect="duckdb")
-        == "SELECT CAST('hello' AS VARIANT)"
+        == "SELECT _FS_AS_VARIANT('hello')"
     )
 
     assert sqlglot.parse_one("SELECT TO_VARIANT(OBJECT_CONSTRUCT('a', 1, 'b', 2))", read="snowflake").transform(
         to_variant
     ).sql(dialect="duckdb") in {
-        "SELECT CAST(OBJECT_CONSTRUCT('a', 1, 'b', 2) AS VARIANT)",
-        'SELECT CAST({"a": 1, "b": 2} AS VARIANT)',
-        "SELECT CAST({'a': 1, 'b': 2} AS VARIANT)",
+        "SELECT _FS_AS_VARIANT({'a': 1, 'b': 2})",
+        'SELECT _FS_AS_VARIANT({"a": 1, "b": 2})',
+        "SELECT _FS_AS_VARIANT(OBJECT_CONSTRUCT('a', 1, 'b', 2))",
     }
 
 
@@ -1097,7 +1097,7 @@ def test_try_parse_json() -> None:
         sqlglot.parse_one("""INSERT INTO table1 (name) SELECT TRY_PARSE_JSON('{"first":"foo", "last":"bar"}')""")
         .transform(try_parse_json_variant)
         .sql(dialect="duckdb")
-        == """INSERT INTO table1 (name) SELECT TRY(_FS_PARSE_JSON('{"first":"foo", "last":"bar"}'))"""
+        == """INSERT INTO table1 (name) SELECT _FS_TRY_PARSE_JSON('{"first":"foo", "last":"bar"}')"""
     )
 
 

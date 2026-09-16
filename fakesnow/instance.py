@@ -43,6 +43,8 @@ class FakeSnow:
 
         # use UTC instead of local time zone for consistent testing
         self.duck_conn.execute("SET GLOBAL TimeZone = 'UTC'")
+        self.duck_conn.execute("SET disabled_optimizers = 'join_order'")
+        self.duck_conn.execute("SET max_expression_depth = 10000")
 
     def connect(
         self,

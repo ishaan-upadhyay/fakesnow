@@ -68,6 +68,28 @@ def array_construct_etc(expression: Expr) -> Expr:
     def as_variant(item: Expr) -> Expr:
         if isinstance(item, exp.Array):
             item = exp.Array(expressions=[as_variant(value) for value in item.expressions])
+        inner = item
+        while isinstance(inner, exp.Cast) and inner.to.this == exp.DataType.Type.VARIANT:
+            inner = inner.this
+        if isinstance(inner, exp.ToMap) or (
+            isinstance(inner, exp.Anonymous)
+            and inner.name.upper()
+            in {
+                "_FS_OBJECT_CAT",
+                "_FS_OBJECT_CONSTRUCT",
+                "_FS_OBJECT_DELETE",
+                "_FS_OBJECT_INSERT",
+                "_FS_OBJECT_PICK",
+                "_FS_VARIANT_TO_OBJECT",
+            }
+        ):
+            return exp.Cast(
+                this=exp.Cast(
+                    this=inner.copy(),
+                    to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+                ),
+                to=variant_type.copy(),
+            )
         return exp.Cast(this=item.copy(), to=variant_type.copy())
 
     if isinstance(expression, exp.ArrayConstructCompact):
@@ -100,8 +122,14 @@ def array_functions(expression: Expr) -> Expr:
             to=variant_type.copy(),
         )
 
-    def call(name: str, *arguments: Expr | None) -> Expr:
-        return exp.Anonymous(this=name, expressions=[variant(argument) for argument in arguments])
+    def call(name: str, array: Expr, *values: Expr | None) -> Expr:
+        return exp.Anonymous(
+            this=name,
+            expressions=[array.copy(), *[variant(value) for value in values]],
+        )
+
+    def two_arrays(name: str, left: Expr, right: Expr) -> Expr:
+        return exp.Anonymous(this=name, expressions=[left.copy(), right.copy()])
 
     if isinstance(expression, exp.ArrayContains):
         return call("_fs_array_contains", expression.this, expression.expression)
@@ -117,7 +145,7 @@ def array_functions(expression: Expr) -> Expr:
         return exp.Anonymous(
             this="_fs_array_slice",
             expressions=[
-                variant(expression.this),
+                expression.this.copy(),
                 expression.args["start"].copy(),
                 expression.args["end"].copy(),
             ],
@@ -125,7 +153,7 @@ def array_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.ArrayToString):
         return exp.Anonymous(
             this="_fs_array_to_string",
-            expressions=[variant(expression.this), expression.expression.copy()],
+            expressions=[expression.this.copy(), expression.expression.copy()],
         )
     if isinstance(expression, exp.ArrayDistinct):
         return call("_fs_array_distinct", expression.this)
@@ -135,7 +163,7 @@ def array_functions(expression: Expr) -> Expr:
         return exp.Anonymous(
             this="_fs_array_sort",
             expressions=[
-                variant(expression.this),
+                expression.this.copy(),
                 (expression.args.get("asc") or exp.Null()).copy(),
                 (expression.args.get("nulls_first") or exp.Null()).copy(),
             ],
@@ -150,7 +178,7 @@ def array_functions(expression: Expr) -> Expr:
         return exp.Anonymous(
             this="_fs_array_insert",
             expressions=[
-                variant(expression.this),
+                expression.this.copy(),
                 expression.args["position"].copy(),
                 variant(expression.expression),
             ],
@@ -158,15 +186,15 @@ def array_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.ArrayCompact):
         return call("_fs_array_compact", expression.this)
     if isinstance(expression, exp.ArrayExcept):
-        return call("_fs_array_except", expression.this, expression.expression)
+        return two_arrays("_fs_array_except", expression.this, expression.expression)
     if isinstance(expression, exp.ArrayIntersect):
-        return call("_fs_array_intersection", *expression.expressions)
+        return two_arrays("_fs_array_intersection", *expression.expressions)
     if isinstance(expression, exp.ArrayOverlaps):
-        return call("_fs_arrays_overlap", expression.this, expression.expression)
+        return two_arrays("_fs_arrays_overlap", expression.this, expression.expression)
     if isinstance(expression, exp.ArraysZip) and len(expression.expressions) == 2:
-        return call("_fs_arrays_zip", *expression.expressions)
+        return two_arrays("_fs_arrays_zip", *expression.expressions)
     if isinstance(expression, exp.ArrayConcat) and len(expression.expressions) == 1:
-        return call("_fs_array_cat", expression.this, expression.expressions[0])
+        return two_arrays("_fs_array_cat", expression.this, expression.expressions[0])
     if isinstance(expression, exp.GenerateSeries) and expression.args.get("is_end_exclusive"):
         generated = expression.copy()
         return exp.Cast(
@@ -1077,22 +1105,9 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                 )
         if isinstance(index, exp.Literal):
             if index.is_string:
-                native_map = exp.TryCast(
-                    this=this,
-                    to=exp.DataType(
-                        this=exp.DataType.Type.MAP,
-                        expressions=[
-                            exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
-                            exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                        ],
-                        nested=False,
-                    ),
-                )
-                native_map.args["_fs_native_variant_container"] = True
-                return exp.Bracket(
-                    this=native_map,
-                    expressions=[index.copy()],
-                    _fs_zero_based_adjusted=True,
+                return exp.Anonymous(
+                    this="_fs_map_get",
+                    expressions=[this.copy(), index.copy()],
                 )
             variant = exp.Cast(
                 this=this,
@@ -1106,11 +1121,9 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                     nested=False,
                 ),
             )
-            native_list.args["_fs_native_variant_container"] = True
-            return exp.Bracket(
-                this=native_list,
-                expressions=[index.copy()],
-                _fs_zero_based_adjusted=True,
+            return exp.Anonymous(
+                this="_fs_variant_get_index",
+                expressions=[variant, index.copy()],
             )
         return exp.Anonymous(
             this="_fs_variant_get",
@@ -1512,22 +1525,44 @@ def _star_object(star: Expr, *, keep_nulls: bool) -> Expr:
         # spread into STRUCT_PACK args so the column names don't need to be known here
         source = exp.Anonymous(this="STRUCT_PACK", expressions=[exp.var("*COLUMNS(*)")])
 
-    return exp.Anonymous(
-        this="_fs_object_keep_null" if keep_nulls else "_fs_object_drop_null",
-        expressions=[
-            exp.Cast(
-                this=source,
-                to=exp.DataType(
-                    this=exp.DataType.Type.MAP,
-                    expressions=[
-                        exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
-                        exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                    ],
-                    nested=False,
-                ),
-            )
-        ],
+    return exp.Cast(
+        this=exp.Cast(
+            this=exp.Anonymous(
+                this="_fs_object_keep_null" if keep_nulls else "_fs_object_drop_null",
+                expressions=[
+                    exp.Cast(
+                        this=source,
+                        to=exp.DataType(
+                            this=exp.DataType.Type.MAP,
+                            expressions=[
+                                exp.DataType(this=exp.DataType.Type.VARCHAR, nested=False),
+                                exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
+                            ],
+                            nested=False,
+                        ),
+                    )
+                ],
+            ),
+            to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+        ),
+        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
     )
+
+
+def _is_sql_null_expr(value: Expr) -> bool:
+    inner: Expr | None = value
+    while inner is not None:
+        if isinstance(inner, exp.Cast):
+            inner = inner.this
+            continue
+        if isinstance(inner, exp.ToVariant):
+            inner = inner.this
+            continue
+        if isinstance(inner, exp.Anonymous) and inner.name.upper() == "_FS_AS_VARIANT" and inner.expressions:
+            inner = inner.expressions[0]
+            continue
+        break
+    return isinstance(inner, exp.Null)
 
 
 def object_construct(expression: Expr) -> Expr:
@@ -1545,7 +1580,9 @@ def object_construct(expression: Expr) -> Expr:
         return _star_object(star, keep_nulls=False) if star else expression
 
     elif isinstance(expression, exp.Struct):
-        # OBJECT_CONSTRUCT
+        # OBJECT_CONSTRUCT — leave PARSE_JSON literal structs and MAP payloads alone.
+        if expression.args.get("_fs_json_literal") or isinstance(expression.parent, exp.ToMap):
+            return expression
         keep_nulls = False
 
         for prop in expression.expressions:
@@ -1571,6 +1608,7 @@ def object_construct(expression: Expr) -> Expr:
     values: list[Expr] = []
     variant_type = exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
     literal_keys: set[str] = set()
+    literal_key_exprs: list[Expr | None] = []
 
     for key, value in items:
         if isinstance(key, exp.Identifier):
@@ -1589,6 +1627,9 @@ def object_construct(expression: Expr) -> Expr:
                     sqlstate="22000",
                 )
             literal_keys.add(key.name)
+            literal_key_exprs.append(key)
+        else:
+            literal_key_exprs.append(None)
 
         keys.append(exp.Cast(this=key, to=variant_type.copy()))
         value = (
@@ -1600,14 +1641,57 @@ def object_construct(expression: Expr) -> Expr:
             else value.transform(object_construct)
         )
 
-        if keep_nulls and isinstance(value, exp.Null):
-            value = exp.Anonymous(
-                this="_fs_parse_json",
-                expressions=[exp.Literal.string("null")],
-            )
+        if _is_sql_null_expr(value):
+            if keep_nulls:
+                value = exp.Anonymous(
+                    this="_fs_parse_json",
+                    expressions=[exp.Literal.string("null")],
+                )
+            else:
+                value = exp.Cast(this=exp.Null(), to=variant_type.copy())
         else:
             value = exp.Cast(this=value, to=variant_type.copy())
         values.append(value)
+
+    if all(key is not None for key in literal_key_exprs):
+        fields: list[Expr] = []
+        for key_expr, value in zip(literal_key_exprs, values, strict=True):
+            assert key_expr is not None
+            inner = value
+            while isinstance(inner, exp.Cast):
+                inner = inner.this
+            if not keep_nulls and _is_sql_null_expr(inner):
+                continue
+            if isinstance(inner, exp.ToMap) or (
+                isinstance(inner, exp.Anonymous)
+                and inner.name.upper()
+                in {
+                    "_FS_OBJECT_CONSTRUCT",
+                    "_FS_OBJECT_INSERT",
+                    "_FS_OBJECT_DELETE",
+                    "_FS_OBJECT_PICK",
+                    "_FS_OBJECT_CAT",
+                    "_FS_VARIANT_TO_OBJECT",
+                }
+            ):
+                value = exp.Cast(
+                    this=exp.Cast(
+                        this=inner.copy(),
+                        to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+                    ),
+                    to=variant_type.copy(),
+                )
+            fields.append(exp.PropertyEQ(this=key_expr.copy(), expression=value.copy()))
+        has_runtime_null = False
+        for value in values:
+            inner = value
+            while isinstance(inner, exp.Cast):
+                inner = inner.this
+            if inner.find(exp.Case, exp.If, exp.Column):
+                has_runtime_null = True
+                break
+        if keep_nulls or not has_runtime_null:
+            return exp.ToMap(this=exp.Struct(expressions=fields))
 
     key_array = exp.Array(expressions=keys)
     key_array.args["_fs_internal"] = True
@@ -1641,7 +1725,7 @@ def object_functions(expression: Expr) -> Expr:
         return exp.Anonymous(
             this="_fs_object_insert",
             expressions=[
-                as_variant(expression.this),
+                expression.this.copy(),
                 as_variant(expression.args["key"]),
                 as_variant(expression.args["value"]),
                 (expression.args.get("update_flag") or exp.false()).copy(),
@@ -1651,13 +1735,13 @@ def object_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.JSONKeys):
         return exp.Anonymous(
             this="_fs_object_keys",
-            expressions=[as_variant(expression.this)],
+            expressions=[expression.this.copy()],
         )
 
     if isinstance(expression, exp.MapCat):
         return exp.Anonymous(
             this="_fs_object_cat",
-            expressions=[as_variant(expression.this), as_variant(expression.expression)],
+            expressions=[expression.this.copy(), expression.expression.copy()],
         )
 
     if isinstance(expression, exp.Anonymous):
@@ -1666,7 +1750,7 @@ def object_functions(expression: Expr) -> Expr:
             return exp.Anonymous(
                 this="_fs_object_delete",
                 expressions=[
-                    as_variant(expression.expressions[0]),
+                    expression.expressions[0].copy(),
                     key_array(expression.expressions[1:]),
                 ],
             )
@@ -1674,7 +1758,7 @@ def object_functions(expression: Expr) -> Expr:
             return exp.Anonymous(
                 this="_fs_object_pick",
                 expressions=[
-                    as_variant(expression.expressions[0]),
+                    expression.expressions[0].copy(),
                     key_array(expression.expressions[1:]),
                 ],
             )
@@ -2215,6 +2299,8 @@ def _coerce_semi_structured_value(value: Expr, target: exp.DataType) -> Expr:
     )
     if target_is_variant_array and isinstance(value, exp.Array):
         return value.copy()
+    if target_is_variant_map and isinstance(value, exp.ToMap):
+        return value.copy()
     if (
         target_is_variant_map
         and isinstance(value, exp.Anonymous)
@@ -2235,6 +2321,34 @@ def _coerce_semi_structured_value(value: Expr, target: exp.DataType) -> Expr:
         and value.to.this == exp.DataType.Type.VARIANT
     ):
         return value.copy()
+    if target.this == exp.DataType.Type.VARIANT and isinstance(value, exp.ToMap):
+        return exp.Cast(
+            this=exp.Cast(
+                this=value.copy(),
+                to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+            ),
+            to=variant_type,
+        )
+    if (
+        target.this == exp.DataType.Type.VARIANT
+        and isinstance(value, exp.Anonymous)
+        and value.name.upper()
+        in {
+            "_FS_OBJECT_CAT",
+            "_FS_OBJECT_CONSTRUCT",
+            "_FS_OBJECT_DELETE",
+            "_FS_OBJECT_INSERT",
+            "_FS_OBJECT_PICK",
+            "_FS_VARIANT_TO_OBJECT",
+        }
+    ):
+        return exp.Cast(
+            this=exp.Cast(
+                this=value.copy(),
+                to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+            ),
+            to=variant_type,
+        )
 
     as_variant = exp.Cast(this=value.copy(), to=variant_type)
     if target.this == exp.DataType.Type.VARIANT:

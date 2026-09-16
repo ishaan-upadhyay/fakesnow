@@ -4,6 +4,7 @@
 *.code-workspace
 *.iml
 .pytest_cache/
+pytest-report.html
 __pycache__/
 .mypy_cache/
 *.egg-info

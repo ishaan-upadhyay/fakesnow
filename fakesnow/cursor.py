@@ -206,17 +206,38 @@ class FakeSnowflakeCursor:
                     variant_text = any(
                         function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
+                    object_star = any(
+                        function.name.upper() in {"_FS_OBJECT_DROP_NULL", "_FS_OBJECT_KEEP_NULL"}
+                        for function in source.find_all(exp.Anonymous)
+                    )
                     hash_result = any(function.name.upper() == "HASH" for function in source.find_all(exp.Anonymous))
-                    wide_text = isinstance(source, (exp.ArrayToString, exp.CheckJson))
+                    wide_text = isinstance(source, (exp.ArrayToString, exp.CheckJson)) or any(
+                        function.name.upper()
+                        in {"_FS_TO_JSON", "_FS_TO_JSON_ELEMENT", "_FS_TO_JSON_OBJECT", "_FS_ARRAY_TO_STRING"}
+                        for function in source.find_all(exp.Anonymous)
+                    )
                     fixed_nine = bool(
                         source.args.get("_fs_array_size") or source.args.get("_fs_array_position")
                     ) or isinstance(source, exp.ArrayPosition)
                     fixed_width_text = isinstance(source, exp.MD5)
-                    if (
+                    if object_star and index < len(rows) and rows[index][1] in {"VARIANT", "JSON"}:
+                        row = list(rows[index])
+                        row[1] = "MAP(VARCHAR, VARIANT)"
+                        rows[index] = tuple(row)
+                    elif (
+                        index < len(rows)
+                        and rows[index][1] in {"VARCHAR", "JSON", "VARIANT"}
+                        and not fixed_width_text
+                        and (wide_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
+                    ):
+                        row = list(rows[index])
+                        row[1] = "VARCHAR(134217728)"
+                        rows[index] = tuple(row)
+                    elif (
                         index < len(rows)
                         and rows[index][1] == "VARCHAR"
                         and not fixed_width_text
-                        and (variant_text or wide_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
+                        and (variant_text or (has_flatten and source.name.upper() in {"KEY", "PATH"}))
                     ):
                         row = list(rows[index])
                         row[1] = "VARCHAR(134217728)"
@@ -419,6 +440,8 @@ class FakeSnowflakeCursor:
             .transform(transforms.semi_structured_types)
             .transform(transforms.parse_json)
             .transform(transforms.try_parse_json_variant)
+            .transform(transforms.object_construct)
+            .transform(transforms.object_functions)
             .transform(transforms.typeof_fn)
             .transform(transforms.variant_functions)
             .transform(transforms.split)
@@ -594,22 +617,53 @@ class FakeSnowflakeCursor:
                 logger.log_sql(sql, params)
                 relation = self._duck_conn.sql(sql, params=params)
                 select = transformed.find(exp.Select)
-                pretty_json_columns = (
-                    [
-                        any(
+                def _json_source(item: Expr) -> Expr:
+                    return item.this if isinstance(item, exp.Alias) else item
+
+                def _pretty_json_column(item: Expr) -> bool:
+                    source = _json_source(item)
+                    if isinstance(source, exp.Anonymous) and source.name.upper() == "_FS_VARIANT_TO_VARCHAR":
+                        return True
+                    if isinstance(source, exp.Cast) and source.to.this in {
+                        exp.DataType.Type.VARCHAR,
+                        exp.DataType.Type.TEXT,
+                        exp.DataType.Type.NVARCHAR,
+                    }:
+                        return any(
                             function.name.upper() == "_FS_VARIANT_TO_VARCHAR"
-                            for function in (item.this if isinstance(item, exp.Alias) else item).find_all(exp.Anonymous)
+                            for function in source.find_all(exp.Anonymous)
                         )
-                        for item in select.expressions
-                    ]
-                    if select
-                    else None
-                )
+                    return False
+
+                def _compact_json_column(item: Expr) -> bool:
+                    source = _json_source(item)
+                    compact_macros = {
+                        "_FS_TO_JSON",
+                        "_FS_TO_JSON_ELEMENT",
+                        "_FS_TO_JSON_OBJECT",
+                        "_FS_VARIANT_TO_VARCHAR",
+                    }
+                    if isinstance(source, exp.Anonymous) and source.name.upper() in compact_macros:
+                        return True
+                    if isinstance(source, exp.Cast) and source.to.this in {
+                        exp.DataType.Type.VARCHAR,
+                        exp.DataType.Type.TEXT,
+                        exp.DataType.Type.NVARCHAR,
+                    }:
+                        return any(
+                            function.name.upper() in compact_macros for function in source.find_all(exp.Anonymous)
+                        )
+                    return False
+
+                pretty_json_columns = [_pretty_json_column(item) for item in select.expressions] if select else None
+                compact_json_columns = [_compact_json_column(item) for item in select.expressions] if select else None
                 select_arrow = render_fetch_table(
                     self._duck_conn,
-                    relation.to_arrow_table(),
-                    [str(column_type) for column_type in relation.types],
+                    relation,
                     pretty_json_columns,
+                    compact_json_columns,
+                    sql,
+                    params,
                 )
             else:
                 logger.log_sql(sql, params)

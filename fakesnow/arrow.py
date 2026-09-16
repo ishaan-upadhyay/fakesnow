@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import json
+import re
+from typing import Any
 
 import pyarrow as pa
 import pyarrow.compute as pc
@@ -81,15 +83,49 @@ def _fix_array_undefined(json_text: str | None, raw_list: object) -> str | None:
     return "[\n" + ",\n".join(rendered) + "\n]"
 
 
-def _pretty_semistructured(value: str | None) -> str | None:
+_UNDEFINED_TOKEN = re.compile(r"(?<=[\[,:])\s*undefined\s*(?=[,\]}])")
+_SCIENTIFIC_NUMBER = re.compile(r"(?<![\"\w])(-?\d+\.\d+e[+-]?\d+)(?![\"\w])")
+
+
+def _normalize_json_number(value: str) -> str:
+    if value.count(".") == 1 and value.replace(".", "", 1).replace("-", "", 1).isdigit():
+        stripped = value.rstrip("0").rstrip(".")
+        return stripped if stripped not in {"", "-"} else "0"
+    return value
+
+
+def _pretty_semistructured(value: str | None, *, compact: bool = False) -> str | None:
     if value is None:
         return None
-    try:
-        parsed = json.loads(value)
-    except json.JSONDecodeError:
+    if value in {"inf", "+inf", "Inf", "+Inf"}:
+        return "Infinity"
+    if value in {"-inf", "-Inf"}:
+        return "-Infinity"
+    if _UNDEFINED_TOKEN.search(value):
         return value
+    prepared = value
+    scientific: list[str] = []
+
+    def _quote_scientific(match: re.Match[str]) -> str:
+        scientific.append(match.group(1))
+        return json.dumps(match.group(1))
+
+    prepared = _SCIENTIFIC_NUMBER.sub(_quote_scientific, prepared)
+    try:
+        parsed = json.loads(prepared)
+    except json.JSONDecodeError:
+        return _normalize_json_number(value)
     if isinstance(parsed, (dict, list)):
-        return json.dumps(parsed, ensure_ascii=False, indent=2)
+        dumped = (
+            json.dumps(parsed, ensure_ascii=False, separators=(",", ":"), sort_keys=True)
+            if compact
+            else json.dumps(parsed, ensure_ascii=False, indent=2, sort_keys=True)
+        )
+        for token in scientific:
+            dumped = dumped.replace(json.dumps(token), token)
+        return dumped
+    if isinstance(parsed, (int, float)) and not isinstance(parsed, bool):
+        return _normalize_json_number(value)
     return value
 
 
@@ -109,7 +145,23 @@ def parquet_variant_to_json(
     for index in range(table.num_columns):
         ident = _quoted_ident(table.schema.field(index).name)
         if should_render[index]:
-            projections.append(f"CAST({ident} AS JSON) AS {ident}")
+            field = table.schema.field(index)
+            if _is_parquet_variant(field) and not pa.types.is_list(field.type) and not pa.types.is_map(field.type):
+                projections.append(
+                    "CASE "
+                    f"WHEN typeof({ident}) = 'VARIANT' AND variant_typeof({ident}) LIKE 'DOUBLE%' "
+                    f"THEN CASE "
+                    f"WHEN NOT isfinite(TRY_CAST({ident} AS DOUBLE)) THEN "
+                    f"CASE WHEN TRY_CAST({ident} AS DOUBLE) > 0 THEN 'Infinity' "
+                    f"WHEN TRY_CAST({ident} AS DOUBLE) < 0 THEN '-Infinity' ELSE 'NaN' END "
+                    f"ELSE printf('%.15e', TRY_CAST({ident} AS DOUBLE)) END "
+                    f"WHEN typeof({ident}) = 'VARIANT' AND ("
+                    f"variant_typeof({ident}) LIKE 'HUGEINT%' OR variant_typeof({ident}) LIKE 'UHUGEINT%'"
+                    f") THEN CAST({ident} AS VARCHAR) "
+                    f"ELSE CAST({ident} AS JSON) END AS {ident}"
+                )
+            else:
+                projections.append(f"CAST({ident} AS JSON) AS {ident}")
         else:
             projections.append(ident)
 
@@ -123,7 +175,9 @@ def parquet_variant_to_json(
     for index in range(table.num_columns):
         field = table.schema.field(index)
         json_column = json_table.column(field.name)
-        if pa.types.is_list(table.schema.field(index).type) and contains_parquet_variant(field):
+        if pa.types.is_list(table.schema.field(index).type) and (
+            contains_parquet_variant(field) or any(_list_has_invalid_slots(table.column(index)))
+        ):
             invalid_rows = _list_has_invalid_slots(table.column(index))
             fixed = []
             json_values = json_column.combine_chunks().to_pylist()
@@ -141,22 +195,49 @@ def parquet_variant_to_json(
     return pa.Table.from_arrays(arrays, names=table.column_names)
 
 
+def _is_variant_sql_json(duck_type: str) -> bool:
+    return duck_type == "VARIANT" or duck_type == "VARIANT[]"
+
+
+def _is_container_json(duck_type: str) -> bool:
+    if duck_type == "VARIANT[]":
+        return False
+    return duck_type.startswith(("MAP(", "STRUCT(", "JSON")) or duck_type.endswith("[]")
+
+
 def render_fetch_table(
     conn: DuckDBPyConnection,
-    table: pa.Table,
-    duck_types: list[str],
+    relation: Any,
     pretty_json_columns: list[bool] | None = None,
+    compact_json_columns: list[bool] | None = None,
+    sql: str | None = None,
+    params: Any = None,
 ) -> pa.Table:
-    if table.num_columns == 0:
-        return table
-    needs_render = [
-        duck_type.startswith(("MAP(", "STRUCT(", "VARIANT")) or duck_type.endswith("[]") for duck_type in duck_types
-    ]
-    rendered = parquet_variant_to_json(conn, table, needs_render) if any(needs_render) else table
+    duck_types = [str(column_type) for column_type in relation.types]
+    names = list(relation.columns)
+    if not names:
+        return relation.to_arrow_table()
+    sql_render = [_is_variant_sql_json(duck_type) for duck_type in duck_types]
+    arrow_render = [_is_container_json(duck_type) for duck_type in duck_types]
+    if any(sql_render):
+        projections = [
+            f"_fs_to_json({_quoted_ident(name)}) AS {_quoted_ident(name)}" if should_render else _quoted_ident(name)
+            for name, should_render in zip(names, sql_render, strict=True)
+        ]
+        inner_sql = (sql or relation.sql_query()).rstrip().rstrip(";")
+        table = conn.execute(
+            f"SELECT {', '.join(projections)} FROM ({inner_sql}) AS {_VARIANT_JSON_RELATION}",
+            params,
+        ).to_arrow_table()
+    else:
+        table = relation.to_arrow_table()
+    rendered = parquet_variant_to_json(conn, table, arrow_render) if any(arrow_render) else table
     pretty_columns = [
-        needs_render[index]
+        sql_render[index]
+        or arrow_render[index]
         or bool(pretty_json_columns and index < len(pretty_json_columns) and pretty_json_columns[index])
-        for index in range(table.num_columns)
+        or bool(compact_json_columns and index < len(compact_json_columns) and compact_json_columns[index])
+        for index in range(len(names))
     ]
     if not any(pretty_columns):
         return rendered
@@ -166,13 +247,17 @@ def render_fetch_table(
         if not pretty_columns[index]:
             arrays.append(column)
             continue
+        compact = bool(compact_json_columns and index < len(compact_json_columns) and compact_json_columns[index])
         pretty_values = []
         for value in column.to_pylist():
             if not isinstance(value, str):
                 pretty_values.append(value)
                 continue
-            pretty_values.append(_pretty_semistructured(value))
-        arrays.append(pa.array(pretty_values, type=pa.string()))
+            pretty_values.append(_pretty_semistructured(value, compact=compact))
+        if all(item is None or isinstance(item, str) for item in pretty_values):
+            arrays.append(pa.array(pretty_values, type=pa.string()))
+        else:
+            arrays.append(column)
     return pa.Table.from_arrays(arrays, names=rendered.column_names)
 
 

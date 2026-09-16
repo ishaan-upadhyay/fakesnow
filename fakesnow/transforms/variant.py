@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from collections.abc import Sequence
 from decimal import Decimal, InvalidOperation
 
@@ -313,10 +314,18 @@ def _is_variant_expression(expression: Expr) -> bool:
     if isinstance(expression, exp.Anonymous):
         return expression.name.upper() in {
             "_FS_PARSE_JSON",
+            "_FS_TRY_PARSE_JSON",
+            "_FS_AS_VARIANT",
             "_FS_TO_VARIANT_TIMESTAMP",
             "_FS_VARIANT_GET",
             "_FS_VARIANT_GET_PATH",
             "_FS_VARIANT_GET_IGNORE_CASE",
+            "_FS_VARIANT_GET_INDEX",
+            "_FS_MAP_GET",
+            "_FS_JSON_GET",
+            "_FS_VARIANT_GREATEST",
+            "_FS_VARIANT_LEAST",
+            "_FS_VARIANT_NULL",
         }
     return (
         isinstance(expression, exp.Cast)
@@ -332,18 +341,112 @@ def _contains_variant_expression(expression: Expr) -> bool:
     )
 
 
-def _as_variant(expression: Expr) -> Expr:
+_OBJECT_MACROS = frozenset(
+    {
+        "_FS_OBJECT_CAT",
+        "_FS_OBJECT_CONSTRUCT",
+        "_FS_OBJECT_DELETE",
+        "_FS_OBJECT_INSERT",
+        "_FS_OBJECT_PICK",
+        "_FS_VARIANT_TO_OBJECT",
+    }
+)
+
+
+def _is_map_expression(expression: Expr) -> bool:
+    if isinstance(expression, exp.Anonymous) and expression.name.upper() in _OBJECT_MACROS:
+        return True
+    if isinstance(expression, exp.ToMap):
+        return True
+    if isinstance(expression, exp.Cast) and expression.to.this == exp.DataType.Type.MAP:
+        return True
+    structured = expression.args.get("_fs_structured_type")
+    return isinstance(structured, exp.DataType) and structured.this == exp.DataType.Type.MAP
+
+
+def _json_as_variant(expression: Expr) -> Expr:
     return exp.Cast(
-        this=expression.copy(),
+        this=exp.Cast(
+            this=expression.copy(),
+            to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+        ),
         to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
     )
 
 
-def _as_json_compact(expression: Expr) -> Expr:
-    return exp.Cast(
-        this=_as_variant(expression),
-        to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+def _as_variant(expression: Expr) -> Expr:
+    if isinstance(expression, exp.Anonymous) and expression.name.upper() == "_FS_AS_VARIANT":
+        return expression.copy()
+    if _is_map_expression(expression):
+        return _json_as_variant(expression)
+    return exp.Anonymous(this="_fs_as_variant", expressions=[expression.copy()])
+
+
+def _unwrap_casts(expression: Expr) -> Expr:
+    current = expression
+    while isinstance(current, exp.Cast):
+        current = current.this
+    return current
+
+
+def _value_to_compact_json(value: Expr) -> Expr:
+    inner = _unwrap_casts(value)
+    if _is_array_expression(inner) or (isinstance(inner, exp.Anonymous) and inner.name.upper().startswith("_FS_ARRAY")):
+        return exp.Anonymous(this="_fs_to_json_element", expressions=[inner.copy()])
+    if _is_map_expression(inner):
+        return _as_json_compact(inner)
+    return exp.Anonymous(this="_fs_to_json", expressions=[_as_variant(value)])
+
+
+def _pairs_to_compact_json(pairs: list[tuple[Expr, Expr]]) -> Expr:
+    if not pairs:
+        return exp.Literal.string("{}")
+    selects = [
+        f"SELECT {key.sql(dialect='duckdb')} AS k, {json_value.sql(dialect='duckdb')} AS j" for key, json_value in pairs
+    ]
+    sql = (
+        "(SELECT '{' || COALESCE(string_agg(to_json(CAST(k AS VARCHAR)) || ':' || j, ',' ORDER BY CAST(k AS VARCHAR)), '') || '}' "
+        f"FROM ({' UNION ALL '.join(selects)}) AS _fs_object_json(k, j))"
     )
+    parsed = exp.maybe_parse(sql, dialect="duckdb")
+    assert parsed is not None
+    return parsed
+
+
+def _object_construct_to_json(expression: Expr) -> Expr | None:
+    if isinstance(expression, exp.ToMap) and isinstance(expression.this, exp.Struct):
+        pairs = [
+            (prop.this, _value_to_compact_json(prop.expression))
+            for prop in expression.this.expressions
+            if isinstance(prop, exp.PropertyEQ)
+        ]
+        return _pairs_to_compact_json(pairs)
+    if not (isinstance(expression, exp.Anonymous) and expression.name.upper() == "_FS_OBJECT_CONSTRUCT"):
+        return None
+    if len(expression.expressions) < 3:
+        return None
+    keys, vals, keep = expression.expressions[:3]
+    if not isinstance(keys, exp.Array) or not isinstance(vals, exp.Array):
+        return None
+    keep_nulls = True
+    if isinstance(keep, exp.Boolean):
+        keep_nulls = bool(keep.this)
+    pairs: list[tuple[Expr, Expr]] = []
+    for key, value in zip(keys.expressions, vals.expressions, strict=True):
+        if not keep_nulls and isinstance(_unwrap_casts(value), exp.Null):
+            continue
+        pairs.append((key, _value_to_compact_json(value)))
+    return _pairs_to_compact_json(pairs)
+
+
+def _as_json_compact(expression: Expr) -> Expr:
+    if converted := _object_construct_to_json(expression):
+        return converted
+    if _is_map_expression(expression):
+        return exp.Anonymous(this="_fs_to_json", expressions=[expression.copy()])
+    if _is_array_expression(expression):
+        return exp.Anonymous(this="_fs_to_json_element", expressions=[expression.copy()])
+    return exp.Anonymous(this="_fs_to_json", expressions=[_as_variant(expression)])
 
 
 def _variant_key(expression: Expr) -> Expr:
@@ -510,25 +613,24 @@ def variant_operators(expression: Expr) -> Expr:
         both_variant = (
             _contains_variant_expression(expression.this) and _contains_variant_expression(expression.expression)
         ) or (_is_array_expression(expression.this) and _is_array_expression(expression.expression))
-        equals = (
-            exp.EQ(
-                this=_variant_key(expression.this),
-                expression=_variant_key(expression.expression),
-            )
-            if both_variant
-            else exp.Anonymous(
-                this="_fs_variant_eq_sql",
-                expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
-            )
+        equals = exp.Anonymous(
+            this="_fs_variant_eq" if both_variant else "_fs_variant_eq_sql",
+            expressions=[_as_variant(expression.this), _as_variant(expression.expression)],
         )
         return exp.Not(this=equals) if isinstance(expression, exp.NEQ) else equals
 
     if isinstance(expression, (exp.GT, exp.GTE, exp.LT, exp.LTE)) and (
         _contains_variant_expression(expression.this) or _contains_variant_expression(expression.expression)
     ):
-        left = _variant_key(expression.this)
-        right = _variant_key(expression.expression)
-        return expression.__class__(this=left, expression=right)
+        left = _as_variant(expression.this)
+        right = _as_variant(expression.expression)
+        if isinstance(expression, exp.LT):
+            return exp.Anonymous(this="_fs_variant_lt", expressions=[left, right])
+        if isinstance(expression, exp.GT):
+            return exp.Anonymous(this="_fs_variant_lt", expressions=[right, left])
+        left_key = _variant_key(expression.this)
+        right_key = _variant_key(expression.expression)
+        return expression.__class__(this=left_key, expression=right_key)
 
     if isinstance(expression, exp.In) and _contains_variant_expression(expression.this):
         keyed = expression.copy()
@@ -695,10 +797,295 @@ def variant_relational_keys(expression: Expr) -> Expr:
     return result
 
 
+class _JsonNumber:
+    __slots__ = ("token",)
+
+    def __init__(self, token: str) -> None:
+        self.token = token
+
+
+class _DuplicateJsonKey(ValueError):
+    def __init__(self, key: str, pos: int) -> None:
+        super().__init__(key)
+        self.key = key
+        self.pos = pos
+
+
+def _quote_unquoted_json_keys(text: str) -> str:
+    """Quote identifier keys so `{a:1}` becomes `{"a":1}` without touching string contents."""
+    out: list[str] = []
+    index = 0
+    in_string = False
+    escape = False
+    expect_key = False
+    while index < len(text):
+        char = text[index]
+        if in_string:
+            out.append(char)
+            if escape:
+                escape = False
+            elif char == "\\":
+                escape = True
+            elif char == '"':
+                in_string = False
+            index += 1
+            continue
+        if char == '"':
+            in_string = True
+            expect_key = False
+            out.append(char)
+            index += 1
+            continue
+        if char in "{[":
+            out.append(char)
+            expect_key = char == "{"
+            index += 1
+            continue
+        if char == ",":
+            out.append(char)
+            expect_key = True
+            index += 1
+            continue
+        if char in "}]":
+            expect_key = False
+            out.append(char)
+            index += 1
+            continue
+        if expect_key and char.isspace():
+            out.append(char)
+            index += 1
+            continue
+        if expect_key and (char.isalpha() or char == "_"):
+            start = index
+            index += 1
+            while index < len(text) and (text[index].isalnum() or text[index] == "_"):
+                index += 1
+            key = text[start:index]
+            while index < len(text) and text[index].isspace():
+                index += 1
+            if index < len(text) and text[index] == ":":
+                out.append(f'"{key}"')
+                expect_key = False
+                continue
+            out.append(key)
+            expect_key = False
+            continue
+        expect_key = False
+        out.append(char)
+        index += 1
+    return "".join(out)
+
+
+def _duplicate_key_pos(text: str, key: str) -> int:
+    needle = json.dumps(key)
+    first = text.find(needle)
+    if first < 0:
+        return 0
+    second = text.find(needle, first + 1)
+    return second + len(needle) if second >= 0 else first + len(needle)
+
+
+def _load_snowflake_json(text: str) -> object:
+    def hook(pairs: list[tuple[str, object]]) -> dict[str, object]:
+        seen: dict[str, object] = {}
+        for key, value in pairs:
+            if key in seen:
+                raise _DuplicateJsonKey(key, _duplicate_key_pos(text, key))
+            seen[key] = value
+        return seen
+
+    last_error: json.JSONDecodeError | None = None
+    candidates = [text]
+    quoted = _quote_unquoted_json_keys(text)
+    if quoted != text:
+        candidates.append(quoted)
+    for candidate in candidates:
+        try:
+            return json.loads(
+                candidate,
+                object_pairs_hook=hook,
+                parse_int=_JsonNumber,
+                parse_float=_JsonNumber,
+            )
+        except _DuplicateJsonKey:
+            raise
+        except json.JSONDecodeError as exc:
+            last_error = exc
+    assert last_error is not None
+    raise last_error
+
+
+def _raise_parse_json_error(text: str, exc: BaseException) -> None:
+    if isinstance(exc, _DuplicateJsonKey):
+        raise snowflake.connector.errors.ProgrammingError(
+            msg=f'Error parsing JSON: duplicate object attribute "{exc.key}", pos {exc.pos}',
+            errno=100069,
+            sqlstate="22P02",
+        ) from None
+    if isinstance(exc, json.JSONDecodeError):
+        message = (
+            "Error parsing JSON: unterminated string, line 2, pos 0"
+            if "\n" in text
+            else f"Error parsing JSON: {exc.msg}, line {exc.lineno}, pos {exc.colno}"
+        )
+        raise snowflake.connector.errors.ProgrammingError(
+            msg=message,
+            errno=100069,
+            sqlstate="22P02",
+        ) from None
+    raise exc
+
+
+_JSON_NUMBER = re.compile(r"^-?(?:0|[1-9]\d*)(?:\.\d+)?(?:[eE][+-]?\d+)?$")
+
+
+def _as_variant_cast(value: Expr) -> Expr:
+    return exp.Anonymous(this="_fs_as_variant", expressions=[value])
+
+
+def _json_number_to_variant_expr(token: str, *, as_variant: bool = True) -> Expr:
+    stripped = token.strip()
+    if re.search(r"[eE]", stripped):
+        value: Expr = exp.Cast(
+            this=exp.Literal.number(stripped),
+            to=exp.DataType(this=exp.DataType.Type.DOUBLE, nested=False),
+        )
+    elif "." not in stripped:
+        magnitude = abs(int(stripped))
+        if magnitude <= 2**63 - 1:
+            value = exp.Literal.number(stripped if stripped != "-0" else "0")
+        elif magnitude <= 2**127 - 1:
+            value = exp.Cast(
+                this=exp.Literal.string(stripped),
+                to=exp.DataType.build("HUGEINT", dialect="duckdb"),
+            )
+        else:
+            value = exp.Cast(
+                this=exp.Literal.number(stripped),
+                to=exp.DataType(this=exp.DataType.Type.DOUBLE, nested=False),
+            )
+    else:
+        negative = stripped.startswith("-")
+        body = stripped[1:] if negative else stripped
+        integer, frac = body.split(".", 1)
+        frac = frac.rstrip("0")
+        if not frac:
+            integer_token = integer.lstrip("0") or "0"
+            if negative and integer_token != "0":
+                integer_token = f"-{integer_token}"
+            return _json_number_to_variant_expr(integer_token, as_variant=as_variant)
+        scale = len(frac)
+        integer_digits = len(integer.lstrip("0") or "0")
+        precision = integer_digits + scale
+        normalized = f"{'-' if negative else ''}{integer.lstrip('0') or '0'}.{frac}"
+        if precision <= 38:
+            value = exp.Cast(
+                this=exp.Literal.string(normalized),
+                to=exp.DataType.build(f"DECIMAL({precision}, {scale})", dialect="duckdb"),
+            )
+        else:
+            value = exp.Cast(
+                this=exp.Literal.number(stripped),
+                to=exp.DataType(this=exp.DataType.Type.DOUBLE, nested=False),
+            )
+    return _as_variant_cast(value) if as_variant else value
+
+
+def _keys_collide_casefold(keys: list[str]) -> bool:
+    folded = [key.casefold() for key in keys]
+    return len(folded) != len(set(folded))
+
+
+def _dump_json_tree(node: object) -> str:
+    if node is None:
+        return "null"
+    if isinstance(node, _JsonNumber):
+        return node.token
+    if isinstance(node, bool):
+        return "true" if node else "false"
+    if isinstance(node, str):
+        return json.dumps(node, ensure_ascii=False)
+    if isinstance(node, list):
+        return "[" + ",".join(_dump_json_tree(item) for item in node) + "]"
+    if isinstance(node, dict):
+        parts = [json.dumps(key, ensure_ascii=False) + ":" + _dump_json_tree(value) for key, value in node.items()]
+        return "{" + ",".join(parts) + "}"
+    return json.dumps(node, ensure_ascii=False)
+
+
+def _json_object_as_variant(node: dict[str, object]) -> Expr:
+    return exp.Cast(
+        this=exp.Cast(
+            this=exp.Literal.string(_dump_json_tree(node)),
+            to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+        ),
+        to=_variant_type(),
+    )
+
+
+def _variant_type() -> exp.DataType:
+    return exp.DataType(this=exp.DataType.Type.VARIANT, nested=False)
+
+
+def _json_tree_to_sql_expr(node: object) -> Expr:
+    if node is None:
+        return exp.Anonymous(this="_fs_variant_null", expressions=[])
+    if isinstance(node, _JsonNumber):
+        return _json_number_to_variant_expr(node.token, as_variant=False)
+    if isinstance(node, bool):
+        return exp.Boolean(this=node)
+    if isinstance(node, str):
+        return exp.Literal.string(node)
+    if isinstance(node, list):
+        return exp.Array(expressions=[_json_tree_to_variant_expr(item) for item in node])
+    if isinstance(node, dict):
+        if not node or "" in node or _keys_collide_casefold(list(node.keys())):
+            return _json_object_as_variant(node)
+        struct = exp.Struct(
+            expressions=[
+                exp.PropertyEQ(
+                    this=exp.Literal.string(key),
+                    expression=_json_tree_to_sql_expr(value),
+                )
+                for key, value in node.items()
+            ]
+        )
+        struct.set("_fs_json_literal", True)
+        return struct
+    return exp.convert(node)
+
+
+def _json_tree_to_variant_expr(node: object) -> Expr:
+    value = _json_tree_to_sql_expr(node)
+    if isinstance(node, (dict, list)):
+        return exp.Cast(this=value, to=_variant_type())
+    if node is None:
+        return value
+    return _as_variant_cast(value)
+
+
 def parse_json(expression: Expr) -> Expr:
     if isinstance(expression, exp.ParseJSON):
-        parsed = exp.Anonymous(this="_fs_parse_json", expressions=[expression.this.copy()])
-        return exp.Anonymous(this="TRY", expressions=[parsed]) if expression.args.get("safe") else parsed
+        argument = expression.this
+        safe = bool(expression.args.get("safe"))
+        if isinstance(argument, exp.Literal) and argument.is_string:
+            if not argument.this.strip():
+                return exp.Cast(
+                    this=exp.Null(),
+                    to=_variant_type(),
+                )
+            try:
+                loaded = _load_snowflake_json(argument.this)
+            except (_DuplicateJsonKey, json.JSONDecodeError) as exc:
+                if safe:
+                    return exp.Cast(
+                        this=exp.Null(),
+                        to=_variant_type(),
+                    )
+                _raise_parse_json_error(argument.this, exc)
+            return _json_tree_to_variant_expr(loaded)
+        name = "_fs_try_parse_json" if safe else "_fs_parse_json"
+        return exp.Anonymous(this=name, expressions=[argument.copy()])
     if isinstance(expression, exp.Anonymous) and expression.name.upper() == "PARSE_JSON":
         return exp.Anonymous(this="_fs_parse_json", expressions=expression.expressions)
     return expression
@@ -706,28 +1093,13 @@ def parse_json(expression: Expr) -> Expr:
 
 def try_parse_json_variant(expression: Expr) -> Expr:
     if isinstance(expression, exp.Anonymous) and expression.name.upper() == "TRY_PARSE_JSON":
-        return exp.Anonymous(
-            this="TRY",
-            expressions=[
-                exp.Anonymous(this="_fs_parse_json", expressions=expression.expressions),
-            ],
-        )
+        return exp.Anonymous(this="_fs_try_parse_json", expressions=expression.expressions)
     return expression
 
 
 def _to_variant_value(value: Expr) -> Expr:
-    if isinstance(value, exp.Anonymous) and value.name.upper() in {
-        "_FS_OBJECT_CAT",
-        "_FS_OBJECT_CONSTRUCT",
-        "_FS_OBJECT_DELETE",
-        "_FS_OBJECT_INSERT",
-        "_FS_OBJECT_PICK",
-        "_FS_VARIANT_TO_OBJECT",
-    }:
-        value = exp.Cast(
-            this=value.copy(),
-            to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
-        )
+    if _is_map_expression(value):
+        return _json_as_variant(value)
 
     timestamp_kinds = {
         exp.DataType.Type.TIMESTAMPLTZ: "LTZ",
@@ -777,10 +1149,7 @@ def _to_variant_value(value: Expr) -> Expr:
             this=value.copy(),
             to=exp.DataType.build("DECIMAL(38, 6)", dialect="duckdb"),
         )
-    return exp.Cast(
-        this=value.copy(),
-        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-    )
+    return exp.Anonymous(this="_fs_as_variant", expressions=[value.copy()])
 
 
 def to_variant(expression: Expr) -> Expr:
@@ -799,7 +1168,10 @@ def to_variant(expression: Expr) -> Expr:
     if (
         isinstance(expression, exp.Cast)
         and expression.to.this == exp.DataType.Type.VARIANT
-        and isinstance(expression.this, (exp.Anonymous, exp.Cast, exp.CurrentTimestamp, exp.Literal, exp.Div))
+        and (
+            _is_map_expression(expression.this)
+            or isinstance(expression.this, (exp.Anonymous, exp.Cast, exp.CurrentTimestamp, exp.Literal, exp.Div))
+        )
     ):
         return _to_variant_value(expression.this)
     return expression
@@ -835,9 +1207,10 @@ def typeof_fn(expression: Expr) -> Expr:
                 errno=1044,
                 sqlstate="42P13",
             )
-        return exp.Anonymous(this="_fs_typeof", expressions=[_as_variant(expression.this)])
+        inner = expression.this
+        return exp.Anonymous(this="_fs_typeof", expressions=[inner.copy()])
     if isinstance(expression, exp.Anonymous) and expression.name.upper() == "TYPEOF":
-        return exp.Anonymous(this="_fs_typeof", expressions=[_as_variant(expression.expressions[0])])
+        return exp.Anonymous(this="_fs_typeof", expressions=[expression.expressions[0].copy()])
     return expression
 
 
@@ -972,6 +1345,17 @@ def variant_functions(expression: Expr) -> Expr:
                 [text_value(argument) for argument in expression.expressions],
             )
             return result
+        if any(_contains_variant_expression(argument) for argument in arguments) and any(
+            isinstance(argument, exp.Literal) and not argument.is_string for argument in arguments
+        ):
+            name = "_fs_variant_greatest" if isinstance(expression, exp.Greatest) else "_fs_variant_least"
+            result = _as_variant(arguments[0])
+            for argument in arguments[1:]:
+                result = exp.Anonymous(
+                    this=name,
+                    expressions=[result, _as_variant(argument)],
+                )
+            return result
     if isinstance(expression, exp.Count) and not isinstance(expression.this, exp.Star):
         if isinstance(expression.this, exp.Distinct):
             return exp.Count(
@@ -1001,12 +1385,30 @@ def variant_functions(expression: Expr) -> Expr:
     if isinstance(expression, exp.ToChar) and isinstance(value, Expr) and _is_array_expression(value):
         return _as_json_compact(value)
 
+    if isinstance(expression, exp.GroupConcat) and _contains_variant_expression(expression.this):
+        result = expression.copy()
+        result.set(
+            "this",
+            exp.Anonymous(
+                this="_fs_variant_to_varchar",
+                expressions=[_as_variant(expression.this)],
+            ),
+        )
+        return result
+
+    if isinstance(expression, exp.Length):
+        return exp.Length(
+            this=exp.Anonymous(
+                this="_fs_variant_to_varchar",
+                expressions=[_as_variant(expression.this)],
+            )
+        )
+
     if isinstance(
         expression,
         (
             exp.Upper,
             exp.Lower,
-            exp.Length,
             exp.Substring,
             exp.Replace,
             exp.SplitPart,
@@ -1053,6 +1455,8 @@ def variant_functions(expression: Expr) -> Expr:
         name = expression.name.upper()
         argument = expression.expressions[0]
         if name == "TO_OBJECT" and len(expression.expressions) == 1:
+            if _is_map_expression(argument):
+                return argument.copy()
             return exp.Anonymous(
                 this="_fs_variant_to_object",
                 expressions=[_as_variant(argument)],
@@ -1132,6 +1536,8 @@ def variant_functions(expression: Expr) -> Expr:
 
         if name in {"AS_ARRAY", "AS_OBJECT"} and len(expression.expressions) == 1:
             expected = name.removeprefix("AS_")
+            if expected == "OBJECT" and _is_map_expression(argument):
+                return argument.copy()
             if expected == "OBJECT" and isinstance(argument, exp.Struct) and not argument.expressions:
                 return exp.Anonymous(
                     this="_fs_variant_to_object",
@@ -1229,12 +1635,7 @@ def variant_cast(expression: Expr) -> Expr:
     ):
         return exp.Anonymous(
             this="_fs_variant_to_varchar",
-            expressions=[
-                exp.Cast(
-                    this=expression.this.copy(),
-                    to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-                )
-            ],
+            expressions=[_as_variant(expression.this)],
         )
     if not isinstance(expression, exp.Cast) or not (
         _is_variant_expression(expression.this) or _is_array_expression(expression.this)
@@ -1242,10 +1643,7 @@ def variant_cast(expression: Expr) -> Expr:
         return expression
 
     target = expression.to
-    variant_value = exp.Cast(
-        this=expression.this.copy(),
-        to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-    )
+    variant_value = _as_variant(expression.this)
     if _is_array_expression(expression.this) and target.this in {
         exp.DataType.Type.VARCHAR,
         exp.DataType.Type.TEXT,
@@ -1344,6 +1742,60 @@ def structured_cast(expression: Expr) -> Expr:
             to=expression.to.copy(),
         )
 
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.STRUCT
+        and isinstance(expression.this, exp.ToMap)
+        and isinstance(expression.this.this, exp.Struct)
+    ):
+        values: dict[str, Expr] = {}
+        for prop in expression.this.this.expressions:
+            if not isinstance(prop, exp.PropertyEQ):
+                continue
+            key = prop.this
+            if (isinstance(key, exp.Literal) and key.is_string) or isinstance(key, exp.Identifier):
+                values[key.name.upper()] = prop.expression.copy()
+        fields: list[Expr] = []
+        for field in expression.to.expressions:
+            if not isinstance(field, exp.ColumnDef) or field.kind is None or field.name.upper() not in values:
+                return exp.Cast(
+                    this=exp.Cast(
+                        this=expression.this.copy(),
+                        to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+                    ),
+                    to=expression.to.copy(),
+                )
+            inner = values[field.name.upper()]
+            while isinstance(inner, exp.Cast):
+                inner = inner.this
+            if isinstance(inner, exp.Null) or inner.find(exp.Null):
+                raise snowflake.connector.errors.ProgrammingError(
+                    msg="Typed object schema mismatch in conversion",
+                    errno=220000,
+                    sqlstate="22000",
+                )
+            fields.append(
+                exp.PropertyEQ(
+                    this=exp.Identifier(this=field.name, quoted=False),
+                    expression=exp.Cast(this=values[field.name.upper()], to=field.kind.copy()),
+                )
+            )
+        return exp.Cast(this=exp.Struct(expressions=fields), to=expression.to.copy())
+
+    if (
+        isinstance(expression, exp.Cast)
+        and expression.to.this == exp.DataType.Type.STRUCT
+        and _is_map_expression(expression.this)
+        and not (isinstance(expression.this, exp.Anonymous) and expression.this.name.upper() == "_FS_OBJECT_CONSTRUCT")
+    ):
+        return exp.Cast(
+            this=exp.Cast(
+                this=expression.this.copy(),
+                to=exp.DataType(this=exp.DataType.Type.JSON, nested=False),
+            ),
+            to=expression.to.copy(),
+        )
+
     if not (
         isinstance(expression, exp.Cast)
         and expression.to.this == exp.DataType.Type.STRUCT
@@ -1359,7 +1811,11 @@ def structured_cast(expression: Expr) -> Expr:
 
     values: dict[str, Expr] = {}
     for key, value in zip(key_array.expressions, value_array.expressions, strict=True):
-        source_key = key.this if isinstance(key, exp.Cast) else key
+        source_key = key
+        if isinstance(key, exp.Anonymous) and key.name.upper() == "_FS_AS_VARIANT" and key.expressions:
+            source_key = key.expressions[0]
+        elif isinstance(key, exp.Cast):
+            source_key = key.this
         if isinstance(source_key, exp.Literal) and source_key.is_string:
             values[source_key.name.upper()] = value.copy()
     fields: list[Expr] = []

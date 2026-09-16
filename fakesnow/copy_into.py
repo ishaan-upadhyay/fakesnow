@@ -524,7 +524,7 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
     )
 
     for getter in list(expr.find_all(exp.Anonymous)):
-        if getter.name.upper() != "_FS_VARIANT_GET" or len(getter.expressions) != 2:
+        if getter.name.upper() not in {"_FS_VARIANT_GET", "_FS_MAP_GET"} or len(getter.expressions) != 2:
             continue
         source, key_expression = getter.expressions
         if not source.find(exp.Parameter):
@@ -533,9 +533,16 @@ def _strip_json_extract(expr: exp.Select) -> exp.Select:
         if key is None or not key.is_string:
             continue
         column = exp.Column(this=exp.Identifier(this=key.name))
-        variant_cast = getter.parent
-        converter = variant_cast.parent if isinstance(variant_cast, exp.Cast) else None
-        if isinstance(converter, exp.Anonymous) and converter.name.upper() == "_FS_VARIANT_TO_BIGINT":
+        converter = None
+        node: Expr | None = getter
+        for _ in range(4):
+            node = node.parent if node is not None else None
+            if node is None:
+                break
+            if isinstance(node, exp.Anonymous) and node.name.upper() == "_FS_VARIANT_TO_BIGINT":
+                converter = node
+                break
+        if converter is not None:
             converter.replace(
                 exp.Cast(
                     this=column,

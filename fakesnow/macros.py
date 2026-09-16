@@ -85,15 +85,17 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_object_construct(keys, vals, keep_nu
         FROM UNNEST(${catalog}.main._fs_object_validate_keys(keys)) WITH ORDINALITY AS u(key, idx)
         ORDER BY idx
     )
-    SELECT CASE
-        WHEN count(*) FILTER (
-            WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
-        ) = 0 THEN map()
-        ELSE map_from_entries(
-            list(struct_pack(key := key, value := value::VARIANT) ORDER BY key)
-            FILTER (WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL))
-        )
-    END
+    SELECT ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN count(*) FILTER (
+                WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
+            ) = 0 THEN map()
+            ELSE map_from_entries(
+                list(struct_pack(key := key, value := value::VARIANT) ORDER BY key)
+                FILTER (WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL))
+            )
+        END
+    )
     FROM kv
 );
 """

@@ -8,75 +8,172 @@ LOAD parquet;
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_null() AS (${variant_null});
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_as_variant(v) AS (
-    CASE
-        WHEN v IS NULL THEN NULL::VARIANT
-        WHEN typeof(v) LIKE 'MAP(%' THEN v::MAP(VARCHAR, VARIANT)::VARIANT
-        WHEN typeof(v) LIKE '%[]' THEN v::VARIANT[]::VARIANT
-        ELSE v::VARIANT
-    END
+    CAST((
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN typeof(v) = 'VARIANT' THEN v
+            WHEN typeof(v) = 'JSON' THEN CAST(v AS VARIANT)
+            ELSE TRY_CAST(v AS VARIANT)
+        END
+    ) AS VARIANT)
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_as_list(v) AS (
     CASE
         WHEN v IS NULL THEN NULL
-        WHEN typeof(v) LIKE '%[]' THEN v::VARIANT[]
-        WHEN try_cast(v AS VARIANT[]) IS NOT NULL THEN try_cast(v AS VARIANT[])
-        WHEN typeof(v) = 'VARIANT' AND variant_typeof(v::VARIANT) LIKE 'ARRAY%' THEN try_cast(v AS VARIANT[])
+        WHEN typeof(v) LIKE 'MAP(%' OR typeof(v) LIKE 'STRUCT(%' THEN NULL
+        WHEN typeof(v) LIKE '%[]' THEN try_cast(v AS VARIANT[])
+        WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'ARRAY%'
+            THEN try_cast(v AS VARIANT[])
         ELSE NULL
+    END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_typeof(v) AS (
+    variant_typeof(CASE WHEN false THEN NULL::VARIANT ELSE TRY_CAST(v AS VARIANT) END)
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_json_get(j, key) AS (
+    CASE _fs_map_get_kind_py(j, key)
+        WHEN 'json_null' THEN ${catalog}.main._fs_variant_null()
+        WHEN 'value' THEN _fs_map_get_py(j, key)
+        ELSE NULL::VARIANT
     END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_as_map(v) AS (
     CASE
         WHEN v IS NULL THEN NULL
-        WHEN typeof(v) LIKE 'MAP(%' THEN v::MAP(VARCHAR, VARIANT)
-        WHEN try_cast(v AS MAP(VARCHAR, VARIANT)) IS NOT NULL THEN try_cast(v AS MAP(VARCHAR, VARIANT))
-        WHEN typeof(v) = 'VARIANT' AND variant_typeof(v::VARIANT) LIKE 'OBJECT%'
-            THEN try_cast(v AS MAP(VARCHAR, VARIANT))
+        WHEN typeof(v) LIKE 'MAP(%' THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'OBJECT%'
+            THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN typeof(v) = 'JSON' AND json_type(v) = 'OBJECT'
+            THEN TRY_CAST(TRY_CAST(v AS VARIANT) AS MAP(VARCHAR, VARIANT))
         ELSE NULL
     END
 );
 
+CREATE OR REPLACE MACRO ${catalog}.main._fs_map_as_object(m) AS (m);
+
 CREATE OR REPLACE MACRO ${catalog}.main._fs_is_json_null(v) AS (
-    v IS NOT NULL
-    AND typeof(v) = 'VARIANT'
-    AND variant_typeof(v::VARIANT) = 'VARIANT_NULL'
+    _fs_is_json_null_py(
+        typeof(v),
+        CASE
+            WHEN typeof(v) = 'VARIANT' THEN variant_typeof(TRY_CAST(v AS VARIANT))
+            ELSE NULL
+        END
+    )
 );
 
-CREATE OR REPLACE MACRO ${catalog}.main._fs_typeof(v) AS (
+CREATE OR REPLACE MACRO ${catalog}.main._fs_typeof_tag(v, t) AS (
     CASE
         WHEN v IS NULL THEN NULL
-        WHEN variant_typeof(v) = 'VARIANT_NULL' THEN 'NULL_VALUE'
-        WHEN variant_typeof(v) LIKE 'INT32%' OR variant_typeof(v) LIKE 'INT64%' THEN 'INTEGER'
-        WHEN variant_typeof(v) LIKE 'BOOL%' THEN 'BOOLEAN'
-        WHEN variant_typeof(v) LIKE 'ARRAY%' THEN 'ARRAY'
-        WHEN typeof(v) LIKE 'MAP(%' OR variant_typeof(v) LIKE 'OBJECT%' THEN 'OBJECT'
-        WHEN variant_typeof(v) LIKE 'VARCHAR%' THEN 'VARCHAR'
-        WHEN variant_typeof(v) LIKE 'DOUBLE%' OR variant_typeof(v) LIKE 'FLOAT%' THEN 'DOUBLE'
-        WHEN variant_typeof(v) LIKE 'DECIMAL%' THEN 'DECIMAL'
-        WHEN variant_typeof(v) LIKE 'BLOB%' OR variant_typeof(v) LIKE 'BINARY%' THEN 'BINARY'
-        WHEN variant_typeof(v) LIKE 'DATE%' THEN 'DATE'
-        WHEN variant_typeof(v) LIKE 'TIME%' THEN 'TIME'
-        WHEN variant_typeof(v) LIKE 'TIMESTAMP WITH TIME ZONE%' THEN 'TIMESTAMP_TZ'
-        WHEN variant_typeof(v) LIKE 'TIMESTAMP%' THEN
+        WHEN t = 'VARIANT_NULL' THEN 'NULL_VALUE'
+        WHEN t LIKE 'INT%' OR t LIKE 'UINT%' OR t LIKE 'HUGEINT%' THEN 'INTEGER'
+        WHEN t LIKE 'BOOL%' THEN 'BOOLEAN'
+        WHEN t LIKE 'ARRAY%' THEN 'ARRAY'
+        WHEN t LIKE 'OBJECT%' THEN 'OBJECT'
+        WHEN t LIKE 'VARCHAR%' THEN
             CASE
                 WHEN TRY_CAST(v AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_LTZ__%' THEN 'TIMESTAMP_LTZ'
                 WHEN TRY_CAST(v AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_TZ__%' THEN 'TIMESTAMP_TZ'
                 WHEN TRY_CAST(v AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_NTZ__%' THEN 'TIMESTAMP_NTZ'
-                ELSE 'TIMESTAMP_NTZ'
+                ELSE 'VARCHAR'
             END
-        ELSE variant_typeof(v)
+        WHEN t LIKE 'DOUBLE%' OR t LIKE 'FLOAT%' THEN 'DOUBLE'
+        WHEN t LIKE 'DECIMAL%' THEN 'DECIMAL'
+        WHEN t LIKE 'BLOB%' OR t LIKE 'BINARY%' THEN 'BINARY'
+        WHEN t LIKE 'DATE%' THEN 'DATE'
+        WHEN t LIKE 'TIMESTAMP WITH TIME ZONE%' OR t LIKE 'TIMESTAMP%TZ%' THEN 'TIMESTAMP_TZ'
+        WHEN t LIKE 'TIMESTAMP%' THEN 'TIMESTAMP_NTZ'
+        WHEN t LIKE 'TIME%' THEN 'TIME'
+        ELSE t
     END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_typeof(v) AS (
+    _fs_typeof_py(
+        v,
+        typeof(v),
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+            ELSE NULL
+        END
+    )
 );
 """
 
 _CORE = """
+CREATE OR REPLACE MACRO ${catalog}.main._fs_try_parse_json(val) AS (
+    CASE
+        WHEN val IS NULL THEN NULL
+        WHEN trim(CAST(val AS VARCHAR)) = '' THEN NULL
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+$') THEN
+            CASE
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT)::VARIANT
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0)) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0))::VARIANT
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS HUGEINT) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS HUGEINT)::VARIANT
+                ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+            END
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+\\.[0-9]+$') THEN
+            CASE
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18))
+                    = CAST(TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18)) AS DECIMAL(38, 0))
+                    THEN CASE
+                        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT) IS NOT NULL
+                            THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT)::VARIANT
+                        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0)) IS NOT NULL
+                            THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0))::VARIANT
+                        ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+                    END
+                ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18))::VARIANT
+            END
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+$') THEN
+            TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON) IS NULL THEN NULL
+        WHEN json_type(TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON)) = 'NULL'
+            THEN ${catalog}.main._fs_variant_null()
+        ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON)::VARIANT
+    END
+);
+
 CREATE OR REPLACE MACRO ${catalog}.main._fs_parse_json(val) AS (
     CASE
         WHEN val IS NULL THEN NULL
-        WHEN TRY_CAST(val AS JSON) IS NULL THEN NULL
-        WHEN json_type(TRY_CAST(val AS JSON)) = 'NULL' THEN ${catalog}.main._fs_variant_null()
-        ELSE TRY_CAST(val AS JSON)::VARIANT
+        WHEN trim(CAST(val AS VARCHAR)) = '' THEN NULL
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+$') THEN
+            CASE
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT)::VARIANT
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0)) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0))::VARIANT
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS HUGEINT) IS NOT NULL
+                    THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS HUGEINT)::VARIANT
+                ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+            END
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+\\.[0-9]+$') THEN
+            CASE
+                WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18))
+                    = CAST(TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18)) AS DECIMAL(38, 0))
+                    THEN CASE
+                        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT) IS NOT NULL
+                            THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS BIGINT)::VARIANT
+                        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0)) IS NOT NULL
+                            THEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 0))::VARIANT
+                        ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+                    END
+                ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS DECIMAL(38, 18))::VARIANT
+            END
+        WHEN regexp_matches(trim(CAST(val AS VARCHAR)), '^-?[0-9]+(\\.[0-9]+)?[eE][+-]?[0-9]+$') THEN
+            TRY_CAST(trim(CAST(val AS VARCHAR)) AS DOUBLE)::VARIANT
+        WHEN TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON) IS NULL THEN NULL
+        WHEN json_type(TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON)) = 'NULL'
+            THEN ${catalog}.main._fs_variant_null()
+        ELSE TRY_CAST(trim(CAST(val AS VARCHAR)) AS JSON)::VARIANT
     END
 );
 
@@ -88,39 +185,283 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_variant_timestamp(val, kind) AS (
     END
 );
 
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_key(v) AS (variant_comparator(v));
-
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_eq(a, b) AS (
-    (a IS NULL AND b IS NULL)
-    OR (
-        a IS NOT NULL
-        AND b IS NOT NULL
-        AND variant_comparator(a) = variant_comparator(b)
+CREATE OR REPLACE MACRO ${catalog}.main._fs_cmp_variant(v) AS (
+    CAST(
+        CASE
+            WHEN typeof(v) LIKE 'MAP(%' THEN CAST(v AS JSON)
+            WHEN typeof(v) = 'JSON' THEN v
+            ELSE ${catalog}.main._fs_as_variant(v)
+        END
+        AS VARIANT
     )
 );
 
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_eq_sql(a, b) AS (${catalog}.main._fs_variant_eq(a, b));
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_key(v) AS (
+    variant_comparator(${catalog}.main._fs_cmp_variant(v))
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_sort_rank(v) AS (
+    _fs_variant_sort_rank_py(
+        typeof(v),
+        CASE
+            WHEN v IS NULL THEN NULL
+            ELSE variant_typeof(TRY_CAST(v AS VARIANT))
+        END
+    )
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_sort_key(v) AS (
+    struct_pack(
+        rank := ${catalog}.main._fs_variant_sort_rank(v),
+        num := CASE
+            WHEN ${catalog}.main._fs_is_numeric_variant(v) THEN TRY_CAST(v AS DOUBLE)
+            ELSE NULL::DOUBLE
+        END,
+        cmp := variant_comparator(${catalog}.main._fs_cmp_variant(v))
+    )
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_lt(a, b) AS (
+    _fs_variant_lt_py(
+        a,
+        typeof(a),
+        CASE WHEN a IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(a AS VARIANT)) END,
+        b,
+        typeof(b),
+        CASE WHEN b IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(b AS VARIANT)) END
+    )
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_is_numeric_variant(v) AS (
+    _fs_is_numeric_variant_py(
+        CASE
+            WHEN v IS NULL THEN NULL
+            ELSE variant_typeof(TRY_CAST(v AS VARIANT))
+        END
+    )
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_eq(a, b) AS (
+    _fs_variant_eq_py(
+        a,
+        typeof(a),
+        CASE WHEN a IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(a AS VARIANT)) END,
+        b,
+        typeof(b),
+        CASE WHEN b IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(b AS VARIANT)) END
+    )
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_eq_sql(a, b) AS (
+    _fs_variant_eq_sql_py(
+        a,
+        typeof(a),
+        CASE WHEN a IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(a AS VARIANT)) END,
+        b,
+        typeof(b),
+        CASE WHEN b IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(b AS VARIANT)) END
+    )
+);
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_index(v, key) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_list(v) IS NULL OR try_cast(key AS UINTEGER) IS NULL THEN NULL
-        WHEN CAST(key AS UINTEGER) < 0 THEN NULL
-        WHEN CAST(key AS UINTEGER) + 1 > len(${catalog}.main._fs_as_list(v)) THEN NULL
-        ELSE list_element(${catalog}.main._fs_as_list(v), CAST(key AS UINTEGER) + 1)
+    _fs_variant_get_index_py(v, key)
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_map_get(m, key) AS (
+    CASE _fs_map_get_kind_py(m, key)
+        WHEN 'json_null' THEN ${catalog}.main._fs_variant_null()
+        WHEN 'value' THEN _fs_map_get_py(m, key)
+        ELSE NULL::VARIANT
     END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_greatest(a, b) AS (
+    CASE
+        WHEN a IS NULL OR b IS NULL THEN NULL::VARIANT
+        WHEN TRY_CAST(a AS DOUBLE) >= TRY_CAST(b AS DOUBLE) THEN a::VARIANT
+        ELSE b::VARIANT
+    END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_least(a, b) AS (
+    CASE
+        WHEN a IS NULL OR b IS NULL THEN NULL::VARIANT
+        WHEN TRY_CAST(a AS DOUBLE) <= TRY_CAST(b AS DOUBLE) THEN a::VARIANT
+        ELSE b::VARIANT
+    END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
+    CASE
+        WHEN x IS NULL THEN 'undefined'
+        WHEN ${catalog}.main._fs_is_json_null(x) THEN 'null'
+        WHEN ${catalog}.main._fs_variant_typeof(x) LIKE 'DOUBLE%'
+            AND isfinite(TRY_CAST(x AS DOUBLE))
+            THEN printf('%.15e', TRY_CAST(x AS DOUBLE))
+        WHEN ${catalog}.main._fs_variant_typeof(x) LIKE 'TIMESTAMP%'
+            THEN '"' || left(strftime(TRY_CAST(x AS TIMESTAMP), '%Y-%m-%d %H:%M:%S.%f'), 23) || '"'
+        WHEN ${catalog}.main._fs_variant_typeof(x) LIKE 'BLOB%'
+            OR ${catalog}.main._fs_variant_typeof(x) LIKE 'BINARY%'
+            THEN '"' || upper(hex(TRY_CAST(x AS BLOB))) || '"'
+        WHEN TRY_CAST(x AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_NTZ__%' THEN
+            '"' || CASE
+                WHEN length(replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', '')) <= 19
+                    THEN replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', '') || '.000'
+                ELSE left(replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_NTZ__', ''), 23)
+            END || '"'
+        WHEN TRY_CAST(x AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_TZ__%' THEN
+            '"' || replace(
+                replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_TZ__', ''),
+                '+',
+                ' +'
+            ) || '"'
+        WHEN TRY_CAST(x AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_LTZ__%' THEN
+            '"' || replace(
+                replace(TRY_CAST(x AS VARCHAR), '__FAKESNOW_TIMESTAMP_LTZ__', ''),
+                ' Z',
+                '.000 Z'
+            ) || '"'
+        WHEN typeof(x) LIKE 'MAP(%'
+            OR typeof(x) LIKE 'STRUCT(%'
+            OR ${catalog}.main._fs_variant_typeof(x) LIKE 'OBJECT%' THEN
+            ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(x))
+        WHEN typeof(x) LIKE '%[]' OR ${catalog}.main._fs_variant_typeof(x) LIKE 'ARRAY%' THEN
+            '[' || COALESCE(
+                list_aggr(
+                    list_transform(
+                        ${catalog}.main._fs_as_list(x),
+                        y -> CASE
+                            WHEN y IS NULL THEN 'undefined'
+                            WHEN ${catalog}.main._fs_is_json_null(y) THEN 'null'
+                            WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'DOUBLE%'
+                                AND isfinite(TRY_CAST(y AS DOUBLE))
+                                THEN printf('%.15e', TRY_CAST(y AS DOUBLE))
+                            WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'TIMESTAMP%'
+                                THEN '"' || left(strftime(TRY_CAST(y AS TIMESTAMP), '%Y-%m-%d %H:%M:%S.%f'), 23) || '"'
+                            WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'BLOB%'
+                                OR ${catalog}.main._fs_variant_typeof(y) LIKE 'BINARY%'
+                                THEN '"' || upper(hex(TRY_CAST(y AS BLOB))) || '"'
+                            ELSE CAST(y AS JSON)::VARCHAR
+                        END
+                    ),
+                    'string_agg',
+                    ','
+                ),
+                ''
+            ) || ']'
+        ELSE CAST(x AS JSON)::VARCHAR
+    END
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_object(m) AS (
+    '{' || COALESCE(
+        list_aggr(
+            list_transform(
+                list_sort(map_keys(CAST(m AS MAP(VARCHAR, VARIANT)))),
+                k -> to_json(k::VARCHAR) || ':' || COALESCE(
+                    CASE
+                        WHEN list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1) IS NULL
+                            THEN 'undefined'
+                        WHEN ${catalog}.main._fs_is_json_null(
+                            list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                        ) THEN 'null'
+                        WHEN ${catalog}.main._fs_variant_typeof(
+                            list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                        ) LIKE 'DOUBLE%'
+                            AND isfinite(
+                                TRY_CAST(
+                                    list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                                    AS DOUBLE
+                                )
+                            )
+                            THEN printf(
+                                '%.15e',
+                                TRY_CAST(
+                                    list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                                    AS DOUBLE
+                                )
+                            )
+                        WHEN ${catalog}.main._fs_variant_typeof(
+                            list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                        ) LIKE 'BLOB%'
+                            OR ${catalog}.main._fs_variant_typeof(
+                                list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                            ) LIKE 'BINARY%'
+                            THEN '"' || upper(hex(TRY_CAST(
+                                list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                                AS BLOB
+                            ))) || '"'
+                        ELSE CAST(
+                            list_element(map_extract(CAST(m AS MAP(VARCHAR, VARIANT)), k), 1)
+                            AS JSON
+                        )::VARCHAR
+                    END,
+                    'undefined'
+                )
+            ),
+            'string_agg',
+            ','
+        ),
+        ''
+    ) || '}'
+);
+
+CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json(v) AS (
+    CAST((
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN ${catalog}.main._fs_is_json_null(v) THEN 'null'
+            WHEN typeof(v) LIKE '%[]'
+                OR (typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'ARRAY%')
+                THEN ${catalog}.main._fs_to_json_element(v)
+            WHEN typeof(v) LIKE 'MAP(%'
+                OR (typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'OBJECT%')
+                THEN ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(v))
+            WHEN typeof(v) IN ('DOUBLE', 'FLOAT') THEN printf('%.15e', TRY_CAST(v AS DOUBLE))
+            WHEN typeof(v) = 'VARIANT' THEN
+                CASE
+                    WHEN ${catalog}.main._fs_variant_typeof(v) LIKE 'DECIMAL%' THEN
+                        CAST(v AS VARCHAR)
+                    WHEN ${catalog}.main._fs_variant_typeof(v) LIKE 'DOUBLE%' THEN
+                        CASE
+                            WHEN NOT isfinite(TRY_CAST(v AS DOUBLE)) THEN
+                                CASE
+                                    WHEN TRY_CAST(v AS DOUBLE) > 0 THEN 'Infinity'
+                                    WHEN TRY_CAST(v AS DOUBLE) < 0 THEN '-Infinity'
+                                    ELSE 'NaN'
+                                END
+                            ELSE printf('%.15e', TRY_CAST(v AS DOUBLE))
+                        END
+                    WHEN ${catalog}.main._fs_variant_typeof(v) LIKE 'HUGEINT%'
+                        OR ${catalog}.main._fs_variant_typeof(v) LIKE 'UHUGEINT%' THEN
+                        CAST(v AS VARCHAR)
+                    WHEN ${catalog}.main._fs_variant_typeof(v) LIKE 'BLOB%'
+                        OR ${catalog}.main._fs_variant_typeof(v) LIKE 'BINARY%' THEN
+                        '"' || upper(hex(TRY_CAST(v AS BLOB))) || '"'
+                    WHEN TRY_CAST(v AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_%' THEN
+                        ${catalog}.main._fs_to_json_element(v)
+                    ELSE CAST(v AS JSON)::VARCHAR
+                END
+            ELSE CAST(v AS JSON)::VARCHAR
+        END
+    ) AS VARCHAR)
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get(v, key) AS (
     CASE
         WHEN v IS NULL OR key IS NULL THEN NULL
         WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN
-            list_element(
-                map_extract(
-                    ${catalog}.main._fs_as_map(v),
-                    TRY_CAST(key AS VARCHAR)
-                ),
-                1
-            )
+            CASE
+                WHEN NOT map_contains(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)) THEN NULL
+                WHEN list_element(
+                    map_extract(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)),
+                    1
+                ) IS NULL THEN ${catalog}.main._fs_variant_null()
+                ELSE list_element(
+                    map_extract(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)),
+                    1
+                )
+            END
         WHEN ${catalog}.main._fs_as_list(v) IS NOT NULL THEN
             ${catalog}.main._fs_variant_get_index(v, key)
         ELSE NULL
@@ -129,13 +470,34 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get(v, key) AS (
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_ignore_case(v, key) AS (
     CASE
-        WHEN ${catalog}.main._fs_as_map(v) IS NULL OR key IS NULL THEN NULL
-        ELSE map_extract(
-            ${catalog}.main._fs_as_map(v),
-            list_any_value(
+        WHEN v IS NULL OR key IS NULL THEN NULL::VARIANT
+        WHEN typeof(v) LIKE 'MAP(%' THEN ${catalog}.main._fs_map_get(
+            v,
+            list_element(
                 list_filter(
-                    map_keys(${catalog}.main._fs_as_map(v)),
+                    map_keys(CAST(v AS MAP(VARCHAR, VARIANT))),
                     k -> lower(k) = lower(key)
+                ),
+                len(
+                    list_filter(
+                        map_keys(CAST(v AS MAP(VARCHAR, VARIANT))),
+                        k -> lower(k) = lower(key)
+                    )
+                )
+            )
+        )
+        ELSE ${catalog}.main._fs_json_get(
+            TRY_CAST(v AS JSON),
+            list_element(
+                list_filter(
+                    COALESCE(json_keys(TRY_CAST(v AS JSON)), []::VARCHAR[]),
+                    k -> lower(k) = lower(key)
+                ),
+                len(
+                    list_filter(
+                        COALESCE(json_keys(TRY_CAST(v AS JSON)), []::VARCHAR[]),
+                        k -> lower(k) = lower(key)
+                    )
                 )
             )
         )
@@ -165,19 +527,35 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_object_entries(v) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_array(v) AS (
     CASE
         WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
-        WHEN ${catalog}.main._fs_as_list(v) IS NOT NULL THEN ${catalog}.main._fs_as_list(v)
-        WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN [v::VARIANT]
-        ELSE [v]
+        WHEN typeof(v) LIKE '%[]' THEN try_cast(v AS VARIANT[])
+        WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'ARRAY%'
+            THEN ${catalog}.main._fs_as_list(v)
+        ELSE list_append([]::VARIANT[], v::VARIANT)
     END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_object(v) AS (
     CASE
-        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
-        WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN ${catalog}.main._fs_as_map(v)
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL::MAP(VARCHAR, VARIANT)
+        WHEN typeof(v) LIKE 'MAP(%' THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'OBJECT%'
+            THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN json_type(TRY_CAST(v AS JSON)) = 'OBJECT'
+            THEN TRY_CAST(TRY_CAST(v AS VARIANT) AS MAP(VARCHAR, VARIANT))
         ELSE error(
             '[FAKESNOW:100071:22000] Failed to cast variant value '
-            || COALESCE(TRY_CAST(v AS JSON)::VARCHAR, 'null')
+            || COALESCE(
+                _fs_cast_error_value_py(
+                    v,
+                    typeof(v),
+                    CASE
+                        WHEN v IS NULL THEN NULL
+                        WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+                        ELSE NULL
+                    END
+                ),
+                'null'
+            )
             || ' to OBJECT'
         )
     END
@@ -206,39 +584,48 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_object_validate_keys(keys) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_drop_null(v) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_map(v) IS NULL THEN NULL
-        ELSE map_from_entries(
-            list_filter(
-                map_entries(${catalog}.main._fs_as_map(v)),
-                e -> e.value IS NOT NULL
+    ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN ${catalog}.main._fs_as_map(v) IS NULL THEN NULL
+            ELSE map_from_entries(
+                list_filter(
+                    map_entries(${catalog}.main._fs_as_map(v)),
+                    e -> e.value IS NOT NULL
+                )
             )
-        )
-    END
+        END
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_keep_null(v) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_map(v) IS NULL THEN NULL
-        ELSE map_from_entries(
-            list_transform(
-                map_entries(${catalog}.main._fs_as_map(v)),
-                e -> struct_pack(
-                    key := e.key,
-                    value := CASE
-                        WHEN e.value IS NULL THEN ${catalog}.main._fs_variant_null()
-                        ELSE e.value
-                    END
+    ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN ${catalog}.main._fs_as_map(v) IS NULL THEN NULL
+            ELSE map_from_entries(
+                list_transform(
+                    map_entries(${catalog}.main._fs_as_map(v)),
+                    e -> struct_pack(
+                        key := e.key,
+                        value := CASE
+                            WHEN e.value IS NULL THEN ${catalog}.main._fs_variant_null()
+                            ELSE e.value
+                        END
+                    )
                 )
             )
-        )
-    END
+        END
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_insert(obj, key, val, update_flag) AS (
     CASE
-        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL
-        WHEN key IS NULL OR val IS NULL THEN ${catalog}.main._fs_as_map(obj)
+        WHEN obj IS NULL OR ${catalog}.main._fs_is_json_null(obj) THEN NULL
+        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN error(
+            '[FAKESNOW:100071:22000] Failed to cast variant value '
+            || COALESCE(TRY_CAST(obj AS JSON)::VARCHAR, 'null')
+            || ' to OBJECT'
+        )
+        WHEN key IS NULL OR val IS NULL THEN ${catalog}.main._fs_map_as_object(${catalog}.main._fs_as_map(obj))
         WHEN try_cast(key AS VARCHAR) IS NULL
             THEN error('[FAKESNOW:2270:22000] SQL compilation error:')
         WHEN map_contains(${catalog}.main._fs_as_map(obj), CAST(key AS VARCHAR))
@@ -248,57 +635,70 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_object_insert(obj, key, val, update_
                 || CAST(key AS VARCHAR)
                 || ''''
             )
-        ELSE map_concat(
-            CASE
-                WHEN COALESCE(update_flag, false) THEN map_from_entries(
-                    list_filter(
-                        map_entries(${catalog}.main._fs_as_map(obj)),
-                        e -> e.key != CAST(key AS VARCHAR)
+        ELSE ${catalog}.main._fs_map_as_object(
+            map_concat(
+                CASE
+                    WHEN COALESCE(update_flag, false) THEN map_from_entries(
+                        list_filter(
+                            map_entries(${catalog}.main._fs_as_map(obj)),
+                            e -> e.key != CAST(key AS VARCHAR)
+                        )
                     )
-                )
-                ELSE ${catalog}.main._fs_as_map(obj)
-            END,
-            MAP {CAST(key AS VARCHAR): val::VARIANT}
+                    ELSE ${catalog}.main._fs_as_map(obj)
+                END,
+                MAP {CAST(key AS VARCHAR): val::VARIANT}
+            )
         )
     END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_delete(obj, keys) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL
-        ELSE map_from_entries(
-            list_filter(
-                map_entries(${catalog}.main._fs_as_map(obj)),
-                e -> NOT list_contains(COALESCE(keys, []::VARCHAR[]), e.key)
+    ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL
+            ELSE map_from_entries(
+                list_filter(
+                    map_entries(${catalog}.main._fs_as_map(obj)),
+                    e -> NOT list_contains(COALESCE(keys, []::VARCHAR[]), e.key)
+                )
             )
-        )
-    END
+        END
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_pick(obj, keys) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL
-        ELSE map_from_entries(
-            list_filter(
-                map_entries(${catalog}.main._fs_as_map(obj)),
-                e -> list_contains(COALESCE(keys, []::VARCHAR[]), e.key)
+    ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL
+            ELSE map_from_entries(
+                list_filter(
+                    map_entries(${catalog}.main._fs_as_map(obj)),
+                    e -> list_contains(COALESCE(keys, []::VARCHAR[]), e.key)
+                )
             )
-        )
-    END
+        END
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_keys(obj) AS (
     CASE
-        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN NULL::VARIANT[]
+        WHEN obj IS NULL OR ${catalog}.main._fs_is_json_null(obj) THEN NULL::VARIANT[]
+        WHEN ${catalog}.main._fs_as_map(obj) IS NULL THEN error(
+            '[FAKESNOW:100071:22000] Failed to cast variant value '
+            || COALESCE(TRY_CAST(obj AS JSON)::VARCHAR, 'null')
+            || ' to OBJECT'
+        )
         ELSE list_transform(list_sort(map_keys(${catalog}.main._fs_as_map(obj))), k -> k::VARIANT)
     END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_cat(obj_left, obj_right) AS (
-    CASE
-        WHEN ${catalog}.main._fs_as_map(obj_left) IS NULL OR ${catalog}.main._fs_as_map(obj_right) IS NULL THEN NULL
-        ELSE map_concat(${catalog}.main._fs_as_map(obj_left), ${catalog}.main._fs_as_map(obj_right))
-    END
+    ${catalog}.main._fs_map_as_object(
+        CASE
+            WHEN ${catalog}.main._fs_as_map(obj_left) IS NULL OR ${catalog}.main._fs_as_map(obj_right) IS NULL THEN NULL
+            ELSE map_concat(${catalog}.main._fs_as_map(obj_left), ${catalog}.main._fs_as_map(obj_right))
+        END
+    )
 );
 """
 
@@ -306,14 +706,21 @@ _ARRAYS = """
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_contains(arr, value) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN CASE WHEN arr IS NULL THEN NULL ELSE false END
-        WHEN value IS NULL THEN list_any_value(
-            list_transform(${catalog}.main._fs_as_list(arr), x -> x IS NULL)
-        )
-        ELSE list_any_value(
-            list_transform(
-                ${catalog}.main._fs_as_list(arr),
-                x -> ${catalog}.main._fs_variant_eq(x, value)
-            )
+        WHEN value IS NULL THEN CASE
+            WHEN COALESCE(
+                list_bool_or(list_transform(${catalog}.main._fs_as_list(arr), x -> x IS NULL)),
+                false
+            ) THEN true
+            ELSE NULL
+        END
+        ELSE COALESCE(
+            list_bool_or(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr),
+                    x -> ${catalog}.main._fs_variant_eq(x, value)
+                )
+            ),
+            false
         )
     END
 );
@@ -340,15 +747,15 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_position(arr, value) AS (
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_append(arr, value) AS (
     CASE
-        WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
-        ELSE list_concat(${catalog}.main._fs_as_list(arr), [value])
+        WHEN arr IS NULL THEN NULL
+        ELSE list_concat(${catalog}.main._fs_variant_to_array(arr), [value])
     END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_prepend(arr, value) AS (
     CASE
-        WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
-        ELSE list_concat([value], ${catalog}.main._fs_as_list(arr))
+        WHEN arr IS NULL THEN NULL
+        ELSE list_concat([value], ${catalog}.main._fs_variant_to_array(arr))
     END
 );
 
@@ -358,7 +765,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_slice(arr, start, end_pos) AS 
         ELSE list_slice(
             ${catalog}.main._fs_as_list(arr),
             CASE WHEN start < 0 THEN greatest(1, len(${catalog}.main._fs_as_list(arr)) + start + 1) ELSE start + 1 END,
-            CASE WHEN end_pos < 0 THEN greatest(0, len(${catalog}.main._fs_as_list(arr)) + end_pos + 1) ELSE end_pos END
+            CASE WHEN end_pos < 0 THEN greatest(0, len(${catalog}.main._fs_as_list(arr)) + end_pos) ELSE end_pos END
         )
     END
 );
@@ -366,20 +773,23 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_slice(arr, start, end_pos) AS 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_to_string(arr, delimiter) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL OR delimiter IS NULL THEN NULL
-        ELSE list_aggr(
-            list_transform(
-                ${catalog}.main._fs_as_list(arr),
-                x -> CASE
-                    WHEN x IS NULL THEN ''
-                    WHEN ${catalog}.main._fs_is_json_null(x)
-                        THEN error('[FAKESNOW:100071:22000] Failed to cast variant value from array to string')
-                    WHEN ${catalog}.main._fs_as_list(x) IS NOT NULL OR ${catalog}.main._fs_as_map(x) IS NOT NULL
-                        THEN COALESCE(TRY_CAST(x AS JSON)::VARCHAR, '')
-                    ELSE COALESCE(TRY_CAST(x AS VARCHAR), '')
-                END
+        ELSE COALESCE(
+            list_aggr(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr),
+                    x -> CASE
+                        WHEN x IS NULL THEN ''
+                        WHEN ${catalog}.main._fs_is_json_null(x)
+                            THEN error('[FAKESNOW:100071:22000] Failed to cast variant value from array to string')
+                        WHEN ${catalog}.main._fs_as_list(x) IS NOT NULL OR ${catalog}.main._fs_as_map(x) IS NOT NULL
+                            THEN COALESCE(TRY_CAST(x AS JSON)::VARCHAR, '')
+                        ELSE COALESCE(TRY_CAST(x AS VARCHAR), '')
+                    END
+                ),
+                'string_agg',
+                delimiter
             ),
-            'string_agg',
-            delimiter
+            ''
         )
     END
 );
@@ -394,11 +804,23 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_distinct(arr) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_flatten(arr) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
-        WHEN list_any_value(
-            list_transform(
-                ${catalog}.main._fs_as_list(arr),
-                x -> x IS NULL OR ${catalog}.main._fs_as_list(x) IS NULL
-            )
+        WHEN COALESCE(
+            list_bool_or(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr),
+                    x -> x IS NULL AND NOT ${catalog}.main._fs_is_json_null(x)
+                )
+            ),
+            false
+        ) THEN NULL
+        WHEN COALESCE(
+            list_bool_or(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr),
+                    x -> ${catalog}.main._fs_as_list(x) IS NULL
+                )
+            ),
+            false
         ) THEN error(
             '[FAKESNOW:100107:22000] Not an array: ''Input argument to ARRAY_FLATTEN is not an array of arrays'''
         )
@@ -421,6 +843,12 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_sort(arr, ascending, nulls_fir
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_max(arr) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
+        WHEN len(
+            list_filter(
+                ${catalog}.main._fs_as_list(arr),
+                x -> x IS NOT NULL AND NOT ${catalog}.main._fs_is_json_null(x)
+            )
+        ) = 0 THEN NULL
         ELSE list_reduce(
             list_filter(
                 ${catalog}.main._fs_as_list(arr),
@@ -437,6 +865,12 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_max(arr) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_min(arr) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL THEN NULL
+        WHEN len(
+            list_filter(
+                ${catalog}.main._fs_as_list(arr),
+                x -> x IS NOT NULL AND NOT ${catalog}.main._fs_is_json_null(x)
+            )
+        ) = 0 THEN NULL
         ELSE list_reduce(
             list_filter(
                 ${catalog}.main._fs_as_list(arr),
@@ -463,6 +897,14 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_remove(arr, value) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_array_insert(arr, position, value) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr) IS NULL OR position IS NULL THEN NULL
+        WHEN position >= len(${catalog}.main._fs_as_list(arr)) THEN list_concat(
+            ${catalog}.main._fs_as_list(arr),
+            list_transform(
+                range(1, (position - len(${catalog}.main._fs_as_list(arr))) + 1),
+                i -> NULL::VARIANT
+            ),
+            [value]
+        )
         ELSE list_concat(
             list_slice(
                 ${catalog}.main._fs_as_list(arr),
@@ -511,10 +953,15 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_except(arr_left, arr_right) AS
         WHEN ${catalog}.main._fs_as_list(arr_left) IS NULL OR ${catalog}.main._fs_as_list(arr_right) IS NULL THEN NULL
         ELSE list_filter(
             ${catalog}.main._fs_as_list(arr_left),
-            l -> NOT list_any_value(
-                list_transform(
+            (l, i) -> len(
+                list_filter(
+                    list_slice(${catalog}.main._fs_as_list(arr_left), 1, i),
+                    x -> ${catalog}.main._fs_variant_eq(x, l)
+                )
+            ) > len(
+                list_filter(
                     ${catalog}.main._fs_as_list(arr_right),
-                    r -> ${catalog}.main._fs_variant_eq(l, r)
+                    r -> ${catalog}.main._fs_variant_eq(r, l)
                 )
             )
         )
@@ -526,10 +973,15 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_intersection(arr_left, arr_rig
         WHEN ${catalog}.main._fs_as_list(arr_left) IS NULL OR ${catalog}.main._fs_as_list(arr_right) IS NULL THEN NULL
         ELSE list_filter(
             ${catalog}.main._fs_as_list(arr_left),
-            l -> list_any_value(
-                list_transform(
+            (l, i) -> len(
+                list_filter(
+                    list_slice(${catalog}.main._fs_as_list(arr_left), 1, i),
+                    x -> ${catalog}.main._fs_variant_eq(x, l)
+                )
+            ) <= len(
+                list_filter(
                     ${catalog}.main._fs_as_list(arr_right),
-                    r -> ${catalog}.main._fs_variant_eq(l, r)
+                    r -> ${catalog}.main._fs_variant_eq(r, l)
                 )
             )
         )
@@ -539,16 +991,22 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_array_intersection(arr_left, arr_rig
 CREATE OR REPLACE MACRO ${catalog}.main._fs_arrays_overlap(arr_left, arr_right) AS (
     CASE
         WHEN ${catalog}.main._fs_as_list(arr_left) IS NULL OR ${catalog}.main._fs_as_list(arr_right) IS NULL THEN NULL
-        ELSE list_any_value(
-            list_transform(
-                ${catalog}.main._fs_as_list(arr_left),
-                l -> list_any_value(
-                    list_transform(
-                        ${catalog}.main._fs_as_list(arr_right),
-                        r -> ${catalog}.main._fs_variant_eq(l, r)
+        ELSE COALESCE(
+            list_bool_or(
+                list_transform(
+                    ${catalog}.main._fs_as_list(arr_left),
+                    l -> COALESCE(
+                        list_bool_or(
+                            list_transform(
+                                ${catalog}.main._fs_as_list(arr_right),
+                                r -> ${catalog}.main._fs_variant_eq(l, r)
+                            )
+                        ),
+                        false
                     )
                 )
-            )
+            ),
+            false
         )
     END
 );
@@ -565,7 +1023,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_arrays_zip(arr_left, arr_right) AS (
                     len(${catalog}.main._fs_as_list(arr_right))
                 ) + 1
             ),
-            i -> MAP {
+            i -> CAST(to_json(MAP {
                 '$1': CASE
                     WHEN i <= len(${catalog}.main._fs_as_list(arr_left))
                         THEN list_element(${catalog}.main._fs_as_list(arr_left), i)
@@ -576,28 +1034,102 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_arrays_zip(arr_left, arr_right) AS (
                         THEN list_element(${catalog}.main._fs_as_list(arr_right), i)
                     ELSE ${catalog}.main._fs_variant_null()
                 END
-            }::VARIANT
+            }) AS VARIANT)
         )
     END
 );
 """
 
 _CASTS = """
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_cast_failed(v, target) AS (
+    error(
+        '[FAKESNOW:100071:22000] Failed to cast variant value '
+        || COALESCE(
+            _fs_cast_error_value_py(
+                v,
+                typeof(v),
+                CASE
+                    WHEN v IS NULL THEN NULL
+                    WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+                    ELSE NULL
+                END
+            ),
+            'null'
+        )
+        || ' to '
+        || target
+    )
+);
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_varchar(v) AS (
+    _fs_variant_to_varchar_py(
+        v,
+        typeof(v),
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+            ELSE NULL
+        END
+    )
+);
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_boolean(v) AS (
     CASE
-        WHEN ${catalog}.main._fs_typeof(v) IN ('ARRAY', 'OBJECT')
-            THEN json_pretty(TRY_CAST(v AS JSON))
-        ELSE TRY_CAST(v AS VARCHAR)
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN ${catalog}.main._fs_typeof(v) = 'BOOLEAN' THEN TRY_CAST(v AS BOOLEAN)
+        WHEN ${catalog}.main._fs_typeof(v) = 'VARCHAR'
+            AND TRY_CAST(v AS BOOLEAN) IS NOT NULL THEN TRY_CAST(v AS BOOLEAN)
+        ELSE ${catalog}.main._fs_variant_cast_failed(v, 'BOOLEAN')
     END
 );
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_boolean(v) AS (TRY_CAST(v AS BOOLEAN));
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_decimal(v, precision, scale) AS (
-    TRY_CAST(round(TRY_CAST(v AS DOUBLE), COALESCE(scale, 0)) AS DECIMAL(38, 18))
+    CASE
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN ${catalog}.main._fs_typeof(v) IN ('INTEGER', 'DECIMAL', 'DOUBLE', 'BOOLEAN')
+            AND TRY_CAST(round(TRY_CAST(v AS DOUBLE), COALESCE(scale, 0)) AS DECIMAL(38, 18)) IS NOT NULL
+            THEN TRY_CAST(round(TRY_CAST(v AS DOUBLE), COALESCE(scale, 0)) AS DECIMAL(38, 18))
+        WHEN ${catalog}.main._fs_typeof(v) = 'VARCHAR'
+            AND TRY_CAST(TRY_CAST(v AS VARCHAR) AS DOUBLE) IS NOT NULL
+            THEN TRY_CAST(round(TRY_CAST(v AS DOUBLE), COALESCE(scale, 0)) AS DECIMAL(38, 18))
+        ELSE ${catalog}.main._fs_variant_cast_failed(v, 'FIXED')
+    END
 );
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_bigint(v) AS (TRY_CAST(v AS BIGINT));
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_double(v) AS (TRY_CAST(v AS DOUBLE));
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_date(v) AS (TRY_CAST(v AS DATE));
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_time(v) AS (TRY_CAST(v AS TIME));
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_bigint(v) AS (
+    _fs_variant_to_bigint_py(
+        v,
+        typeof(v),
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+            ELSE NULL
+        END
+    )
+);
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_double(v) AS (
+    _fs_variant_to_double_py(
+        v,
+        typeof(v),
+        CASE
+            WHEN v IS NULL THEN NULL
+            WHEN typeof(v) IN ('VARIANT', 'JSON') THEN variant_typeof(TRY_CAST(v AS VARIANT))
+            ELSE NULL
+        END
+    )
+);
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_date(v) AS (
+    CASE
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN TRY_CAST(v AS DATE) IS NOT NULL
+            AND ${catalog}.main._fs_typeof(v) IN ('DATE', 'VARCHAR', 'TIMESTAMP_NTZ', 'TIMESTAMP_LTZ', 'TIMESTAMP_TZ')
+            THEN TRY_CAST(v AS DATE)
+        ELSE ${catalog}.main._fs_variant_cast_failed(v, 'DATE')
+    END
+);
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_time(v) AS (
+    CASE
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN TRY_CAST(v AS TIME) IS NOT NULL THEN TRY_CAST(v AS TIME)
+        ELSE ${catalog}.main._fs_variant_cast_failed(v, 'TIME')
+    END
+);
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_timestamp(v) AS (
     CASE
         WHEN TRY_CAST(v AS VARCHAR) LIKE '__FAKESNOW_TIMESTAMP_%' THEN TRY_CAST(
@@ -617,10 +1149,32 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_timestamp(v) AS (
         ELSE TRY_CAST(v AS TIMESTAMP)
     END
 );
-CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_binary(v) AS (TRY_CAST(v AS BLOB));
+CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_binary(v) AS (
+    CASE
+        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN ${catalog}.main._fs_typeof(v) = 'VARCHAR'
+            AND TRY_CAST(from_hex(TRY_CAST(v AS VARCHAR)) AS BLOB) IS NOT NULL
+            THEN TRY_CAST(from_hex(TRY_CAST(v AS VARCHAR)) AS BLOB)
+        ELSE TRY_CAST(v AS BLOB)
+    END
+);
 """
 
 _FLATTEN = """
+CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_json_object_level(v, prefix, seq) AS (
+    list_transform(
+        list_sort(COALESCE(json_keys(TRY_CAST(v AS JSON)), []::VARCHAR[])),
+        k -> struct_pack(
+            seq := seq,
+            key := k,
+            path := CASE WHEN prefix = '' THEN k ELSE prefix || '.' || k END,
+            index := NULL::BIGINT,
+            value := ${catalog}.main._fs_json_get(TRY_CAST(v AS JSON), k),
+            this := TRY_CAST(v AS VARIANT)
+        )
+    )
+);
+
 CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_map_level(m, prefix, seq) AS (
     list_transform(
         list_sort(map_keys(m)),
@@ -630,7 +1184,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_map_level(m, prefix, seq) AS
             path := CASE WHEN prefix = '' THEN k ELSE prefix || '.' || k END,
             index := NULL::BIGINT,
             value := list_element(map_extract(m, k), 1),
-            this := m::VARIANT
+            this := CAST(to_json(m) AS VARIANT)
         )
     )
 );
@@ -679,8 +1233,10 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_flatten_rows_impl(
                     this VARIANT
                 )[]
             END
-        WHEN ${catalog}.main._fs_as_map(target) IS NOT NULL AND mode IN ('BOTH', 'OBJECT') THEN
-            ${catalog}.main._fs_flatten_map_level(${catalog}.main._fs_as_map(target), prefix, seq)
+        WHEN typeof(target) LIKE 'MAP(%' AND mode IN ('BOTH', 'OBJECT') THEN
+            ${catalog}.main._fs_flatten_map_level(CAST(target AS MAP(VARCHAR, VARIANT)), prefix, seq)
+        WHEN ${catalog}.main._fs_variant_typeof(target) LIKE 'OBJECT%' AND mode IN ('BOTH', 'OBJECT') THEN
+            ${catalog}.main._fs_flatten_json_object_level(target, prefix, seq)
         WHEN ${catalog}.main._fs_as_list(target) IS NOT NULL AND mode IN ('BOTH', 'ARRAY') THEN
             ${catalog}.main._fs_flatten_array_level(${catalog}.main._fs_as_list(target), prefix, seq)
         WHEN COALESCE(is_outer, false) THEN [${catalog}.main._fs_flatten_outer_row(prefix, seq, target)]
@@ -718,7 +1274,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_flatten_map_rows(
                     ELSE path_arg || '.' || k
                 END,
                 index := NULL::BIGINT,
-                value := map_extract(value, k),
+                value := list_element(map_extract(value, k), 1),
                 this := value
             )
         )
