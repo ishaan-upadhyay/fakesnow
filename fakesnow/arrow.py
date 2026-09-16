@@ -120,7 +120,7 @@ def _pretty_nonstandard_json(value: str) -> str:
         elif char == ",":
             rendered.extend((",\n", "  " * depth))
         elif char == ":":
-            rendered.extend((": "))
+            rendered.extend(": ")
         elif not char.isspace():
             rendered.append(char)
     return "".join(rendered)
@@ -190,9 +190,7 @@ def parquet_variant_to_json(
     conn.register(_VARIANT_JSON_RELATION, table)
     try:
         try:
-            json_table = conn.execute(
-                f"SELECT {', '.join(projections)} FROM {_VARIANT_JSON_RELATION}"
-            ).to_arrow_table()
+            json_table = conn.execute(f"SELECT {', '.join(projections)} FROM {_VARIANT_JSON_RELATION}").to_arrow_table()
         except CatalogException as exc:
             if "_fs_to_json" not in str(exc):
                 raise
@@ -202,9 +200,7 @@ def parquet_variant_to_json(
                 else _quoted_ident(field.name)
                 for index, field in enumerate(table.schema)
             ]
-            json_table = conn.execute(
-                f"SELECT {', '.join(fallback)} FROM {_VARIANT_JSON_RELATION}"
-            ).to_arrow_table()
+            json_table = conn.execute(f"SELECT {', '.join(fallback)} FROM {_VARIANT_JSON_RELATION}").to_arrow_table()
     finally:
         conn.unregister(_VARIANT_JSON_RELATION)
 
