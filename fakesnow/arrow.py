@@ -208,9 +208,11 @@ def parquet_variant_to_json(
                 fixed.append(_fix_array_undefined(json_text, raw_value) if invalid_rows[row_index] else json_text)
             arrays.append(pa.array(fixed, type=pa.string()))
         elif should_render[index]:
-            raw_values = table.column(index).combine_chunks().to_pylist()
+            raw_values = table.column(index).combine_chunks()
             json_values = json_column.combine_chunks().to_pylist()
-            fixed = [None if raw is None else json_text for raw, json_text in zip(raw_values, json_values, strict=True)]
+            fixed = [
+                json_text if raw.is_valid else None for raw, json_text in zip(raw_values, json_values, strict=True)
+            ]
             arrays.append(pa.array(fixed, type=pa.string()))
         else:
             arrays.append(table.column(index).combine_chunks())
@@ -246,8 +248,14 @@ def render_fetch_table(
         if "out of range for the destination type INT64" not in str(exc):
             raise
         projections = [
-            f"_fs_to_json({_quoted_ident(name)}) AS {_quoted_ident(name)}" if render else _quoted_ident(name)
-            for name, render in zip(names, sql_render, strict=True)
+            (
+                f"_fs_to_json_py({_quoted_ident(name)}) AS {_quoted_ident(name)}"
+                if duck_type == "VARIANT"
+                else f"_fs_to_json({_quoted_ident(name)}) AS {_quoted_ident(name)}"
+            )
+            if render
+            else _quoted_ident(name)
+            for name, duck_type, render in zip(names, duck_types, sql_render, strict=True)
         ]
         table = relation.project(", ".join(projections)).to_arrow_table()
         already_rendered = True

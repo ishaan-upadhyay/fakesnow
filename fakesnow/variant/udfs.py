@@ -194,7 +194,7 @@ def _render_variant_json(value: Any) -> str:
 
 
 def _fs_to_json_py(value: Any) -> str | None:
-    return None if value is None else _render_variant_json(value)
+    return _render_variant_json(value)
 
 
 def _map_lookup(container: Any, key: Any) -> tuple[str, Any] | None:
