@@ -441,6 +441,27 @@ def _fs_variant_get_index_py(container: Any, key: Any) -> Any:
     return _as_variant_value(container[index])
 
 
+def _fs_variant_get_py(container: Any, key: Any) -> Any:
+    if container is None or key is None:
+        return None
+    if _map_items(container) is not None:
+        return _fs_map_get_py(container, key)
+    return _fs_variant_get_index_py(container, key)
+
+
+def _fs_variant_to_binary_py(value: Any) -> bytes | None:
+    if value is None:
+        return None
+    if isinstance(value, bytes):
+        return value
+    if isinstance(value, str):
+        try:
+            return bytes.fromhex(value)
+        except ValueError:
+            return None
+    return None
+
+
 def _strip_timestamp_sentinel(value: str) -> str:
     kind = "NTZ"
     body = value
@@ -557,6 +578,8 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
         ("_fs_map_get_py", _fs_map_get_py, sqltypes.VARIANT),
         ("_fs_map_get_kind_py", _fs_map_get_kind_py, sqltypes.VARCHAR),
         ("_fs_variant_get_index_py", _fs_variant_get_index_py, sqltypes.VARIANT),
+        ("_fs_variant_get_py", _fs_variant_get_py, sqltypes.VARIANT),
+        ("_fs_variant_to_binary_py", _fs_variant_to_binary_py, sqltypes.BLOB),
         ("_fs_variant_eq_py", _fs_variant_eq_py, sqltypes.BOOLEAN),
         ("_fs_variant_eq_sql_py", _fs_variant_eq_sql_py, sqltypes.BOOLEAN),
         ("_fs_variant_lt_py", _fs_variant_lt_py, sqltypes.BOOLEAN),

@@ -503,24 +503,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json(v) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get(v, key) AS (
-    CASE
-        WHEN v IS NULL OR key IS NULL THEN NULL
-        WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN
-            CASE
-                WHEN NOT map_contains(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)) THEN NULL
-                WHEN list_element(
-                    map_extract(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)),
-                    1
-                ) IS NULL THEN ${catalog}.main._fs_variant_null()
-                ELSE list_element(
-                    map_extract(${catalog}.main._fs_as_map(v), TRY_CAST(key AS VARCHAR)),
-                    1
-                )
-            END
-        WHEN ${catalog}.main._fs_as_list(v) IS NOT NULL THEN
-            ${catalog}.main._fs_variant_get_index(v, key)
-        ELSE NULL
-    END
+    _fs_variant_get_py(v, key)
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_ignore_case(v, key) AS (
@@ -1205,13 +1188,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_timestamp(v) AS (
     END
 );
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_binary(v) AS (
-    CASE
-        WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
-        WHEN ${catalog}.main._fs_typeof(v) = 'VARCHAR'
-            AND TRY_CAST(from_hex(TRY_CAST(v AS VARCHAR)) AS BLOB) IS NOT NULL
-            THEN TRY_CAST(from_hex(TRY_CAST(v AS VARCHAR)) AS BLOB)
-        ELSE TRY_CAST(v AS BLOB)
-    END
+    _fs_variant_to_binary_py(v)
 );
 """
 
