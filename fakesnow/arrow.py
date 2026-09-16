@@ -5,7 +5,7 @@ import re
 
 import pyarrow as pa
 import pyarrow.compute as pc
-from duckdb import DuckDBPyConnection, DuckDBPyRelation
+from duckdb import DuckDBPyConnection, DuckDBPyRelation, InvalidInputException
 
 from fakesnow.rowtype import ColumnInfo
 
@@ -237,8 +237,21 @@ def render_fetch_table(
         return relation.to_arrow_table()
     sql_render = [_is_variant_sql_json(duck_type) for duck_type in duck_types]
     arrow_render = [_is_container_json(duck_type) for duck_type in duck_types]
-    table = relation.to_arrow_table()
-    render_columns = [sql or arrow for sql, arrow in zip(sql_render, arrow_render, strict=True)]
+    already_rendered = False
+    try:
+        table = relation.to_arrow_table()
+    except InvalidInputException as exc:
+        if "out of range for the destination type INT64" not in str(exc):
+            raise
+        projections = [
+            f"_fs_to_json({_quoted_ident(name)}) AS {_quoted_ident(name)}" if render else _quoted_ident(name)
+            for name, render in zip(names, sql_render, strict=True)
+        ]
+        table = relation.project(", ".join(projections)).to_arrow_table()
+        already_rendered = True
+    render_columns = [
+        not already_rendered and (sql or arrow) for sql, arrow in zip(sql_render, arrow_render, strict=True)
+    ]
     rendered = parquet_variant_to_json(conn, table, render_columns) if any(render_columns) else table
     pretty_columns = [
         sql_render[index]
