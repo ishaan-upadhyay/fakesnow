@@ -398,7 +398,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
                                     '.000 Z'
                                 ) || '"'
                             WHEN ${catalog}.main._fs_variant_typeof(y) LIKE 'OBJECT%' THEN
-                                ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(y))
+                                CAST(y AS JSON)::VARCHAR
                             ELSE _fs_to_json_py(y)
                         END
                     ),
