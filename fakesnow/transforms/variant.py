@@ -1752,26 +1752,27 @@ def structured_cast(expression: Expr) -> Expr:
             for prop in expression.this.this.expressions
             if isinstance(prop, exp.PropertyEQ)
         }
-        fields: list[exp.ColumnDef] = [
+        json_fields: list[exp.ColumnDef] = [
             field for field in expression.to.expressions if isinstance(field, exp.ColumnDef) and field.kind is not None
         ]
-        if set(values) != {field.name for field in fields}:
+        if set(values) != {field.name for field in json_fields}:
             raise snowflake.connector.errors.ProgrammingError(
                 msg="Typed object schema mismatch in conversion",
                 errno=220000,
                 sqlstate="22000",
             )
+        properties: list[Expr] = []
+        for field in json_fields:
+            field_kind = field.kind
+            assert field_kind is not None
+            properties.append(
+                exp.PropertyEQ(
+                    this=exp.Identifier(this=field.name, quoted=False),
+                    expression=exp.Cast(this=values[field.name], to=field_kind.copy()),
+                )
+            )
         return exp.Cast(
-            this=exp.Struct(
-                expressions=[
-                    exp.PropertyEQ(
-                        this=exp.Identifier(this=field.name, quoted=False),
-                        expression=exp.Cast(this=values[field.name], to=field.kind.copy()),
-                    )
-                    for field in fields
-                    if field.kind is not None
-                ]
-            ),
+            this=exp.Struct(expressions=properties),
             to=expression.to.copy(),
         )
 
