@@ -333,7 +333,8 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json_element(x) AS (
             ) || '"'
         WHEN typeof(x) LIKE 'MAP(%'
             OR typeof(x) LIKE 'STRUCT(%'
-            OR ${catalog}.main._fs_variant_typeof(x) LIKE 'OBJECT%' THEN
+            OR ${catalog}.main._fs_variant_typeof(x) LIKE 'OBJECT%'
+            OR ${catalog}.main._fs_as_map(x) IS NOT NULL THEN
             ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(x))
         WHEN typeof(x) LIKE '%[]' OR ${catalog}.main._fs_variant_typeof(x) LIKE 'ARRAY%' THEN
             '[' || COALESCE(
@@ -471,6 +472,8 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_to_json(v) AS (
         CASE
             WHEN v IS NULL THEN NULL
             WHEN ${catalog}.main._fs_is_json_null(v) THEN 'null'
+            WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL
+                THEN ${catalog}.main._fs_to_json_object(${catalog}.main._fs_as_map(v))
             WHEN typeof(v) LIKE '%[]'
                 OR (typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'ARRAY%')
                 THEN ${catalog}.main._fs_to_json_element(v)
@@ -570,6 +573,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_object_entries(v) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_array(v) AS (
     CASE
         WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL
+        WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN list_append([]::VARIANT[], v::VARIANT)
         WHEN typeof(v) LIKE '%[]' THEN try_cast(v AS VARIANT[])
         WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'ARRAY%'
             THEN ${catalog}.main._fs_as_list(v)
@@ -580,9 +584,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_array(v) AS (
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_to_object(v) AS (
     CASE
         WHEN v IS NULL OR ${catalog}.main._fs_is_json_null(v) THEN NULL::MAP(VARCHAR, VARIANT)
-        WHEN typeof(v) LIKE 'MAP(%' THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
-        WHEN typeof(v) = 'VARIANT' AND ${catalog}.main._fs_variant_typeof(v) LIKE 'OBJECT%'
-            THEN TRY_CAST(v AS MAP(VARCHAR, VARIANT))
+        WHEN ${catalog}.main._fs_as_map(v) IS NOT NULL THEN ${catalog}.main._fs_as_map(v)
         WHEN json_type(TRY_CAST(v AS JSON)) = 'OBJECT'
             THEN TRY_CAST(TRY_CAST(v AS VARIANT) AS MAP(VARCHAR, VARIANT))
         ELSE error(
