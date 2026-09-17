@@ -43,6 +43,8 @@ def _typeof_tag(value: object, variant_typeof: str | None) -> str | None:
     t = variant_typeof
     if t == "VARIANT_NULL":
         return "NULL_VALUE"
+    if _map_items(value) is not None:
+        return "OBJECT"
     if t.startswith(("INT", "UINT", "HUGEINT")):
         return "INTEGER"
     if t.startswith("BOOL"):
@@ -179,8 +181,6 @@ def _render_variant_json(value: Any) -> str:
     if isinstance(value, str):
         rendered = _strip_timestamp_sentinel(value) if value.startswith("__FAKESNOW_TIMESTAMP_") else value
         return json.dumps(rendered, ensure_ascii=False)
-    if isinstance(value, list):
-        return "[" + ",".join(_render_variant_json(item) for item in value) + "]"
     if items := _map_items(value):
         return (
             "{"
@@ -190,6 +190,8 @@ def _render_variant_json(value: Any) -> str:
             )
             + "}"
         )
+    if isinstance(value, list):
+        return "[" + ",".join(_render_variant_json(item) for item in value) + "]"
     return json.dumps(value, default=str, ensure_ascii=False, separators=(",", ":"))
 
 

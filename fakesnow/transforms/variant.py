@@ -1005,6 +1005,14 @@ def _keys_collide_casefold(keys: list[str]) -> bool:
     return len(folded) != len(set(folded))
 
 
+def _requires_dynamic_map(node: dict[str, object]) -> bool:
+    return (
+        "" in node
+        or _keys_collide_casefold(list(node))
+        or any(isinstance(value, dict) and _requires_dynamic_map(value) for value in node.values())
+    )
+
+
 def _dump_json_tree(node: object) -> str:
     if node is None:
         return "null"
@@ -1050,7 +1058,7 @@ def _json_tree_to_sql_expr(node: object) -> Expr:
     if isinstance(node, dict):
         if not node:
             return _json_object_as_variant(node)
-        if "" in node or _keys_collide_casefold(list(node.keys())):
+        if _requires_dynamic_map(node):
             return exp.ToMap(
                 this=exp.Struct(
                     expressions=[
