@@ -35,7 +35,6 @@ from fakesnow.rowtype import describe_as_result_metadata
 from fakesnow.transforms import stage
 from fakesnow.transforms.merge import operations as merge_operations
 from fakesnow.variant.errors import programming_error as variant_programming_error
-from fakesnow.variant.register import register_variant_macros
 
 if TYPE_CHECKING:
     # don't require pandas at import time
@@ -775,7 +774,6 @@ class FakeSnowflakeCursor:
         elif create_db_name := transformed.args.get("create_db_name"):
             # we created a new database, so create the info schema extensions
             self._duck_conn.execute(info_schema.per_db_creation_sql(create_db_name))
-            register_variant_macros(self._duck_conn, create_db_name)
             self._duck_conn.execute(macros.creation_sql(create_db_name))
             result_sql = SQL_CREATED_DATABASE.substitute(name=create_db_name)
 

@@ -17,7 +17,7 @@ import fakesnow.macros as macros
 from fakesnow.cursor import FakeSnowflakeCursor
 from fakesnow.instance import GLOBAL_DATABASE_NAME
 from fakesnow.variables import Variables
-from fakesnow.variant.register import register_variant_macros
+from fakesnow.variant.register import VARIANT_DATABASE_NAME
 
 
 class FakeSnowflakeConnection:
@@ -80,7 +80,6 @@ class FakeSnowflakeConnection:
             # creates db file if it doesn't exist
             duck_conn.execute(f"ATTACH DATABASE '{db_file}' AS {self.database}")
             duck_conn.execute(info_schema.per_db_creation_sql(self.database))
-            register_variant_macros(duck_conn, self.database)
             duck_conn.execute(macros.creation_sql(self.database))
 
         # create schema if needed
@@ -106,7 +105,8 @@ class FakeSnowflakeConnection:
         ):
             duck_conn.execute(f"SET schema='{self.database}.{self._schema}'")
             duck_conn.execute(
-                f"SET search_path='{self.database}.{self._schema},{self.database}.main,{GLOBAL_DATABASE_NAME}.main'"
+                f"SET search_path='{self.database}.{self._schema},{self.database}.main,"
+                f"{VARIANT_DATABASE_NAME}.main,{GLOBAL_DATABASE_NAME}.main'"
             )
             self.database_set = True
             self.schema_set = True
@@ -119,7 +119,9 @@ class FakeSnowflakeConnection:
             ).fetchone()
         ):
             duck_conn.execute(f"SET schema='{self.database}.main'")
-            duck_conn.execute(f"SET search_path='{self.database}.main,{GLOBAL_DATABASE_NAME}.main'")
+            duck_conn.execute(
+                f"SET search_path='{self.database}.main,{VARIANT_DATABASE_NAME}.main,{GLOBAL_DATABASE_NAME}.main'"
+            )
             self.database_set = True
 
     def __enter__(self) -> Self:

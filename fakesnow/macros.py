@@ -13,7 +13,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten(
         e.path AS PATH,
         e.index AS INDEX,
         CASE
-            WHEN e.json_null THEN ${catalog}.main._fs_variant_null()
+            WHEN e.json_null THEN _fs_variant.main._fs_variant_null()
             ELSE e.value
         END AS VALUE,
         e.this AS THIS
@@ -47,7 +47,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_array(
         CAST(input AS VARIANT) AS THIS
     FROM UNNEST(input) WITH ORDINALITY AS e(value, index)
     WHERE UPPER(mode_arg) IN ('ARRAY', 'BOTH')
-      AND ${catalog}.main._fs_typeof(CAST(e.value AS VARIANT)) IS NOT NULL
+      AND _fs_variant.main._fs_typeof(CAST(e.value AS VARIANT)) IS NOT NULL
     """
 )
 
@@ -65,7 +65,7 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_flatten_map(
         e.this AS THIS
     FROM (
         SELECT UNNEST(
-            ${catalog}.main._fs_variant_flatten_map_rows(
+            _fs_variant.main._fs_variant_flatten_map_rows(
                 input,
                 path_arg,
                 mode_arg,
@@ -82,10 +82,10 @@ FS_OBJECT_CONSTRUCT = Template(
 CREATE OR REPLACE MACRO ${catalog}.main._fs_object_construct(keys, vals, keep_nulls) AS (
     WITH kv AS (
         SELECT key, list_extract(vals, idx) AS value
-        FROM UNNEST(${catalog}.main._fs_object_validate_keys(keys)) WITH ORDINALITY AS u(key, idx)
+        FROM UNNEST(_fs_variant.main._fs_object_validate_keys(keys)) WITH ORDINALITY AS u(key, idx)
         ORDER BY idx
     )
-    SELECT ${catalog}.main._fs_map_as_object(
+    SELECT _fs_variant.main._fs_map_as_object(
         CASE
             WHEN count(*) FILTER (
                 WHERE key IS NOT NULL AND (keep_nulls OR value IS NOT NULL)
