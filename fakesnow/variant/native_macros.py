@@ -277,14 +277,10 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_index(v, key) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_map_get(m, key) AS (
-    CASE
-        WHEN m IS NULL OR key IS NULL OR ${catalog}.main._fs_as_map(m) IS NULL THEN NULL::VARIANT
-        WHEN NOT map_contains(${catalog}.main._fs_as_map(m), TRY_CAST(key AS VARCHAR)) THEN NULL::VARIANT
-        ELSE list_element(
-            map_extract(${catalog}.main._fs_as_map(m), TRY_CAST(key AS VARCHAR)),
-            1
-        )
-    END
+    list_element(
+        map_extract(TRY_CAST(m AS MAP(VARCHAR, VARIANT)), TRY_CAST(key AS VARCHAR)),
+        1
+    )
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_greatest(a, b) AS (
