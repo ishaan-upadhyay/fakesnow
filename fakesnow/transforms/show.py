@@ -133,7 +133,7 @@ SELECT
     'ROLE' as 'owner_role_type',
     NULL as 'object_visibility'
 FROM duckdb_databases
-WHERE database_name NOT IN ('memory', '_fs_global')
+WHERE database_name NOT IN ('memory', '_fs_global', '_fs_variant')
 """
 
 
@@ -397,7 +397,7 @@ select
     catalog_name as 'database_name',
     NULL as 'schema_name'
 from information_schema.schemata
-where not catalog_name in ('memory', 'system', 'temp', '_fs_global')
+where not catalog_name in ('memory', 'system', 'temp', '_fs_global', '_fs_variant')
   and not schema_name in ('main', 'pg_catalog')
 """
 

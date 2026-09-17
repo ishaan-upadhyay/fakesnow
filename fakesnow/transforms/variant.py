@@ -1752,7 +1752,7 @@ def structured_cast(expression: Expr) -> Expr:
             for prop in expression.this.this.expressions
             if isinstance(prop, exp.PropertyEQ)
         }
-        fields = [
+        fields: list[exp.ColumnDef] = [
             field for field in expression.to.expressions if isinstance(field, exp.ColumnDef) and field.kind is not None
         ]
         if set(values) != {field.name for field in fields}:

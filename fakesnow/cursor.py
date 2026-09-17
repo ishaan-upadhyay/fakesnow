@@ -35,6 +35,7 @@ from fakesnow.rowtype import describe_as_result_metadata
 from fakesnow.transforms import stage
 from fakesnow.transforms.merge import operations as merge_operations
 from fakesnow.variant.errors import programming_error as variant_programming_error
+from fakesnow.variant.register import VARIANT_DATABASE_NAME
 
 if TYPE_CHECKING:
     # don't require pandas at import time
@@ -882,6 +883,14 @@ class FakeSnowflakeCursor:
             match = re.search(r"SECRET\s+(\w+)\s*\(", transformed.expression, re.IGNORECASE)
             secret_name = match[1].upper() if match else "UNKNOWN"
             result_sql = SQL_CREATED_SECRET.substitute(name=secret_name)
+
+        if set_database or set_schema:
+            assert self._conn.database
+            schema = self._conn._schema if self._conn.schema_set else "main"
+            self._duck_conn.execute(
+                f"SET search_path='{self._conn.database}.{schema},{self._conn.database}.main,"
+                f"{VARIANT_DATABASE_NAME}.main,_fs_global.main'"
+            )
 
         if table_comment := cast(tuple[exp.Table, str], transformed.args.get("table_comment")):
             # record table comment

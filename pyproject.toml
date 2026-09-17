@@ -83,7 +83,7 @@ reportUnnecessaryTypeIgnoreComment = true
 testpaths = ["tests"]
 addopts = [
     "-n",
-    "auto",
+    "4",
     "--html=pytest-report.html",
     "--self-contained-html",
 ]
