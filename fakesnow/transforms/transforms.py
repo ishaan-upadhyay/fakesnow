@@ -1597,10 +1597,7 @@ def object_construct(expression: Expr) -> Expr:
                 if isinstance(prop, exp.PropertyEQ) and not isinstance(prop.expression, exp.Null)
             ]
             return exp.Struct(expressions=fields) if fields else exp.Anonymous(this="map", expressions=[])
-        if (
-            expression.args.get("_fs_json_literal")
-            or isinstance(expression.parent, exp.ToMap)
-        ):
+        if expression.args.get("_fs_json_literal") or isinstance(expression.parent, exp.ToMap):
             return expression
         keep_nulls = False
 
