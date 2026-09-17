@@ -1100,7 +1100,7 @@ def parse_json(expression: Expr) -> Expr:
     if isinstance(expression, exp.ParseJSON):
         argument = expression.this
         safe = bool(expression.args.get("safe"))
-        if isinstance(argument, exp.Literal) and argument.is_string:
+        if (isinstance(argument, exp.Literal) and argument.is_string) or isinstance(argument, exp.RawString):
             if not argument.this.strip():
                 return exp.Cast(
                     this=exp.Null(),
