@@ -7,6 +7,29 @@ import snowflake.connector
 
 from tests.parity import compare_results, load_fixtures, run_fakesnow, run_snowflake
 
+_ACCEPTED_FAKESNOW_GAPS = {
+    (
+        "pr07_misc",
+        "array_construct_array_construct_null",
+    ): "DuckDB collapses nested undefined when VARIANT[] is cast to VARIANT for nesting",
+    (
+        "pr09_arrays_null_vs_undefined",
+        "select_array_construct_null_0_e0_array_construct_null_0_is_n",
+    ): "DuckDB collapses nested undefined when VARIANT[] is cast to VARIANT for nesting",
+    (
+        "pr09_arrays_null_vs_undefined",
+        "select_f_from_table_flatten_input_array_construct_null_1_par",
+    ): "DuckDB collapses nested undefined when VARIANT[] is cast to VARIANT for nesting",
+    (
+        "pr09_function_coverage_values_individual",
+        "object_construct_a_array_construct_null_b_object_construct",
+    ): "DuckDB collapses nested undefined when VARIANT[] is cast to VARIANT for nesting",
+    (
+        "pr07_misc",
+        "parse_json_123456789012345678901234567890_123456789",
+    ): "DuckDB VARIANT cannot exactly represent a 39-digit fixed-point number; DECIMAL is limited to precision 38",
+}
+
 
 def _params() -> list[Any]:
     return [
@@ -26,6 +49,8 @@ def test_fakesnow_parity(
     fixture: dict[str, Any],
     case: dict[str, Any],
 ) -> None:
+    if reason := _ACCEPTED_FAKESNOW_GAPS.get((fixture["name"], case["id"])):
+        pytest.xfail(reason)
     if case.get("setup"):
         setup_result = run_fakesnow(case["setup"], conn)
         if case["expect"]["error"] is None:
