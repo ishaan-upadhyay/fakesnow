@@ -1591,13 +1591,19 @@ def object_construct(expression: Expr) -> Expr:
     elif isinstance(expression, exp.Struct):
         # OBJECT_CONSTRUCT — leave PARSE_JSON literal structs and MAP payloads alone.
         if (
+            isinstance(expression.parent, exp.Cast)
+            and expression.parent.to.this == exp.DataType.Type.MAP
+            and bool(expression.parent.to.expressions)
+        ):
+            fields = [
+                prop.copy()
+                for prop in expression.expressions
+                if isinstance(prop, exp.PropertyEQ) and not isinstance(prop.expression, exp.Null)
+            ]
+            return exp.Struct(expressions=fields) if fields else exp.Anonymous(this="map", expressions=[])
+        if (
             expression.args.get("_fs_json_literal")
             or isinstance(expression.parent, exp.ToMap)
-            or (
-                isinstance(expression.parent, exp.Cast)
-                and expression.parent.to.this == exp.DataType.Type.MAP
-                and bool(expression.parent.to.expressions)
-            )
         ):
             return expression
         keep_nulls = False
