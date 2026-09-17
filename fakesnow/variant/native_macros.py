@@ -265,9 +265,11 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_eq_sql(a, b) AS (
         a,
         typeof(a),
         CASE WHEN a IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(a AS VARIANT)) END,
+        a IS NULL,
         b,
         typeof(b),
-        CASE WHEN b IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(b AS VARIANT)) END
+        CASE WHEN b IS NULL THEN NULL ELSE variant_typeof(TRY_CAST(b AS VARIANT)) END,
+        b IS NULL
     )
 );
 
@@ -276,10 +278,17 @@ CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_get_index(v, key) AS (
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_map_get(m, key) AS (
-    list_element(
-        map_extract(TRY_CAST(m AS MAP(VARCHAR, VARIANT)), TRY_CAST(key AS VARCHAR)),
-        1
-    )
+    CASE
+        WHEN map_contains(TRY_CAST(m AS MAP(VARCHAR, VARIANT)), TRY_CAST(key AS VARCHAR)) THEN
+            COALESCE(
+                list_element(
+                    map_extract(TRY_CAST(m AS MAP(VARCHAR, VARIANT)), TRY_CAST(key AS VARCHAR)),
+                    1
+                ),
+                ${catalog}.main._fs_variant_null()
+            )
+        ELSE NULL::VARIANT
+    END
 );
 
 CREATE OR REPLACE MACRO ${catalog}.main._fs_variant_greatest(a, b) AS (

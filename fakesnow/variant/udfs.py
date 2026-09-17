@@ -322,13 +322,13 @@ def _fs_variant_eq_sql_py(
     left: Any,
     left_typeof: Any,
     left_variant_typeof: Any,
+    left_is_sql_null: Any,
     right: Any,
     right_typeof: Any,
     right_variant_typeof: Any,
+    right_is_sql_null: Any,
 ) -> bool | None:
-    if _is_sql_null_arg(left, left_typeof, left_variant_typeof) or _is_sql_null_arg(
-        right, right_typeof, right_variant_typeof
-    ):
+    if left_is_sql_null or right_is_sql_null:
         return None
     if _fs_variant_eq_py(
         left,
@@ -345,6 +345,13 @@ def _fs_variant_eq_sql_py(
     right_vt = str(right_variant_typeof) if right_variant_typeof is not None else None
     left_kind = snowflake_typeof(left, left_sql, left_vt)
     right_kind = snowflake_typeof(right, right_sql, right_vt)
+    if {left_kind, right_kind} == {"BOOLEAN", "VARCHAR"}:
+        text = str(right if left_kind == "BOOLEAN" else left).lower()
+        if text not in {"true", "false"}:
+            return False
+        left_bool = left if isinstance(left, bool) else text == "true"
+        right_bool = right if isinstance(right, bool) else text == "true"
+        return left_bool == right_bool
     if left_kind == "VARCHAR" or right_kind == "VARCHAR":
         left_text = None if left is None or left_kind == "NULL_VALUE" else str(left)
         right_text = None if right is None or right_kind == "NULL_VALUE" else str(right)
