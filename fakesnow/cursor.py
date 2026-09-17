@@ -211,6 +211,10 @@ class FakeSnowflakeCursor:
                     variant_text = any(
                         function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
+                    variant_result = any(
+                        function.name.upper() in {"_FS_MAP_GET", "_FS_VARIANT_GET", "_FS_VARIANT_GET_INDEX"}
+                        for function in source.find_all(exp.Anonymous)
+                    )
                     object_star = any(
                         function.name.upper() in {"_FS_OBJECT_DROP_NULL", "_FS_OBJECT_KEEP_NULL"}
                         for function in source.find_all(exp.Anonymous)
@@ -225,7 +229,7 @@ class FakeSnowflakeCursor:
                         source.args.get("_fs_array_size") or source.args.get("_fs_array_position")
                     ) or isinstance(source, exp.ArrayPosition)
                     fixed_width_text = isinstance(source, exp.MD5)
-                    if source.args.get("_fs_logical_variant") and index < len(rows):
+                    if (source.args.get("_fs_logical_variant") or variant_result) and index < len(rows):
                         row = list(rows[index])
                         row[1] = "VARIANT"
                         rows[index] = tuple(row)

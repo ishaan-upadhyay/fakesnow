@@ -219,6 +219,18 @@ def _map_lookup(container: Any, key: Any) -> tuple[str, Any] | None:
     return ("value", value)
 
 
+def _fs_as_map_py(value: Any) -> dict[str, Any] | None:
+    if isinstance(value, str):
+        try:
+            value = json.loads(value)
+        except json.JSONDecodeError:
+            return None
+    items = _map_items(value)
+    if items is None:
+        return None
+    return {key: duckdb.Value(_variant_output(item), sqltypes.VARIANT) for key, item in items}
+
+
 def _fs_map_get_kind_py(container: Any, key: Any) -> str | None:
     found = _map_lookup(container, key)
     if found is None:
@@ -507,7 +519,7 @@ def _fs_variant_to_varchar_py(value: Any, sql_typeof: Any, variant_typeof: Any) 
                 payload = json.loads(value)
             except json.JSONDecodeError:
                 return value
-        return json.dumps(payload, default=str, ensure_ascii=False, separators=(",", ":"))
+        return _render_variant_json(payload)
     if kind == "BOOLEAN":
         return "true" if value else "false"
     if isinstance(value, Decimal):
@@ -578,6 +590,7 @@ def register_variant_udfs(conn: DuckDBPyConnection) -> None:
         ("_fs_cast_error_value_py", _fs_cast_error_value_py, sqltypes.VARCHAR),
         ("_fs_variant_to_bigint_py", _fs_variant_to_bigint_py, sqltypes.BIGINT),
         ("_fs_map_get_py", _fs_map_get_py, sqltypes.VARIANT),
+        ("_fs_as_map_py", _fs_as_map_py, duckdb.map_type(sqltypes.VARCHAR, sqltypes.VARIANT)),
         ("_fs_map_get_kind_py", _fs_map_get_kind_py, sqltypes.VARCHAR),
         ("_fs_variant_get_index_py", _fs_variant_get_index_py, sqltypes.VARIANT),
         ("_fs_variant_get_py", _fs_variant_get_py, sqltypes.VARIANT),
