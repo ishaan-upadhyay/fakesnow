@@ -211,9 +211,9 @@ class FakeSnowflakeCursor:
                     variant_text = any(
                         function.name.upper().startswith("_FS_") for function in source.find_all(exp.Anonymous)
                     )
-                    variant_result = any(
-                        function.name.upper() in {"_FS_MAP_GET", "_FS_VARIANT_GET", "_FS_VARIANT_GET_INDEX"}
-                        for function in source.find_all(exp.Anonymous)
+                    variant_result = (
+                        isinstance(source, exp.Anonymous)
+                        and source.name.upper() in {"_FS_MAP_GET", "_FS_VARIANT_GET", "_FS_VARIANT_GET_INDEX"}
                     )
                     object_star = any(
                         function.name.upper() in {"_FS_OBJECT_DROP_NULL", "_FS_OBJECT_KEEP_NULL"}

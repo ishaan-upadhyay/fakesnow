@@ -62,6 +62,11 @@ def snowflake_error_json(value: object, *, kind: str | None = None) -> str:
                 payload = json.loads(value)
             except json.JSONDecodeError:
                 payload = value
+        if (
+            isinstance(payload, list)
+            and all(isinstance(entry, dict) and set(entry) == {"key", "value"} for entry in payload)
+        ):
+            payload = {str(entry["key"]): entry["value"] for entry in payload}
         if isinstance(payload, dict):
             return json.dumps(payload, ensure_ascii=False, separators=(",", ":"), sort_keys=True, default=str)
         return json.dumps(payload, ensure_ascii=False, separators=(",", ":"), default=str)
