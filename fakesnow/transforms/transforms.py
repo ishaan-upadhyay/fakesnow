@@ -1126,13 +1126,9 @@ def indices_to_json_extract(expression: Expr) -> Expr:
                     this="_fs_map_get",
                     expressions=[this.copy(), index.copy()],
                 )
-            variant = exp.Cast(
-                this=this,
-                to=exp.DataType(this=exp.DataType.Type.VARIANT, nested=False),
-            )
             return exp.Anonymous(
                 this="_fs_variant_get_index",
-                expressions=[variant, index.copy()],
+                expressions=[this, index.copy()],
             )
         return exp.Anonymous(
             this="_fs_variant_get",

@@ -522,7 +522,7 @@ def test_identifier() -> None:
 def test_indices_to_object() -> None:
     assert (
         sqlglot.parse_one("SELECT myarray[0] FROM table1").transform(indices_to_json_extract).sql()
-        == "SELECT _FS_VARIANT_GET_INDEX(CAST(myarray AS VARIANT), 0) FROM table1"
+        == "SELECT _FS_VARIANT_GET_INDEX(myarray, 0) FROM table1"
     )
 
     assert (
